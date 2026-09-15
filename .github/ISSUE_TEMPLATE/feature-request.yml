@@ -1,0 +1,54 @@
+name: Feature request
+description: Suggest an improvement to Outline View.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the document-navigation problem first. Outline View is scoped to
+        the heading structure of the active document, which helps us evaluate
+        whether a request belongs in this plugin.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to accomplish, and where does the current workflow fall short?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe what a successful workflow would let you accomplish.
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Current workaround
+      description: Share how you handle this need today.
+  - type: textarea
+    id: scope-fit
+    attributes:
+      label: Scope fit
+      description: Explain how this request relates to navigating the current document's heading structure.
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Primary operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - All platforms
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed personal, confidential, and secret information from any examples or screenshots.
+          required: true
