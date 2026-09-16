@@ -1,0 +1,92 @@
+name: Bug report
+description: Report a reproducible problem with Outline View.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Outline View. Please remove personal or confidential document content before sharing logs, screenshots, or sample Markdown.
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Outline View version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: typora-version
+    attributes:
+      label: Typora version
+    validations:
+      required: true
+  - type: input
+    id: community-plugin-version
+    attributes:
+      label: Typora Community Plugin version
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: installation-scope
+    attributes:
+      label: Installation scope
+      options:
+        - Global plugin installation
+        - Vault-specific plugin installation
+        - Development installation
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem summary
+      description: Briefly describe the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a sanitized Markdown document
+        2. Open Outline View
+        3. Change ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Relevant diagnostics
+      description: Paste sanitized console output or a minimal sample document. Do not include secrets, private paths, or confidential content.
+      render: shell
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed personal, confidential, and secret information from everything included in this report.
+          required: true

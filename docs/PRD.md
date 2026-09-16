@@ -1,0 +1,281 @@
+# Product Requirements Document
+
+## Product
+
+**Typora Outline View**
+
+## Repository
+
+`prisant-labs/typora-plugin-outline-view`
+
+## Summary
+
+Outline View is a Community Plugin for Typora that provides a persistent, synchronized heading outline of the active Markdown document as an independent workspace view.
+
+Its primary purpose is to let users keep Typora's Files sidebar visible while simultaneously navigating the structure of a long document.
+
+## Problem
+
+Typora's native left sidebar switches between Files, Search, and Outline.
+
+For users working across many Markdown files and long structured documents, both levels of navigation matter at the same time:
+
+- **workspace navigation:** folders and files
+- **document navigation:** headings within the active file
+
+Today, selecting Outline hides Files.
+
+## Primary job to be done
+
+> While editing a Markdown document, I want to see both my file structure and my document structure so I can move between files and sections without repeatedly switching sidebar modes.
+
+## Product principles
+
+1. **Native to Community Plugin**
+2. **Independent from Typora's native left sidebar**
+3. **Simple by default**
+4. **Configurable without becoming a generic workspace framework**
+5. **Cross-platform**
+6. **Low reliance on private Typora internals**
+
+## Target users
+
+Primary:
+
+- people using Typora as a serious Markdown editor
+- people working with long structured documents
+- users managing folder-based Markdown collections
+- Community Plugin users who keep Files open
+
+Secondary:
+
+- technical writers
+- researchers
+- product managers
+- nonfiction writers
+- documentation authors
+
+## Core experience
+
+Default layout:
+
+```text
+┌────────────────┬───────────────────────────┬──────────────────┐
+│ FILES          │ DOCUMENT                  │ OUTLINE VIEW     │
+│                │                           │                  │
+│ docs           │ # Introduction            │ Introduction     │
+│ ├ intro.md     │                           │   Goals          │
+│ ├ design.md    │ ## Goals                  │   Scope          │
+│ └ roadmap.md   │                           │ Architecture     │
+└────────────────┴───────────────────────────┴──────────────────┘
+```
+
+## V1 functional requirements
+
+### Outline generation
+
+The plugin must:
+
+- detect H1-H6 headings in the active Typora document
+- preserve source order
+- preserve heading depth
+- render readable nested indentation
+- handle documents with skipped heading levels
+- display a clear empty state when no headings exist
+
+### Navigation
+
+Users must be able to:
+
+- click an outline item
+- navigate to the corresponding heading
+- return focus to the document naturally
+
+Navigation should prefer heading `cid` or a direct live DOM reference.
+
+### Live synchronization
+
+The outline must refresh when:
+
+- another file opens
+- a heading is added
+- a heading is deleted
+- heading text changes
+- heading levels change
+
+Updates should be debounced to avoid excessive rendering.
+
+### Active heading
+
+The plugin should:
+
+- determine the current/active heading while scrolling
+- visually highlight that heading
+- keep the active outline item visible when follow mode is enabled
+
+### Collapsing
+
+Users should be able to:
+
+- collapse headings with children
+- expand collapsed headings
+- optionally expand/collapse all
+
+Collapsed state should remain stable during ordinary edits when possible.
+
+### Commands
+
+At minimum:
+
+- `Outline View: Toggle`
+- `Outline View: Refresh`
+- `Outline View: Expand All`
+- `Outline View: Collapse All`
+
+### Settings
+
+V1 should include:
+
+#### Placement
+
+- default placement: Right dock
+- architecture must support additional placement adapters later
+- do not promise unsupported placements in the first marketplace release
+
+#### Behavior
+
+- open automatically: on/off
+- follow active heading: on/off
+- auto-scroll outline: on/off
+- remember collapse state: on/off
+
+#### Heading visibility
+
+- maximum heading depth: H1-H6
+- optional minimum heading level if implementation remains intuitive
+
+#### Appearance
+
+- density: compact / comfortable
+- indentation: small / medium / large
+
+### Persistence
+
+Persist plugin settings using Community Plugin settings APIs.
+
+Persist only state that has clear value. Do not create complex document metadata in V1.
+
+## Accessibility
+
+- outline items should be keyboard-focusable
+- use semantic roles where useful
+- visible active state must not rely solely on color
+- tooltips/title should expose truncated heading text
+
+## Performance
+
+The plugin should remain responsive on documents with:
+
+- 500+ headings
+- frequent editing
+- long documents
+
+Avoid rebuilding unnecessarily.
+
+Recommended:
+
+- debounce heading refresh
+- compare a lightweight signature before DOM replacement if useful
+- avoid repeated expensive global selectors during scroll
+
+## Cross-platform requirements
+
+Support:
+
+- macOS
+- Windows
+- Linux
+
+No V1 feature should require a platform-specific Node bridge.
+
+## Marketplace requirements
+
+The plugin should be suitable for the Typora Community Plugin marketplace:
+
+- independent repository
+- valid manifest
+- documented installation/use
+- MIT-compatible licensing
+- current Community Plugin core dependency
+- release artifact compatible with marketplace expectations
+
+## Out of scope for V1
+
+Do not include:
+
+- starred/pinned files
+- backlinks
+- recent files
+- Git status
+- AI features
+- table/image/link/code/math navigation modes
+- drag-to-reorder sections
+- automatic document rewriting
+- full Obsidian-style outline manipulation
+
+## Future opportunities
+
+### V1.x
+
+- search/filter headings
+- focus current branch
+- heading level badges
+- context actions
+- copy heading link
+- configurable active-heading threshold
+
+### V2: Document Navigator mode
+
+Potential additional navigators:
+
+- tables
+- images
+- fenced code blocks
+- links
+- math blocks
+
+This should only be added if it remains coherent with the product.
+
+### V2+: additional placements
+
+Possible:
+
+- main workspace tab
+- floating view
+- other Community workspace surfaces
+
+Each must be validated before being presented as a supported setting.
+
+### Structural editing
+
+Drag-to-reorder heading sections is intentionally deferred because the obgnail implementation relies on deep Typora document-model internals.
+
+## Success criteria
+
+### Technical success
+
+- Files can remain open on the left
+- Outline View remains usable on the right
+- no duplicate-plugin framework required
+- no significant editor performance regression
+- clean unload/reload behavior
+
+### Product success
+
+The user no longer needs to switch to Typora's native Outline sidebar during normal long-document editing.
+
+## Non-goal
+
+This plugin should not attempt to replace Typora Community Plugin's workspace system.
+
+It is a focused view that uses that system.

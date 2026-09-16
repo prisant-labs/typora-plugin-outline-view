@@ -1,0 +1,7 @@
+_local/
+node_modules/
+dist/
+plugin.zip
+plugin_typora-outline-view.zip
+.vitest/
+test/vault/.typora/

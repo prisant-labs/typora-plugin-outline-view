@@ -1,0 +1,322 @@
+.outline-view {
+  --outline-indent: 14px;
+  --outline-row-block-padding: 5px;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-color);
+  background: var(--bg-color);
+  font-size: 13px;
+}
+
+.outline-view--compact {
+  --outline-row-block-padding: 2px;
+}
+
+.outline-view--comfortable {
+  --outline-row-block-padding: 5px;
+}
+
+.outline-view--indent-small {
+  --outline-indent: 10px;
+}
+
+.outline-view--indent-medium {
+  --outline-indent: 14px;
+}
+
+.outline-view--indent-large {
+  --outline-indent: 20px;
+}
+
+.outline-view__toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--base-border);
+}
+
+.outline-view__toolbar-button {
+  padding: 2px 3px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.35;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+
+.outline-view__toolbar-button:hover {
+  color: var(--text-color);
+  background: var(--item-hover-bg-color);
+}
+
+.outline-view__toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.outline-view__config-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+
+.outline-view__config-button:hover {
+  color: var(--text-color);
+  background: var(--item-hover-bg-color);
+}
+
+.outline-view__level-selector {
+  --outline-level-scale: 1;
+
+  box-sizing: border-box;
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 10px 8px;
+  border-bottom: 1px solid var(--base-border);
+}
+
+.outline-view__level-selector[data-level='1'] {
+  --outline-level-scale: 0;
+}
+
+.outline-view__level-selector[data-level='2'] {
+  --outline-level-scale: 0.2;
+}
+
+.outline-view__level-selector[data-level='3'] {
+  --outline-level-scale: 0.4;
+}
+
+.outline-view__level-selector[data-level='4'] {
+  --outline-level-scale: 0.6;
+}
+
+.outline-view__level-selector[data-level='5'] {
+  --outline-level-scale: 0.8;
+}
+
+.outline-view__level-track {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.outline-view__level-track::before,
+.outline-view__level-track::after {
+  position: absolute;
+  right: 7px;
+  left: 7px;
+  height: 2px;
+  content: '';
+  pointer-events: none;
+}
+
+.outline-view__level-track::before {
+  background: var(--base-border);
+}
+
+.outline-view__level-track::after {
+  background: var(--active-file-border-color);
+  transform: scaleX(var(--outline-level-scale));
+  transform-origin: left;
+}
+
+.outline-view__level-stop {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  cursor: pointer;
+  background: var(--base-border);
+  border: 2px solid var(--base-border);
+  border-radius: 50%;
+}
+
+.outline-view__level-stop[data-included='true'] {
+  background: var(--bg-color);
+  border-color: var(--active-file-border-color);
+}
+
+.outline-view__level-stop[aria-checked='true'] {
+  background: var(--active-file-border-color);
+  box-shadow: inset 0 0 0 2px var(--bg-color);
+}
+
+.outline-view__level-stop:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.outline-view__level-stop:focus-visible {
+  outline: 1px solid var(--active-file-border-color);
+  outline-offset: 2px;
+}
+
+.outline-view__level-value {
+  min-width: 5.2em;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.outline-view__toolbar-button:focus-visible,
+.outline-view__config-button:focus-visible,
+.outline-view__disclosure:focus-visible,
+.outline-view__item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--active-file-border-color);
+}
+
+.outline-view__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 6px 8px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.outline-view-settings
+  .typ-setting-item:has(> .typ-setting-controls.postfix > select)
+  > .typ-setting-info {
+  flex: 0 1 20rem;
+}
+
+.outline-view-settings
+  .typ-setting-item:has(> .typ-setting-controls.postfix > select)
+  > .typ-setting-controls.postfix {
+  margin-inline-start: 0.75rem;
+}
+
+.outline-view__tree,
+.outline-view__group {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.outline-view__group {
+  padding-inline-start: var(--outline-indent);
+}
+
+.outline-view__group[hidden] {
+  display: none;
+}
+
+.outline-view__node {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.outline-view__row {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+  border-radius: 4px;
+}
+
+.outline-view__row:hover {
+  background: var(--item-hover-bg-color);
+}
+
+.outline-view__disclosure,
+.outline-view__disclosure-spacer {
+  box-sizing: border-box;
+  flex: 0 0 20px;
+  width: 20px;
+  height: calc(1.4em + 2 * var(--outline-row-block-padding));
+}
+
+.outline-view__disclosure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--text-muted);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+
+.outline-view__disclosure:hover {
+  color: var(--text-color);
+}
+
+.outline-view__item {
+  max-width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: var(--outline-row-block-padding) 6px;
+  overflow: hidden;
+  color: inherit;
+  font: inherit;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+
+.outline-view--wrap .outline-view__item {
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.outline-view--truncate .outline-view__item {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outline-view__item.is-active {
+  color: var(--active-file-border-color, var(--text-color));
+  font-weight: 600;
+}
+
+.outline-view__empty {
+  margin: 0;
+  padding: 14px 10px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
