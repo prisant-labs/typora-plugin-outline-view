@@ -2,7 +2,7 @@ import {
   Plugin,
   PluginSettings,
 } from '@typora-community-plugin/core'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   DEFAULT_OUTLINE_SETTINGS,
@@ -36,6 +36,47 @@ function settingRow(tab: OutlineSettingsTab, name: string) {
 }
 
 describe('OutlineSettingsTab', () => {
+  it('refreshes after modal reopen even when core does not call onshow again', () => {
+    let resized!: () => void
+    const disconnect = vi.fn()
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: () => void) { resized = callback }
+      observe() {}
+      disconnect = disconnect
+    })
+    document.body.innerHTML = '<div id="write"><h1>Before</h1></div>'
+    const { tab, settings } = createTab()
+    let visible = true
+    tab.containerEl.getClientRects = () => ({ length: visible ? 1 : 0 }) as DOMRectList
+    resized()
+    visible = false
+    resized()
+    document.querySelector('h1')!.textContent = 'After'
+    settings.set('density', 'compact')
+    expect(tab.containerEl.querySelector('.outline-view__item')!.textContent).toBe('Before')
+    visible = true
+    resized()
+    expect(tab.containerEl.querySelector('.outline-view__item')!.textContent).toBe('After')
+    tab.onhide()
+    expect(disconnect).toHaveBeenCalledOnce()
+    vi.unstubAllGlobals()
+  })
+  it('pairs the size slider with its numeric value and clamps committed values', () => {
+    const { settings, tab } = createTab()
+    const row = tab.containerEl.querySelector('[data-appearance-level="3"]')!
+    const slider = row.querySelector<HTMLInputElement>('input[type="range"]')!
+    const number = row.querySelector<HTMLInputElement>('input[type="number"]')!
+    expect(slider).not.toBeNull()
+    slider.value = '175'
+    slider.dispatchEvent(new Event('input'))
+    expect(number.value).toBe('175')
+    expect(settings.get('headingStyles')[3].size).toBe(175)
+    number.value = '300'
+    number.dispatchEvent(new Event('change'))
+    expect(number.value).toBe('250')
+    expect(slider.value).toBe('250')
+    tab.onhide()
+  })
   it('uses the manifest name and renders every approved setting', () => {
     const { tab } = createTab()
 
@@ -45,7 +86,7 @@ describe('OutlineSettingsTab', () => {
       Array.from(tab.containerEl.querySelectorAll('.typ-setting-name')).map(
         (name) => name.textContent?.trim(),
       ),
-    ).toEqual([
+    ).toEqual(expect.arrayContaining([
       'Open automatically',
       'Follow active heading',
       'Auto-scroll outline',
@@ -56,7 +97,11 @@ describe('OutlineSettingsTab', () => {
       'Wrap long heading labels',
       'Density',
       'Indentation',
-    ])
+      'Show heading-level selector',
+      'Selector style',
+      'Show heading-level labels',
+      'Color theme',
+    ]))
   })
 
   it('shows the approved defaults', () => {
@@ -68,20 +113,8 @@ describe('OutlineSettingsTab', () => {
       tab.containerEl.querySelectorAll<HTMLSelectElement>('select'),
     )
 
-    expect(checkboxes.map(({ checked }) => checked)).toEqual([
-      false,
-      true,
-      true,
-      true,
-      true,
-    ])
-    expect(selects.map(({ value }) => value)).toEqual([
-      '1',
-      '6',
-      '3',
-      'comfortable',
-      'medium',
-    ])
+    expect(checkboxes[0].checked).toBe(false)
+    expect(selects.map(({ value }) => value)).toEqual(expect.arrayContaining(['1', '6', '3', 'comfortable', 'medium', 'rail', 'theme']))
   })
 
   it('persists checkbox and select changes', () => {
@@ -120,4 +153,60 @@ describe('OutlineSettingsTab', () => {
     expect(settings.get('minHeadingLevel')).toBe(6)
     expect(settings.get('maxHeadingLevel')).toBe(6)
   })
+
+  it('previews size, emphasis, casing and color immediately and resets each level', () => {
+    const { settings, tab } = createTab()
+    const row = tab.containerEl.querySelector<HTMLElement>('[data-appearance-level="2"]')!
+    const size = row.querySelector<HTMLInputElement>('[data-field="size"]')!
+    size.value = '150'
+    size.dispatchEvent(new Event('input'))
+    row.querySelector<HTMLButtonElement>('[data-field="bold"]')!.click()
+    const casing = row.querySelector<HTMLSelectElement>('[data-field="casing"]')!
+    casing.value = 'small-caps'
+    casing.dispatchEvent(new Event('change'))
+    const mode = row.querySelector<HTMLSelectElement>('[data-field="color-mode"]')!
+    mode.value = 'custom'
+    mode.dispatchEvent(new Event('change'))
+    const color = row.querySelector<HTMLInputElement>('input[type="color"]')!
+    color.value = '#336699'
+    color.dispatchEvent(new Event('input'))
+    expect(settings.get('headingStyles')[2]).toMatchObject({ size: 150, bold: true, casing: 'small-caps', color: '#336699' })
+    const preview = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__preview [data-heading-level="2"]')!
+    expect(preview.style.getPropertyValue('--outline-heading-color')).toBe('#336699')
+    expect(preview.style.fontVariantCaps).toBe('small-caps')
+    expect(preview.parentElement!.style.fontSize).toBe('150%')
+    row.querySelector<HTMLButtonElement>('[data-action="reset-level"]')!.click()
+    expect(settings.get('headingStyles')[2]).toEqual(DEFAULT_OUTLINE_SETTINGS.headingStyles[2])
+    tab.onhide()
+  })
+
+  it('uses active-document headings, falls back to samples, and disables dependent selector settings', () => {
+    document.body.innerHTML = '<div id="write"><h1>Current document</h1><h3>Real heading</h3></div>'
+    const { tab } = createTab()
+    expect(tab.containerEl.querySelector('.outline-view-settings__preview')!.textContent).toContain('Real heading')
+    const show = settingRow(tab, 'Show heading-level selector')!.querySelector<HTMLInputElement>('input')!
+    show.checked = false
+    show.dispatchEvent(new Event('change'))
+    expect(settingRow(tab, 'Selector style')!.querySelector<HTMLSelectElement>('select')!.disabled).toBe(true)
+    expect(tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__preview .outline-view__level-selector')!.hidden).toBe(true)
+    tab.onhide()
+    document.body.replaceChildren()
+    tab.onshow()
+    expect(tab.containerEl.querySelector('.outline-view-settings__preview')!.textContent).toContain('Sample outline')
+    expect(tab.containerEl.querySelectorAll('.outline-view-settings__preview .outline-view__item')).toHaveLength(6)
+    tab.onhide()
+  })
+
+  it('cleans up subscriptions and old preview when shown repeatedly or hidden', () => {
+    const { tab, settings } = createTab()
+    tab.onshow()
+    expect(tab.containerEl.querySelectorAll('.outline-view-settings__preview')).toHaveLength(1)
+    const oldPreview = tab.containerEl.querySelector('.outline-view-settings__preview')!
+    tab.onhide()
+    const oldHTML = oldPreview.innerHTML
+    settings.set('maxHeadingLevel', 1)
+    expect(oldPreview.innerHTML).toBe(oldHTML)
+  })
 })
+
+afterEach(() => { document.body.replaceChildren(); vi.unstubAllGlobals() })

@@ -1,3 +1,6 @@
+@use './selector';
+@use './settings';
+
 .outline-view {
   --outline-indent: 14px;
   --outline-row-block-padding: 5px;
@@ -10,7 +13,8 @@
   overflow: hidden;
   color: var(--text-color);
   background: var(--bg-color);
-  font-size: 13px;
+  // Match preview and dock while following the theme's root font scaling.
+  font-size: .8125rem;
 }
 
 .outline-view--compact {
@@ -82,114 +86,6 @@
   background: var(--item-hover-bg-color);
 }
 
-.outline-view__level-selector {
-  --outline-level-scale: 1;
-
-  box-sizing: border-box;
-  display: grid;
-  flex: 0 0 auto;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  padding: 7px 10px 8px;
-  border-bottom: 1px solid var(--base-border);
-}
-
-.outline-view__level-selector[data-level='1'] {
-  --outline-level-scale: 0;
-}
-
-.outline-view__level-selector[data-level='2'] {
-  --outline-level-scale: 0.2;
-}
-
-.outline-view__level-selector[data-level='3'] {
-  --outline-level-scale: 0.4;
-}
-
-.outline-view__level-selector[data-level='4'] {
-  --outline-level-scale: 0.6;
-}
-
-.outline-view__level-selector[data-level='5'] {
-  --outline-level-scale: 0.8;
-}
-
-.outline-view__level-track {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  padding: 2px 0;
-}
-
-.outline-view__level-track::before,
-.outline-view__level-track::after {
-  position: absolute;
-  right: 7px;
-  left: 7px;
-  height: 2px;
-  content: '';
-  pointer-events: none;
-}
-
-.outline-view__level-track::before {
-  background: var(--base-border);
-}
-
-.outline-view__level-track::after {
-  background: var(--active-file-border-color);
-  transform: scaleX(var(--outline-level-scale));
-  transform-origin: left;
-}
-
-.outline-view__level-stop {
-  position: relative;
-  z-index: 1;
-  box-sizing: border-box;
-  justify-self: center;
-  width: 14px;
-  height: 14px;
-  padding: 0;
-  cursor: pointer;
-  background: var(--base-border);
-  border: 2px solid var(--base-border);
-  border-radius: 50%;
-}
-
-.outline-view__level-stop[data-included='true'] {
-  background: var(--bg-color);
-  border-color: var(--active-file-border-color);
-}
-
-.outline-view__level-stop[aria-checked='true'] {
-  background: var(--active-file-border-color);
-  box-shadow: inset 0 0 0 2px var(--bg-color);
-}
-
-.outline-view__level-stop:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-}
-
-.outline-view__level-stop:focus-visible {
-  outline: 1px solid var(--active-file-border-color);
-  outline-offset: 2px;
-}
-
-.outline-view__level-value {
-  min-width: 5.2em;
-  color: var(--text-muted);
-  font-size: 10.5px;
-  line-height: 1;
-  text-align: right;
-  white-space: nowrap;
-}
-
 .outline-view__toolbar-button:focus-visible,
 .outline-view__config-button:focus-visible,
 .outline-view__disclosure:focus-visible,
@@ -205,18 +101,6 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-}
-
-.outline-view-settings
-  .typ-setting-item:has(> .typ-setting-controls.postfix > select)
-  > .typ-setting-info {
-  flex: 0 1 20rem;
-}
-
-.outline-view-settings
-  .typ-setting-item:has(> .typ-setting-controls.postfix > select)
-  > .typ-setting-controls.postfix {
-  margin-inline-start: 0.75rem;
 }
 
 .outline-view__tree,
@@ -288,8 +172,9 @@
   flex: 1 1 auto;
   padding: var(--outline-row-block-padding) 6px;
   overflow: hidden;
-  color: inherit;
+  color: var(--outline-heading-color, inherit);
   font: inherit;
+  font-weight: var(--outline-heading-weight, inherit);
   line-height: 1.4;
   text-align: left;
   cursor: pointer;

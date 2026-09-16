@@ -104,9 +104,7 @@ function levelStops(view: OutlineView) {
 }
 
 function selectedLevel(view: OutlineView) {
-  return levelStops(view).find(
-    (button) => button.getAttribute('aria-checked') === 'true',
-  )?.dataset.level
+  return view.containerEl.querySelector('.outline-view__level-selector')?.getAttribute('data-end')
 }
 
 afterEach(() => {
@@ -160,132 +158,76 @@ describe('OutlineView', () => {
     expect(view.containerEl.classList.contains('outline-view--wrap')).toBe(true)
   })
 
-  it('renders an accessible six-stop heading-level selector below the toolbar', () => {
-    document.body.innerHTML =
-      '<div id="write"><h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6></div>'
-    setHeadingTops([10, 110, 210, 310, 410, 510])
-    const { app } = createApp()
-    const view = new OutlineView({} as never, app as never)
-
-    view.onOpen()
-
-    const toolbar = view.containerEl.querySelector('.outline-view__toolbar')
-    const selector = view.containerEl.querySelector(
-      '[role="radiogroup"][aria-label="Maximum visible heading level"]',
-    )
-    const stops = levelStops(view)
-
-    expect(toolbar?.nextElementSibling).toBe(selector)
-    expect(stops).toHaveLength(6)
-    expect(stops.map(({ dataset }) => dataset.level)).toEqual([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-    ])
-    expect(stops.map((button) => button.getAttribute('aria-label'))).toEqual([
-      'Show through H1',
-      'Show through H2',
-      'Show through H3',
-      'Show through H4',
-      'Show through H5',
-      'Show through H6',
-    ])
-    expect(selectedLevel(view)).toBe('6')
-    expect(stops.map(({ tabIndex }) => tabIndex)).toEqual([-1, -1, -1, -1, -1, 0])
-    expect(
-      view.containerEl.querySelector('.outline-view__level-value')?.textContent,
-    ).toBe('Through H6')
-  })
-
-  it('filters the active document immediately when a level stop is selected', () => {
-    document.body.innerHTML =
-      '<div id="write"><h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6></div>'
-    setHeadingTops([10, 110, 210, 310, 410, 510])
+  it('renders six visual stops and two separately focusable endpoints', () => {
     const { app } = createApp()
     const view = new OutlineView({} as never, app as never)
     view.onOpen()
-
-    levelStops(view)[2].click()
-
-    expect(labels(view)).toEqual(['One', 'Two', 'Three'])
-    expect(selectedLevel(view)).toBe('3')
-    expect(
-      view.containerEl.querySelector('.outline-view__level-value')?.textContent,
-    ).toBe('Through H3')
-  })
-
-  it('supports arrow, Home, and End keys across enabled level stops', () => {
-    document.body.innerHTML =
-      '<div id="write"><h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6></div>'
-    setHeadingTops([10, 110, 210, 310, 410, 510])
-    const { app } = createApp()
-    const view = new OutlineView({} as never, app as never)
-    view.onOpen()
-
-    levelStops(view)[5].dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }),
-    )
-    expect(selectedLevel(view)).toBe('5')
-
-    levelStops(view)[4].dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Home', bubbles: true }),
-    )
-    expect(selectedLevel(view)).toBe('1')
-
-    levelStops(view)[0].dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'End', bubbles: true }),
-    )
+    const selector = view.containerEl.querySelector('[aria-label="Visible heading range"]')
+    expect(view.containerEl.querySelector('.outline-view__toolbar')?.nextElementSibling).toBe(selector)
+    expect(levelStops(view)).toHaveLength(6)
+    expect(selector?.querySelectorAll('[role="slider"]')).toHaveLength(2)
     expect(selectedLevel(view)).toBe('6')
+    expect(selector?.textContent).not.toContain('Through H')
   })
 
-  it('remembers independent maximum levels for documents during the session', () => {
-    vi.useFakeTimers()
-    document.body.innerHTML =
-      '<div id="write"><h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6></div>'
-    setHeadingTops([10, 110, 210, 310, 410, 510])
-    const { app, workspace } = createApp('doc.md')
-    const view = new OutlineView({} as never, app as never)
-    view.onOpen()
-
-    levelStops(view)[2].click()
-    workspace.activeFile = 'second.md'
-    workspace.emit('file:open')
-    vi.advanceTimersByTime(120)
-    expect(selectedLevel(view)).toBe('6')
-
-    levelStops(view)[4].click()
-    workspace.activeFile = 'doc.md'
-    workspace.emit('file:open')
-    vi.advanceTimersByTime(120)
-
-    expect(selectedLevel(view)).toBe('3')
-    expect(labels(view)).toEqual(['One', 'Two', 'Three'])
-  })
-
-  it('clamps document selection and disables stops below the minimum level', () => {
-    vi.useFakeTimers()
-    document.body.innerHTML =
-      '<div id="write"><h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6></div>'
-    setHeadingTops([10, 110, 210, 310, 410, 510])
+  it('filters both endpoints including a single-level range without changing saved defaults', () => {
+    document.body.innerHTML = '<div id="write"><h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5></div>'
     const { app } = createApp()
     const settings = new FakeSettings()
     const view = new OutlineView({} as never, app as never, settings as never)
     view.onOpen()
+    levelStops(view)[3].click()
+    view.containerEl.querySelector<HTMLButtonElement>('[data-handle="start"]')!.click()
     levelStops(view)[1].click()
-
-    settings.set('minHeadingLevel', 4)
-    vi.advanceTimersByTime(120)
-
-    const stops = levelStops(view)
-    expect(selectedLevel(view)).toBe('4')
-    expect(stops.slice(0, 3).every(({ disabled }) => disabled)).toBe(true)
-    expect(stops.slice(3).every(({ disabled }) => !disabled)).toBe(true)
+    expect(labels(view)).toEqual(['Two', 'Three', 'Four'])
+    levelStops(view)[3].click()
     expect(labels(view)).toEqual(['Four'])
-    stops[1].click()
-    expect(selectedLevel(view)).toBe('4')
+    expect(settings.get('minHeadingLevel')).toBe(1)
+    expect(settings.get('maxHeadingLevel')).toBe(6)
+  })
+
+  it('remembers both endpoints per file and applies new defaults after a settings range change', () => {
+    vi.useFakeTimers()
+    document.body.innerHTML = '<div id="write"><h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6></div>'
+    const { app, workspace } = createApp('doc.md')
+    const settings = new FakeSettings()
+    const view = new OutlineView({} as never, app as never, settings as never)
+    view.onOpen()
+    levelStops(view)[3].click()
+    view.containerEl.querySelector<HTMLButtonElement>('[data-handle="start"]')!.click()
+    levelStops(view)[1].click()
+    workspace.activeFile = 'second.md'
+    workspace.emit('file:open')
+    vi.advanceTimersByTime(120)
+    expect(labels(view)).toHaveLength(6)
+    workspace.activeFile = 'doc.md'
+    workspace.emit('file:open')
+    vi.advanceTimersByTime(120)
+    expect(labels(view)).toEqual(['Two', 'Three', 'Four'])
+    settings.set('minHeadingLevel', 3)
+    settings.set('maxHeadingLevel', 3)
+    vi.advanceTimersByTime(120)
+    expect(labels(view)).toEqual(['Three'])
+  })
+
+  it('updates selector presentation and heading appearance on settings changes', () => {
+    vi.useFakeTimers()
+    document.body.innerHTML = '<div id="write"><h1>One</h1></div>'
+    const { app } = createApp()
+    const settings = new FakeSettings()
+    const view = new OutlineView({} as never, app as never, settings as never)
+    view.onOpen()
+    settings.set('selectorStyle', 'bracket')
+    settings.set('selectorLabels', false)
+    settings.set('selectorColor', 'grayscale')
+    settings.set('headingStyles', { ...DEFAULT_OUTLINE_SETTINGS.headingStyles, 1: { ...DEFAULT_OUTLINE_SETTINGS.headingStyles[1], size: 150, bold: true, color: '#aabbcc' } })
+    vi.advanceTimersByTime(120)
+    expect(view.containerEl.querySelector<HTMLElement>('.outline-view__level-selector')!.dataset).toMatchObject({ style: 'bracket', labels: 'false', color: 'grayscale' })
+    expect(view.containerEl.querySelector<HTMLElement>('.outline-view__row')!.style.fontSize).toBe('150%')
+    expect(view.containerEl.querySelector<HTMLElement>('.outline-view__item')!.style.getPropertyValue('--outline-heading-color')).toBe('#aabbcc')
+    settings.set('showLevelSelector', false)
+    vi.advanceTimersByTime(120)
+    expect(view.containerEl.querySelector<HTMLElement>('.outline-view__level-selector')!.hidden).toBe(true)
   })
 
   it('preserves collapse choices for branches temporarily hidden by the selector', () => {

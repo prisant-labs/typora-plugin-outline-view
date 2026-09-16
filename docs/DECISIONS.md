@@ -122,3 +122,36 @@ scope and release checklist pass.
 
 **Why:** A Git tag should identify a releasable artifact, not the start of
 implementation.
+
+---
+
+## D015 (0.2.0 range): One shared two-endpoint selector
+
+**Decision:** Replace maximum-only filtering with start/end controls, allowing
+equal endpoints and clamping at the opposite endpoint. Use drag, click-to-arm,
+and separately focusable keyboard handles. At equality, drag direction selects
+which endpoint moves. Per-document ranges remain session-only; saved defaults
+are separate. Three display styles share the same behavior.
+
+**Why:** Direct manipulation stays predictable without automatic endpoint
+alternation or hidden range crossing rules.
+
+## D016 (0.2.0 appearance): Per-rank styles with live preview
+
+**Decision:** Use 50-250% size in 5% steps, independent tri-state theme/on/off
+emphasis, normal/uppercase/small-caps, and theme/custom native color input.
+Use the same outline renderer and range component in settings. Keep Markdown
+unchanged and retain active-heading accent/weight precedence.
+
+**Why:** Users can judge changes immediately; normalized defaults preserve old
+settings, theme inheritance, and a visible navigation cue.
+
+## D017 (0.2.0 release boundary): Tag separately from marketplace publication
+
+**Decision:** The user authorized completion, testing, integration, and the
+`0.2.0` tag. A tag identifies the verified code/package. Public release and
+marketplace submission remain subject to native platform smoke checks and
+repository publication approval. See [0.2.0 release notes](release/0.2.0.md).
+
+**Why:** Automated/browser component tests do not prove native macOS integration,
+and a Git tag alone is not a marketplace listing.

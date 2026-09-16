@@ -246,3 +246,26 @@ Before every release:
 - [ ] both archives are byte-identical and `plugin.zip` remains present
 - [ ] manifest version updated
 - [ ] README limitations accurate
+
+## 0.2.0 heading presentation regression checks
+
+- [ ] Drag either endpoint and use click-to-arm then click-level.
+- [ ] Test H2-H4, equality H3-H3, outward merged-handle drags, crossing clamps,
+      arrows/Home/End, Escape, pointer cancellation, and focus loss.
+- [ ] Switch documents during a drag and confirm subsequent movement cannot
+      change the new document's range; verify per-file ranges and default resets.
+- [ ] Check all three styles with labels on/off and theme/grayscale, hidden
+      selector, narrow dock widths, light/dark and a third-party theme.
+- [ ] Test all six size sliders/numbers including 50%, 250%, invalid input,
+      and no compounded nesting. Check B/I/U, case, native color picker, resets.
+- [ ] With custom color and Bold On/Off, the current heading remains identifiable.
+- [ ] Preview real headings and sample fallback; style changes show immediately
+      without closing settings, and Markdown remains untouched.
+- [ ] Close/reopen the settings modal without switching tabs: hidden preview
+      stays idle, reopening refreshes, and repeated cycles do not add listeners.
+- [ ] Test tab hide/plugin unload during a drag and pending refresh.
+- [ ] Recheck settings and dock-toggle SVG icons on macOS, including enable/unload.
+
+Automated/browser component coverage is not a substitute for installing the
+archive in native Typora. Record platform checks separately as described in
+[0.2.0 release notes](release/0.2.0.md).

@@ -1,3 +1,5 @@
+import { outlineIcon } from './icons'
+
 interface SettingsCommandApp {
   commands: {
     run(commandId: string): void
@@ -31,10 +33,18 @@ export function relabelRightDockToggle(root: ParentNode = document) {
 
   const originalHint = toggle.getAttribute('ty-hint')
   const originalLabel = toggle.getAttribute('aria-label')
+  const fontIcon = toggle.querySelector<HTMLElement>('.fa-align-right')!
+  const originalDisplay = fontIcon.style.display
+  fontIcon.style.display = 'none'
+  const icon = outlineIcon('dock')
+  icon.style.verticalAlign = 'middle'
+  toggle.append(icon)
   toggle.setAttribute('ty-hint', OUTLINE_DOCK_HINT)
   toggle.setAttribute('aria-label', OUTLINE_DOCK_HINT)
 
   return () => {
+    icon.remove()
+    fontIcon.style.display = originalDisplay
     if (originalHint === null) toggle.removeAttribute('ty-hint')
     else toggle.setAttribute('ty-hint', originalHint)
 

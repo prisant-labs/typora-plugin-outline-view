@@ -279,3 +279,22 @@ The user no longer needs to switch to Typora's native Outline sidebar during nor
 This plugin should not attempt to replace Typora Community Plugin's workspace system.
 
 It is a focused view that uses that system.
+
+## Approved 0.2.0 extension: heading presentation
+
+The heading-range selector has two endpoints with drag, click-to-arm then
+choose-level, and keyboard support. Keep `1 <= start <= end <= 6`, including
+equal endpoints. Both bounds are temporary per document; saved settings provide
+defaults. Offer Rail, Enclosure, and Bracket, all-label visibility, theme/grayscale,
+and an option to hide the selector.
+
+Each heading rank supports 50-250% size in 5% steps using a slider plus number
+field, independent bold/italic/underline, Normal/ALL CAPS/Small Caps, and theme
+or custom color via the native picker. Resets restore theme-friendly defaults.
+Font scaling is relative to a shared theme-root-based outline size and does not
+compound through the hierarchy. The active-heading cue remains visible.
+
+Settings include a live outline preview using the active document or fallback
+H1-H6 samples, beside controls at wide widths and below at narrow widths. Its
+renderer and selector are the production components. Changing presentation
+must never modify heading text, markup, or document contents.

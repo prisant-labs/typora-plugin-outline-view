@@ -36,20 +36,21 @@ describe('outline layout safeguards', () => {
   })
 
   it('keeps the heading-level selector fixed, contained, and theme-aware', async () => {
-    const source = await stylesheet()
+    const source = await readFile(new URL('./selector.scss', import.meta.url), 'utf8')
     const selector = rule(source, '.outline-view__level-selector')
     const track = rule(source, '.outline-view__level-track')
     const included = rule(
       source,
-      ".outline-view__level-stop[data-included='true']",
+      ".outline-view__level-stop[data-included='true'] .outline-view__level-mark",
     )
-    const focus = rule(source, '.outline-view__level-stop:focus-visible')
+    const focus = rule(source, '.outline-view__range-handle:focus-visible')
 
     expect(selector).toContain('flex: 0 0 auto')
     expect(selector).toContain('min-width: 0')
     expect(selector).toContain('width: 100%')
     expect(track).toContain('min-width: 0')
-    expect(included).toContain('--active-file-border-color')
-    expect(focus).toContain('--active-file-border-color')
+    expect(selector).toContain('--active-file-border-color')
+    expect(included).toContain('--range-accent')
+    expect(focus).toContain('--range-accent')
   })
 })
