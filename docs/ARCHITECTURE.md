@@ -416,3 +416,29 @@ move Typora's native #outline-content
 ```
 
 Use obgnail as UX/behavior reference only.
+
+## 0.2.0 shared presentation components
+
+- `outline/range-selector.ts` owns the two-endpoint DOM control. Pointer capture,
+  keyboard handling, range clamping, and display settings are shared by workspace
+  and preview. File switches and unload release active gestures.
+- `outline/appearance.ts` applies normalized per-rank styles. Row-local percent
+  sizing cannot compound into child lists. Weight/color custom properties allow
+  active-heading CSS to take precedence without erasing user settings.
+- `settings/preview.ts` reads `#write` or detached sample headings and calls the
+  same parser/tree/renderer as the workspace. Preview clicks never navigate or
+  mutate the editor. Preview range changes do not change saved defaults.
+- `settings/settings-tab.ts` persists through public `PluginSettings`. The tab
+  owns/disposes its subscriptions, debounce task, preview, and ResizeObserver.
+- `selector.scss` and `settings.scss` hold scoped presentation. Both outlines use
+  `.8125rem` as the theme-scaled base, avoiding the settings modal's different
+  inherited size. The selector uses active-file accent/fill or neutral colors.
+
+Core 2.10.21 calls `SettingTab.onhide` when switching tabs but not when simply
+closing the settings modal. The tab observes its own layout visibility and
+skips hidden rendering; reopening refreshes without requiring a fresh `onshow`.
+No private Modal access or additional editor observer is needed.
+
+`integration/icons.ts` creates font-independent SVG icons. Existing dock toggle
+tooltip/icon changes are reversible and do not replace the framework's action.
+If that framework element is absent, integration is a no-op; F1 Toggle remains.

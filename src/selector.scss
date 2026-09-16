@@ -1,0 +1,140 @@
+.outline-view__level-selector {
+  --range-accent: var(--active-file-border-color, var(--text-color, #555));
+  --range-fill: var(--active-file-bg-color, var(--item-hover-bg-color, #eee));
+  --range-neutral: var(--text-muted, #888);
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--base-border, #ddd);
+  user-select: none;
+}
+
+.outline-view__level-selector[hidden] { display: none; }
+.outline-view__level-selector[data-color='grayscale'] {
+  --range-accent: var(--text-color, #555);
+  --range-fill: var(--item-hover-bg-color, #eee);
+}
+.outline-view__level-selector * { box-sizing: border-box; }
+.outline-view__level-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  direction: ltr;
+}
+.outline-view__range-base,
+.outline-view__range-active,
+.outline-view__range-shape { position: absolute; pointer-events: none; }
+.outline-view__range-base,
+.outline-view__range-active {
+  top: 14px;
+  height: 2px;
+  background: var(--range-neutral);
+}
+.outline-view__range-base { left: 8.333333%; right: 8.333333%; opacity: .4; }
+.outline-view__range-active { left: var(--range-start); right: var(--range-end); background: var(--range-accent); opacity: .65; }
+.outline-view__range-shape { display: none; left: var(--range-left); right: var(--range-right); }
+.outline-view__level-stop,
+.outline-view__range-handle {
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+  touch-action: none;
+}
+.outline-view__level-stop { position: relative; z-index: 1; width: 100%; height: 100%; min-width: 0; }
+.outline-view__level-mark {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--range-neutral);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+.outline-view__level-stop[data-included='true'] .outline-view__level-mark { background: var(--range-accent); }
+.outline-view__level-stop.is-start .outline-view__level-mark,
+.outline-view__level-stop.is-end .outline-view__level-mark {
+  top: 8px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--bg-color, white);
+  box-shadow: 0 0 0 2px var(--range-accent);
+}
+.outline-view__level-label {
+  position: absolute;
+  top: 29px;
+  left: 0;
+  width: 100%;
+  color: var(--range-neutral);
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+}
+.outline-view__level-stop[data-included='true'] .outline-view__level-label { color: var(--text-color, #555); }
+.outline-view__level-stop.is-start .outline-view__level-label,
+.outline-view__level-stop.is-end .outline-view__level-label { font-weight: 700; }
+.outline-view__range-handle { position: absolute; z-index: 2; top: 0; width: 16.666667%; height: 100%; }
+.outline-view__range-handle.is-armed { z-index: 3; }
+.outline-view__range-handle:focus-visible {
+  outline: 1px solid var(--range-accent);
+  outline-offset: -1px;
+}
+.outline-view__range-handle.is-armed::after {
+  position: absolute;
+  bottom: 0;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--range-accent);
+  content: '';
+  opacity: .7;
+}
+// A single equal-range handle is visibly different from a simple endpoint.
+.outline-view__level-selector[data-merged='true'] .is-start .outline-view__level-mark {
+  box-shadow: 0 0 0 2px var(--range-accent), 0 0 0 3px var(--bg-color, white), 0 0 0 4px var(--range-accent);
+}
+.outline-view__range-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.outline-view__level-selector[data-labels='false'] {
+  .outline-view__level-track { height: 30px; }
+  .outline-view__level-label { display: none; }
+}
+.outline-view__level-selector[data-style='enclosure'] {
+  .outline-view__range-shape { display: block; top: 1px; bottom: 1px; border: 1px solid var(--range-accent); border-radius: 5px; background: var(--range-fill); }
+  .outline-view__range-base, .outline-view__range-active { top: 50%; transform: translateY(-50%); }
+  .outline-view__level-mark { top: 50%; transform: translate(-50%, -50%); }
+  &[data-labels='true'] {
+    .outline-view__range-shape { top: 9px; bottom: 9px; }
+    .outline-view__range-base, .outline-view__range-active, .outline-view__level-mark { display: none; }
+    .outline-view__level-label { top: 16px; font-size: 12px; }
+  }
+}
+.outline-view__level-selector[data-style='bracket'] {
+  .outline-view__level-track { height: 36px; }
+  .outline-view__range-shape { display: block; top: 24px; bottom: 2px; border: solid var(--range-accent); border-width: 0 2px 2px; }
+  &[data-labels='true'] {
+    .outline-view__range-base, .outline-view__range-active, .outline-view__level-mark { display: none; }
+    .outline-view__level-label { top: 5px; font-size: 12px; }
+  }
+  &[data-labels='false'] .outline-view__level-track { height: 38px; }
+}

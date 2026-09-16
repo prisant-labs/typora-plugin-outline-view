@@ -17,7 +17,6 @@ import {
   type RememberedCollapseState,
 } from '../outline/collapse'
 import type {
-  HeadingLevel,
   OutlineHeading,
   OutlineNode,
 } from '../outline/model'
@@ -28,11 +27,13 @@ import { createDebouncedTask } from '../outline/scheduler'
 import { buildOutlineTree, filterHeadings } from '../outline/tree'
 import { OUTLINE_VIEW_TYPE } from '../placement/right-dock'
 import {
-  DEFAULT_OUTLINE_SETTINGS,
-  HEADING_LEVEL_OPTIONS,
-  normalizeOutlineSettings,
+  readOutlineSettings,
   type OutlineSettings,
 } from '../settings/model'
+
+import { HeadingRangeSelector, type HeadingRange } from '../outline/range-selector'
+import { applyOutlineAppearance } from '../outline/appearance'
+import { outlineIcon } from '../integration/icons'
 
 const REFRESH_DELAY_MS = 120
 const ACTIVE_HEADING_DELAY_MS = 32
@@ -50,10 +51,9 @@ export class OutlineView extends WorkspaceView {
   icon = 'fa-list-ul'
 
   private readonly contentEl: HTMLElement
-  private readonly levelSelectorEl: HTMLElement
-  private readonly levelValueEl: HTMLElement
-  private readonly levelStops = new Map<HeadingLevel, HTMLButtonElement>()
-  private readonly maxLevelByFile = new Map<string, HeadingLevel>()
+  private readonly rangeSelector: HeadingRangeSelector
+  private readonly rangeByFile = new Map<string, HeadingRange>()
+  private renderedFileKey?: string
   private readonly collapseStateByFile = new Map<
     string,
     RememberedCollapseState
@@ -108,57 +108,29 @@ export class OutlineView extends WorkspaceView {
     settingsButton.dataset.action = 'open-settings'
     settingsButton.title = 'Configure Outline View'
     settingsButton.setAttribute('aria-label', 'Configure Outline View')
-    settingsButton.innerHTML =
-      '<span class="fa fa-cog" aria-hidden="true"></span>'
+    settingsButton.append(outlineIcon('settings'))
     settingsButton.addEventListener('click', () => this.onOpenSettings())
     toolbar.append(toolbarSpacer, settingsButton)
 
-    this.levelSelectorEl = document.createElement('div')
-    this.levelSelectorEl.className = 'outline-view__level-selector'
-    this.levelSelectorEl.dataset.level = '6'
-    this.levelSelectorEl.setAttribute('role', 'radiogroup')
-    this.levelSelectorEl.setAttribute(
-      'aria-label',
-      'Maximum visible heading level',
-    )
-
-    const levelTrack = document.createElement('div')
-    levelTrack.className = 'outline-view__level-track'
-
-    for (const level of HEADING_LEVEL_OPTIONS) {
-      const stop = document.createElement('button')
-      stop.className = 'outline-view__level-stop'
-      stop.type = 'button'
-      stop.dataset.level = String(level)
-      stop.dataset.included = 'true'
-      stop.setAttribute('role', 'radio')
-      stop.setAttribute('aria-label', `Show through H${level}`)
-      stop.title = `Show through H${level}`
-      stop.addEventListener('click', () => this.selectMaximumLevel(level))
-      stop.addEventListener('keydown', (event) =>
-        this.onLevelStopKeydown(event, level),
-      )
-      this.levelStops.set(level, stop)
-      levelTrack.append(stop)
-    }
-
-    this.levelValueEl = document.createElement('span')
-    this.levelValueEl.className = 'outline-view__level-value'
-    this.levelValueEl.setAttribute('aria-live', 'polite')
-    this.levelValueEl.textContent = 'Through H6'
-    this.levelSelectorEl.append(levelTrack, this.levelValueEl)
+    this.rangeSelector = new HeadingRangeSelector(range => {
+      this.rangeByFile.set(this.renderedFileKey ?? this.activeFileKey(), range)
+      this.refresh()
+    })
 
     this.contentEl = document.createElement('div')
     this.contentEl.className = 'outline-view__content'
 
-    this.containerEl.append(toolbar, this.levelSelectorEl, this.contentEl)
+    this.containerEl.append(toolbar, this.rangeSelector.element, this.contentEl)
   }
 
   onOpen() {
     this.refresh()
 
     this.register(
-      this.app.workspace.on('file:open', this.refreshTask.schedule),
+      this.app.workspace.on('file:open', () => {
+        this.rangeSelector.endGesture()
+        this.refreshTask.schedule()
+      }),
     )
     this.register(
       this.app.features.markdownEditor.on('load', this.refreshTask.schedule),
@@ -175,21 +147,29 @@ export class OutlineView extends WorkspaceView {
     if (this.settings) {
       this.register(
         this.settings.onChange('*', (key) => {
+          if (key === 'minHeadingLevel' || key === 'maxHeadingLevel') {
+            this.rangeSelector.endGesture()
+            this.rangeByFile.clear()
+          }
           if (key === 'expandThroughLevel') this.collapseStateByFile.clear()
           this.refreshTask.schedule()
         }),
       )
     }
+    this.register(() => this.rangeSelector.destroy())
     this.register(this.refreshTask.cancel)
     this.register(this.activeHeadingTask.cancel)
   }
 
   refresh() {
+    const fileKey = this.activeFileKey()
+    if (fileKey !== this.renderedFileKey) this.rangeSelector.endGesture()
+    this.renderedFileKey = fileKey
     const editor = document.querySelector<HTMLElement>('#write')
-    this.applyAppearance()
     const settings = this.currentSettings()
-    const maximumHeadingLevel = this.effectiveMaximumLevel(settings)
-    this.syncLevelSelector(settings.minHeadingLevel, maximumHeadingLevel)
+    applyOutlineAppearance(this.containerEl, settings)
+    const range = this.rangeByFile.get(this.activeFileKey()) ?? { start: settings.minHeadingLevel, end: settings.maxHeadingLevel }
+    this.rangeSelector.update(range, settings)
 
     if (!editor) {
       this.fullTree = []
@@ -204,8 +184,8 @@ export class OutlineView extends WorkspaceView {
     this.fullTree = buildOutlineTree(parsedHeadings)
     this.headings = filterHeadings(
       parsedHeadings,
-      settings.minHeadingLevel,
-      maximumHeadingLevel,
+      range.start,
+      range.end,
     )
     this.tree = buildOutlineTree(this.headings)
     this.emptyMessage =
@@ -213,7 +193,6 @@ export class OutlineView extends WorkspaceView {
         ? 'No headings match the current level settings.'
         : 'No headings in this document.'
 
-    const fileKey = this.activeFileKey()
     const remembered = settings.rememberCollapseState
       ? this.collapseStateByFile.get(fileKey)
       : undefined
@@ -262,98 +241,8 @@ export class OutlineView extends WorkspaceView {
     return button
   }
 
-  private effectiveMaximumLevel(settings: OutlineSettings) {
-    const fileKey = this.activeFileKey()
-    const override = this.maxLevelByFile.get(fileKey)
-
-    if (override !== undefined && override < settings.minHeadingLevel) {
-      this.maxLevelByFile.set(fileKey, settings.minHeadingLevel)
-      return settings.minHeadingLevel
-    }
-
-    return override ?? settings.maxHeadingLevel
-  }
-
-  private selectMaximumLevel(level: HeadingLevel) {
-    if (level < this.currentSettings().minHeadingLevel) return
-    this.maxLevelByFile.set(this.activeFileKey(), level)
-    this.refresh()
-  }
-
-  private syncLevelSelector(
-    minimum: HeadingLevel,
-    maximum: HeadingLevel,
-  ) {
-    this.levelSelectorEl.dataset.level = String(maximum)
-    this.levelValueEl.textContent = `Through H${maximum}`
-
-    for (const [level, stop] of this.levelStops) {
-      const selected = level === maximum
-      const disabled = level < minimum
-      stop.disabled = disabled
-      stop.dataset.included = String(level <= maximum)
-      stop.setAttribute('aria-checked', String(selected))
-      stop.setAttribute('aria-disabled', String(disabled))
-      stop.tabIndex = selected ? 0 : -1
-    }
-  }
-
-  private onLevelStopKeydown(event: KeyboardEvent, level: HeadingLevel) {
-    const enabledLevels = HEADING_LEVEL_OPTIONS.filter(
-      (candidate) => candidate >= this.currentSettings().minHeadingLevel,
-    )
-    const currentIndex = enabledLevels.indexOf(level)
-    let target: HeadingLevel | undefined
-
-    if (event.key === 'Home') target = enabledLevels[0]
-    else if (event.key === 'End') target = enabledLevels.at(-1)
-    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      target = enabledLevels[Math.max(0, currentIndex - 1)]
-    } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      target = enabledLevels[Math.min(enabledLevels.length - 1, currentIndex + 1)]
-    } else return
-
-    if (target === undefined) return
-    event.preventDefault()
-    this.selectMaximumLevel(target)
-    this.levelStops.get(target)?.focus()
-  }
-
   private currentSettings() {
-    if (!this.settings) return { ...DEFAULT_OUTLINE_SETTINGS }
-
-    return normalizeOutlineSettings({
-      autoOpen: this.settings.get('autoOpen'),
-      followActiveHeading: this.settings.get('followActiveHeading'),
-      autoScrollOutline: this.settings.get('autoScrollOutline'),
-      rememberCollapseState: this.settings.get('rememberCollapseState'),
-      wrapHeadingLabels: this.settings.get('wrapHeadingLabels'),
-      minHeadingLevel: this.settings.get('minHeadingLevel'),
-      maxHeadingLevel: this.settings.get('maxHeadingLevel'),
-      expandThroughLevel: this.settings.get('expandThroughLevel'),
-      density: this.settings.get('density'),
-      indentation: this.settings.get('indentation'),
-    })
-  }
-
-  private applyAppearance() {
-    const { density, indentation } = this.currentSettings()
-    this.containerEl.classList.remove(
-      'outline-view--compact',
-      'outline-view--comfortable',
-      'outline-view--indent-small',
-      'outline-view--indent-medium',
-      'outline-view--indent-large',
-      'outline-view--wrap',
-      'outline-view--truncate',
-    )
-    this.containerEl.classList.add(
-      `outline-view--${density}`,
-      `outline-view--indent-${indentation}`,
-      this.currentSettings().wrapHeadingLabels
-        ? 'outline-view--wrap'
-        : 'outline-view--truncate',
-    )
+    return readOutlineSettings(this.settings)
   }
 
   private activeFileKey() {
@@ -382,6 +271,7 @@ export class OutlineView extends WorkspaceView {
       collapsedKeys: this.collapsedKeys,
       activeKey: this.activeKey,
       emptyMessage: this.emptyMessage,
+      headingStyles: this.currentSettings().headingStyles,
       onNavigate: navigateToHeading,
       onToggle: (node) => this.toggleBranch(node),
     })

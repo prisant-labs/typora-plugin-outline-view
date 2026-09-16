@@ -95,7 +95,7 @@ This keeps the plugin independent from Typora's left-sidebar state machine and m
 
 ## Current status
 
-**0.1.0 release candidate implemented**
+**0.2.0 - heading range, appearance, and live preview**
 
 A previous validation spike proved out the intended approach conceptually:
 
@@ -120,14 +120,17 @@ The current development build provides:
 - expand-all and collapse-all commands and toolbar controls
 - compact Collapse all and Expand all toolbar links
 - a toolbar shortcut to the Outline View settings tab
-- a six-stop H1-H6 depth selector with per-document session memory
+- a two-endpoint H1-H6 range selector with per-document session memory
+- Rail, Enclosure, and Bracket selector styles, optional labels, theme or grayscale colors
+- per-heading size, bold, italic, underline, ALL CAPS / Small Caps, and custom colors
+- live settings preview using the active document or sample headings
 - live heading-range, density, and indentation settings
 - configurable heading wrapping, enabled by default
 - optional auto-open
 - unload cleanup and duplicate-view protection
 
-The marketplace package is prepared. Final visual verification and the release
-tag remain before publishing `0.1.0`.
+See [0.2.0 release notes](docs/release/0.2.0.md) for the scope and validation
+boundary. A version tag does not by itself publish the marketplace listing.
 
 ## Settings
 
@@ -146,6 +149,8 @@ Defaults:
 - Density - Comfortable
 - Indentation - Medium
 - Wrap long heading labels - On
+- Heading-level selector - On, Rail, H1-H6 labels, Theme colors
+- Heading styles - 100%, inherited emphasis and color, Normal case
 
 Community Plugin stores the vault-local configuration at
 `.typora/data/prisant-labs.outline-view.json`. With global settings enabled, the
@@ -158,18 +163,36 @@ Available F1 commands:
 - **Outline View: Expand All**
 - **Outline View: Collapse All**
 
-The outline toolbar provides the same collapse/expand actions and a gear button
+The outline toolbar provides the same collapse/expand actions and a settings button
 that opens **Community Plugins → Outline View** directly. While Outline View is
 enabled, the Community Plugin right-dock control is labeled **Toggle outline
 sidebar**.
 
-Directly beneath the toolbar, the six-stop heading-depth selector changes the
-deepest heading level shown in the active document. For example, selecting H3
-shows H1, H2, and H3 headings while hiding H4-H6. Each document remembers its
-selection for the current Typora session. A document without a session override
-starts from the **Maximum heading level** setting, and using the selector does
-not change that global default. The stops support clicking plus arrow, Home, and
-End keys; stops below the configured minimum heading level are disabled.
+Directly beneath the toolbar, the range selector chooses both the first and last
+heading levels to show, such as H2-H4. Drag either endpoint, or click an endpoint
+and then a level. A small underline marks the selected endpoint. Tab between the
+two handles and use arrows, Home, or End with a keyboard. The endpoints stop at
+one another instead of crossing. An equal range shows one heading level; drag
+the shared handle left to move the start, right to move the end, or click it to
+switch the selected endpoint. Escape cancels a drag.
+
+Each document remembers both endpoints for this session only. New documents use
+the Minimum/Maximum settings. Changing those defaults resets temporary ranges.
+You can hide the selector, choose Rail/Enclosure/Bracket, hide all H1-H6 labels
+for dots only, and use theme or grayscale colors. Theme uses the active-file
+accent and background; grayscale uses neutral text and hover colors.
+
+Under **Heading styles**, each H1-H6 has a 50-250% size slider and number field
+(5% steps), independent B/I/U controls, Normal / ALL CAPS / Small Caps, and Theme
+or a native custom-color picker. B/I/U cycle Theme, On, Off. Sizes are relative
+to the theme-scaled outline base, not compounded by nesting. Reset a level or
+all levels at once. The active heading retains its theme highlight even when
+custom colors or bold settings are used. Case and style never change Markdown.
+
+The live preview stays beside settings when space allows and moves below on
+narrow layouts. It uses your document, with sample H1-H6 headings available at
+any time and automatically when there is no document outline. Preview range
+changes are temporary; save defaults with Minimum/Maximum heading level.
 
 ## Recommended development baseline
 
@@ -236,8 +259,8 @@ The Community Plugin installer requires the GitHub release asset to be named
 
 After the smoke test passes:
 
-1. Create and push the `0.1.0` tag.
-2. Create a public GitHub release named `0.1.0` for that tag.
+1. Verify the `0.2.0` tag identifies the tested commit.
+2. Create a public GitHub release named `0.2.0` for that tag after publication approval.
 3. Upload `plugin.zip` to the release. The branded archive may be uploaded too.
 4. Fork `typora-community-plugin/typora-plugin-releases`.
 5. Add the Outline View entry to `community-plugins.json` and open a pull request.
@@ -264,9 +287,10 @@ Typora, open Community Plugin settings, and enable **Outline View** under
 - Outline View reads Typora's rendered `#write` document. In source mode, where
   that rendered document may be unavailable, the outline shows its unavailable
   state rather than attempting to parse the raw source editor.
-- Windows is verified for the `0.1.0` release candidate. macOS is enabled for
-  testing but remains unverified until the Mac smoke test passes. Linux is not
-  yet listed in the manifest.
+- The earlier baseline was tested on Windows, and macOS functionality was
+  user-confirmed with a small toggle-icon issue. The new 0.2.0 controls have
+  automated and Chromium component coverage; native Windows/macOS 0.2.0 smoke
+  tests remain necessary before marketplace publication. Linux is not listed.
 
 ## Documentation
 

@@ -68,7 +68,7 @@ packaged plugin on Linux.
 
 ## Release readiness
 
-Before `0.1.0`:
+Before publishing `0.2.0` to the marketplace (tagging is a separate step):
 
 - plugin builds in production mode
 - manifest is correct
@@ -102,10 +102,10 @@ The public README should eventually contain:
 ## Publishing sequence
 
 1. Complete the automated release gate and Windows Typora smoke test.
-2. Create annotated tag `0.1.0` on the verified release commit.
+2. Create annotated tag `0.2.0` on the verified release commit.
 3. Push the release commit and tag to the public GitHub repository.
 4. Run `pnpm run pack`.
-5. Create a GitHub release for tag `0.1.0`, named `0.1.0`.
+5. Create a GitHub release for tag `0.2.0`, named `0.2.0`.
 6. Upload `plugin.zip` to the release.
 7. Optionally upload `plugin_typora-outline-view.zip` for direct distribution.
 8. Fork `typora-community-plugin/typora-plugin-releases`.
@@ -155,8 +155,9 @@ essential settings, accessibility, and stability work.
 
 ### `0.2.x`
 
-Post-launch improvements such as filter/search, additional customization, and
-other validated enhancements.
+Heading-range selection, per-heading typography/colors, and live settings
+preview. Search/filter remains deferred. See [0.2.0 notes](release/0.2.0.md)
+for validation limits and the remaining native-platform checks.
 
 ### `1.0.0`
 

@@ -1,5 +1,7 @@
 import type { OutlineHeading, OutlineNode } from './model'
 import { buildOutlineTree } from './tree'
+import type { HeadingStyles } from '../settings/model'
+import { applyHeadingAppearance } from './appearance'
 
 export type NavigateHandler = (heading: OutlineHeading) => void
 
@@ -7,6 +9,7 @@ export interface RenderOutlineOptions {
   collapsedKeys: ReadonlySet<string>
   activeKey?: string
   emptyMessage?: string
+  headingStyles?: HeadingStyles
   onNavigate: NavigateHandler
   onToggle(node: OutlineNode): void
 }
@@ -73,6 +76,7 @@ function renderNodes(
     button.setAttribute('aria-level', String(depth))
     button.title = node.text
     button.textContent = node.text
+    if (options.headingStyles) applyHeadingAppearance(row, button, options.headingStyles[node.level])
     if (node.children.length > 0) {
       button.setAttribute(
         'aria-expanded',

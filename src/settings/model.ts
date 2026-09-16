@@ -3,6 +3,41 @@ import type { HeadingLevel } from '../outline/model'
 export const HEADING_LEVEL_OPTIONS = [1, 2, 3, 4, 5, 6] as const
 export const DENSITY_OPTIONS = ['compact', 'comfortable'] as const
 export const INDENTATION_OPTIONS = ['small', 'medium', 'large'] as const
+export const SELECTOR_STYLES = ['rail', 'enclosure', 'bracket'] as const
+export const CASING_OPTIONS = ['normal', 'uppercase', 'small-caps'] as const
+
+export interface HeadingAppearance {
+  size: number
+  bold: boolean | null
+  italic: boolean | null
+  underline: boolean | null
+  casing: (typeof CASING_OPTIONS)[number]
+  color: string | null
+}
+
+export type HeadingStyles = Record<HeadingLevel, HeadingAppearance>
+
+export function defaultHeadingAppearance(): HeadingAppearance {
+  return { size: 100, bold: null, italic: null, underline: null, casing: 'normal', color: null }
+}
+
+function normalizeHeadingStyles(value: unknown): HeadingStyles {
+  const records = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+  return Object.fromEntries(HEADING_LEVEL_OPTIONS.map(level => {
+    const candidate = records[level]
+    const raw = candidate && typeof candidate === 'object' ? candidate as Record<string, unknown> : {}
+    return [level, {
+      size: typeof raw.size === 'number' && Number.isFinite(raw.size)
+        ? Math.max(50, Math.min(250, Math.round(raw.size / 5) * 5)) : 100,
+      bold: typeof raw.bold === 'boolean' ? raw.bold : null,
+      italic: typeof raw.italic === 'boolean' ? raw.italic : null,
+      underline: typeof raw.underline === 'boolean' ? raw.underline : null,
+      casing: isOption(raw.casing, CASING_OPTIONS) ? raw.casing : 'normal',
+      color: typeof raw.color === 'string' && /^#[0-9a-f]{6}$/i.test(raw.color)
+        ? raw.color.toLowerCase() : null,
+    }]
+  })) as HeadingStyles
+}
 
 export type OutlineDensity = (typeof DENSITY_OPTIONS)[number]
 export type OutlineIndentation = (typeof INDENTATION_OPTIONS)[number]
@@ -18,6 +53,11 @@ export interface OutlineSettings {
   expandThroughLevel: HeadingLevel
   density: OutlineDensity
   indentation: OutlineIndentation
+  showLevelSelector: boolean
+  selectorStyle: (typeof SELECTOR_STYLES)[number]
+  selectorLabels: boolean
+  selectorColor: 'theme' | 'grayscale'
+  headingStyles: HeadingStyles
 }
 
 export const DEFAULT_OUTLINE_SETTINGS: Readonly<OutlineSettings> = {
@@ -31,6 +71,11 @@ export const DEFAULT_OUTLINE_SETTINGS: Readonly<OutlineSettings> = {
   expandThroughLevel: 3,
   density: 'comfortable',
   indentation: 'medium',
+  showLevelSelector: true,
+  selectorStyle: 'rail',
+  selectorLabels: true,
+  selectorColor: 'theme',
+  headingStyles: normalizeHeadingStyles(undefined),
 }
 
 function isOption<T>(value: unknown, options: readonly T[]): value is T {
@@ -62,6 +107,11 @@ export function normalizeOutlineSettings(
   ) as HeadingLevel
 
   return {
+    showLevelSelector: booleanOrDefault(value.showLevelSelector, true),
+    selectorStyle: isOption(value.selectorStyle, SELECTOR_STYLES) ? value.selectorStyle : 'rail',
+    selectorLabels: booleanOrDefault(value.selectorLabels, true),
+    selectorColor: value.selectorColor === 'grayscale' ? 'grayscale' : 'theme',
+    headingStyles: normalizeHeadingStyles(value.headingStyles),
     autoOpen: booleanOrDefault(
       value.autoOpen,
       DEFAULT_OUTLINE_SETTINGS.autoOpen,
@@ -97,4 +147,11 @@ export function normalizeOutlineSettings(
       ? value.indentation
       : DEFAULT_OUTLINE_SETTINGS.indentation,
   }
+}
+
+export function readOutlineSettings(store?: { get(key: keyof OutlineSettings): unknown }): OutlineSettings {
+  if (!store) return normalizeOutlineSettings()
+  return normalizeOutlineSettings(Object.fromEntries(
+    Object.keys(DEFAULT_OUTLINE_SETTINGS).map(key => [key, store.get(key as keyof OutlineSettings)]),
+  ))
 }

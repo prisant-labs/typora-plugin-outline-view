@@ -35,7 +35,9 @@ export default class OutlinePlugin extends Plugin<OutlineSettings> {
     )
     settings.setDefault(DEFAULT_OUTLINE_SETTINGS)
     this.registerSettings(settings)
-    this.registerSettingTab(new OutlineSettingsTab(this))
+    const settingsTab = new OutlineSettingsTab(this, this.app)
+    this.registerSettingTab(settingsTab)
+    this.register(() => settingsTab.onhide())
     this.register(relabelRightDockToggle())
 
     this.register(

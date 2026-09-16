@@ -276,3 +276,16 @@ For each phase:
 8. move to next phase only after exit criteria pass
 
 Do not ask an agent to implement the entire roadmap in one unreviewed pass.
+
+## 0.2.0 approved feature slice
+
+1. Normalize/migrate new selector and per-heading appearance settings.
+2. Share two-endpoint range logic between dock and settings preview; verify drag,
+   click, keyboard, equality, cancellation, per-file memory, and cleanup.
+3. Add theme-aware display variants and per-rank typography/color controls with
+   native live preview and resets. Preserve active-heading navigation cues.
+4. Run focused and full tests, typecheck, production build, archive inspection,
+   browser interaction checks, and independent review.
+5. Integrate through a PR after green CI; tag the verified integration `0.2.0`.
+   Keep public marketplace publication distinct from tagging; see
+   [release validation boundary](release/0.2.0.md).

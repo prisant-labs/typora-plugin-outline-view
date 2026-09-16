@@ -42,11 +42,15 @@ describe('Community Plugin UI integration', () => {
     expect(dock.getAttribute('ty-hint')).toBe('Toggle outline sidebar')
     expect(dock.getAttribute('aria-label')).toBe('Toggle outline sidebar')
     expect(other.getAttribute('ty-hint')).toBe('Another action')
+    expect(dock.querySelector('svg')).not.toBeNull()
+    expect(dock.querySelector<HTMLElement>('i')!.style.display).toBe('none')
 
     restore()
 
     expect(dock.getAttribute('ty-hint')).toBe('Toggle right sidebar')
     expect(dock.getAttribute('aria-label')).toBe('Toggle right sidebar')
+    expect(dock.querySelector('svg')).toBeNull()
+    expect(dock.querySelector<HTMLElement>('i')!.style.display).toBe('')
   })
 
   it('recognizes the core dock button when its tooltip is localized', () => {
