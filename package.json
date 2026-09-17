@@ -33,7 +33,7 @@
     "@rollup/plugin-terser": "1.0.0",
     "@rollup/plugin-typescript": "^11.1.5",
     "@rollup/plugin-virtual": "^3.0.2",
-    "@types/jquery": "^3.5.32",
+    "@types/jquery": "^4.0.1",
     "@types/node": "^22.10.1",
     "@typora-community-plugin/core": "2.10.21",
     "archiver": "^7.0.1",
