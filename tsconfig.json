@@ -25,6 +25,7 @@
   },
   "include": [
     "src/**/*.ts",
+    "prototype/**/*.ts",
     "vitest.config.ts"
   ]
 }

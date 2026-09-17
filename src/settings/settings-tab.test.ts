@@ -36,6 +36,91 @@ function settingRow(tab: OutlineSettingsTab, name: string) {
 }
 
 describe('OutlineSettingsTab', () => {
+  it('hides theme color swatches, shows custom color, and hides them again on reset', () => {
+    const { tab } = createTab()
+    const row = tab.containerEl.querySelector('[data-appearance-level="1"]')!
+    const color = row.querySelector<HTMLInputElement>('[data-field="color"]')!
+    const mode = row.querySelector<HTMLSelectElement>('[data-field="color-mode"]')!
+    expect(color.hidden).toBe(true)
+    expect(color.disabled).toBe(true)
+    mode.value = 'custom'
+    mode.dispatchEvent(new Event('change'))
+    expect(color.hidden).toBe(false)
+    expect(color.disabled).toBe(false)
+    row.querySelector<HTMLButtonElement>('[data-action="reset-level"]')!.click()
+    expect(color.hidden).toBe(true)
+    expect(mode.value).toBe('theme')
+    tab.onhide()
+  })
+
+  it('exposes distinct automatic, on, and off emphasis states without changing the cycle', () => {
+    const { tab } = createTab()
+    const button = tab.containerEl.querySelector<HTMLButtonElement>('[data-field="bold"]')!
+    expect(button.dataset.state).toBe('theme')
+    expect(button.getAttribute('aria-pressed')).toBe('mixed')
+    button.click()
+    expect(button.dataset.state).toBe('on')
+    expect(button.getAttribute('aria-pressed')).toBe('true')
+    button.click()
+    expect(button.dataset.state).toBe('off')
+    button.click()
+    expect(button.dataset.state).toBe('theme')
+    tab.onhide()
+  })
+
+  it('provides section links that scroll and focus the target without changing settings', () => {
+    const { tab, settings } = createTab()
+    document.body.append(tab.containerEl)
+    const nav = tab.containerEl.querySelector('nav[aria-label="Outline View settings sections"]')
+    expect(nav).not.toBeNull()
+    const links = Array.from(nav!.querySelectorAll('a'))
+    expect(links.map(link => link.textContent)).toEqual(['General', 'Behavior', 'Structure', 'Appearance', 'Selector', 'Heading styles'])
+    const target = tab.containerEl.querySelector<HTMLElement>('#outline-settings-heading-styles')!
+    target.scrollIntoView = vi.fn()
+    links[5].click()
+    expect(target.scrollIntoView).toHaveBeenCalledWith({ block: 'start', behavior: 'instant' })
+    expect(document.activeElement).toBe(target)
+    expect(links[5].getAttribute('aria-current')).toBe('location')
+    expect(links.filter(link => link.hasAttribute('aria-current'))).toHaveLength(1)
+    expect(settings.get('headingStyles')).toEqual(DEFAULT_OUTLINE_SETTINGS.headingStyles)
+    tab.onhide()
+    tab.onshow()
+    expect(tab.containerEl.querySelectorAll('nav')).toHaveLength(1)
+    tab.onhide()
+  })
+
+  it('removes section scroll tracking and cancels queued work when hidden', () => {
+    const remove = vi.spyOn(document, 'removeEventListener')
+    const cancel = vi.spyOn(window, 'cancelAnimationFrame')
+    const frame = vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(42)
+    const { tab } = createTab()
+    document.dispatchEvent(new Event('scroll'))
+    expect(frame).toHaveBeenCalled()
+    tab.onhide()
+    expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function), true)
+    expect(cancel).toHaveBeenCalledWith(42)
+  })
+
+  it('marks the last section current at the bottom even when it cannot reach the sticky bar', () => {
+    const { tab } = createTab()
+    const scroll = document.createElement('div')
+    scroll.style.overflowY = 'auto'
+    scroll.append(tab.containerEl)
+    document.body.append(scroll)
+    Object.defineProperties(scroll, { scrollHeight: { value: 1800 }, clientHeight: { value: 800 } })
+    scroll.scrollTop = 1000
+    tab.containerEl.getClientRects = () => ({ length: 1 }) as DOMRectList
+    tab.containerEl.querySelector('nav')!.getBoundingClientRect = () => ({ bottom: 53 }) as DOMRect
+    tab.containerEl.querySelectorAll('section.outline-view-settings__section').forEach((section, index) => {
+      section.getBoundingClientRect = () => ({ top: index === 5 ? 200 : -500 + index * 100 }) as DOMRect
+    })
+    let frame!: FrameRequestCallback
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => { frame = callback; return 1 })
+    scroll.dispatchEvent(new Event('scroll'))
+    frame(0)
+    expect(tab.containerEl.querySelector('nav [aria-current]')!.textContent).toBe('Heading styles')
+    tab.onhide()
+  })
   it('refreshes after modal reopen even when core does not call onshow again', () => {
     let resized!: () => void
     const disconnect = vi.fn()

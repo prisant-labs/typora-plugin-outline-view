@@ -20,6 +20,8 @@ function copyManifest() {
     name: 'copy-manifest',
     async writeBundle() {
       await fs.copyFile('./src/manifest.json', './dist/manifest.json')
+      await fs.copyFile('./LICENSE.md', './dist/LICENSE.md')
+      await fs.copyFile('./THIRD-PARTY-NOTICES.md', './dist/THIRD-PARTY-NOTICES.md')
     },
   }
 }

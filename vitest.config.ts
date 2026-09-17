@@ -10,6 +10,8 @@ export default defineConfig({
     },
   },
   test: {
+    // Bound concurrent jsdom startup on developer laptops and hosted runners.
+    maxWorkers: 2,
     environment: 'jsdom',
     restoreMocks: true,
   },

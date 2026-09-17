@@ -155,3 +155,26 @@ repository publication approval. See [0.2.0 release notes](release/0.2.0.md).
 
 **Why:** Automated/browser component tests do not prove native macOS integration,
 and a Git tag alone is not a marketplace listing.
+
+## D018 (settings reference): Generate the prototype from production
+
+**Decision:** Keep `docs/prototype/settings.html` as a tracked offline artifact
+generated from production settings/outline components and pinned core CSS. CI
+compares deterministic regeneration and fails if the reference is stale. Adapt
+only the host services and synthetic document/theme environment; never copy the
+product settings markup into a second implementation.
+
+**Why:** Design review should reflect the code being shipped. A fabricated CSS
+token in the earlier browser harness masked missing native control borders.
+Browser checks complement, but do not replace, native platform/theme validation.
+
+## D019 (settings navigation): Keep section navigation inside the plugin tab
+
+**Decision:** Use sticky section links with keyboard focus and current-section
+feedback. The live preview stays beside controls at wide widths and above them
+as a compact sticky card at narrow widths. Restore bounded select-label columns
+and inherit supported core border/theme colors with fallbacks. Preserve the
+existing Theme/On/Off emphasis semantics while making the three states distinct.
+
+**Why:** This keeps the preview accessible without adding another settings
+sidebar column or changing host-owned navigation internals.

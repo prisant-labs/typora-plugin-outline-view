@@ -1,5 +1,8 @@
 # Release Scripts
 
-Place repeatable, non-secret release validation and packaging helpers here.
-Scripts must be safe to run from a clean checkout and must not embed local
-paths, credentials, or account-specific values.
+The current validation helper is [`../release.mjs`](../release.mjs), exposed as
+`pnpm release:check`. Packaging uses the root `pack.js` through `pnpm run pack`.
+Both are exercised on Linux and Windows CI. Neither publishes or creates tags.
+
+See the [release runbook](../../docs/MARKETPLACE-RELEASE.md) for the full sequence.
+Keep scripts free of local paths, credentials, and account-specific values.

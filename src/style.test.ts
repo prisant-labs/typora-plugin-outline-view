@@ -14,6 +14,17 @@ function rule(source: string, selector: string) {
 }
 
 describe('outline layout safeguards', () => {
+  it('keeps setting selects close and contains preview using host-safe border colors', async () => {
+    const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
+    expect(source).toContain('flex: 0 1 20rem')
+    expect(source).toContain('--typ-border-color')
+    expect(source).not.toContain('--base-border')
+    expect(rule(source, '.outline-view-settings__preview')).toContain('border: 1px solid var(--settings-border)')
+    expect(rule(source, '.outline-view-settings__nav')).toContain('position: sticky')
+    expect(source).not.toContain('border-style: dashed')
+    expect(rule(source, ".outline-view-settings__heading-style button[aria-pressed='true']")).toContain('color: var(--settings-on-text)')
+    expect(rule(source, ".outline-view-settings__heading-style button[aria-pressed='true']")).toContain('background: var(--settings-on-bg)')
+  })
   it('keeps the outline viewport vertical-only and constrains nested lists', async () => {
     const source = (await stylesheet()).replace(/\r?\n/g, '\r\n')
     const content = rule(source, '.outline-view__content')

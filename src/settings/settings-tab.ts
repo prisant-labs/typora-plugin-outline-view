@@ -53,7 +53,7 @@ export class OutlineSettingsTab extends SettingTab {
     this.addSettingTitle('Heading styles')
     const help = document.createElement('p')
     help.className = 'outline-view-settings__help'
-    help.textContent = 'Size is relative to the theme-scaled outline font (50–250%). B, I and U cycle Theme → On → Off. Colors and case affect only outline labels.'
+    help.textContent = 'Size is relative to the theme-scaled outline font (50–250%). B, I and U cycle Theme (A) → On (filled) → Off (outlined). Colors and case affect only outline labels.'
     this.containerEl.append(help)
     for (const level of HEADING_LEVEL_OPTIONS) this.addAppearanceRow(level)
     const resetAll = document.createElement('button')
@@ -68,12 +68,13 @@ export class OutlineSettingsTab extends SettingTab {
     const controls = document.createElement('div')
     controls.className = 'outline-view-settings__controls'
     controls.append(...Array.from(this.containerEl.childNodes))
+    const navigation = this.addSectionNavigation(controls)
     this.preview = new OutlinePreview()
     this.previewVisible = true
     const layout = document.createElement('div')
     layout.className = 'outline-view-settings__layout'
     layout.append(controls, this.preview.element)
-    this.containerEl.append(layout)
+    this.containerEl.append(navigation, layout)
     this.disposables.push(this.outlinePlugin.settings.onChange('*', () => this.sync()))
     if (this.app) {
       const refresh = createDebouncedTask(() => {
@@ -108,6 +109,85 @@ export class OutlineSettingsTab extends SettingTab {
     this.disposables.splice(0).forEach(dispose => dispose())
     this.preview?.destroy()
     this.preview = undefined
+  }
+
+  private addSectionNavigation(controls: HTMLElement) {
+    const nav = document.createElement('nav')
+    nav.className = 'outline-view-settings__nav'
+    nav.setAttribute('aria-label', 'Outline View settings sections')
+    const sections: HTMLElement[] = []
+    const links: HTMLAnchorElement[] = []
+    const scrollParent = () => {
+      let parent = this.containerEl.parentElement
+      while (parent) {
+        if (/(auto|scroll)/.test(getComputedStyle(parent).overflowY)) return parent
+        parent = parent.parentElement
+      }
+      return undefined
+    }
+    let current: HTMLElement | undefined
+    const select = (index: number) => links.forEach((link, i) => {
+      if (i === index) link.setAttribute('aria-current', 'location')
+      else link.removeAttribute('aria-current')
+    })
+    for (const child of Array.from(controls.children)) {
+      const title = child.querySelector<HTMLElement>('.typ-setting-title')
+      if (title) {
+        const name = title.textContent ?? ''
+        const slug = name === 'Heading-level selector' ? 'selector' : name.toLowerCase().replaceAll(' ', '-')
+        current = document.createElement('section')
+        current.id = 'outline-settings-' + slug
+        current.className = 'outline-view-settings__section'
+        current.tabIndex = -1
+        title.id = current.id + '-title'
+        current.setAttribute('aria-labelledby', title.id)
+        controls.append(current)
+        const index = sections.push(current) - 1
+        const target = current
+        const link = document.createElement('a')
+        link.href = '#' + target.id
+        link.textContent = slug === 'selector' ? 'Selector' : name
+        const navigate = (event: Event) => {
+          event.preventDefault()
+          const scroll = scrollParent()
+          if (scroll) {
+            const offset = Number.parseFloat(getComputedStyle(target).scrollMarginTop) || 72
+            scroll.scrollTo({ top: scroll.scrollTop + target.getBoundingClientRect().top - scroll.getBoundingClientRect().top - offset, behavior: 'instant' })
+          } else target.scrollIntoView({ block: 'start', behavior: 'instant' })
+          target.focus({ preventScroll: true })
+          select(index)
+        }
+        link.addEventListener('click', navigate)
+        this.disposables.push(() => link.removeEventListener('click', navigate))
+        links.push(link)
+        nav.append(link)
+      }
+      current?.append(child)
+    }
+    select(0)
+    let frame = 0
+    const update = () => {
+      frame = 0
+      if (!this.containerEl.getClientRects().length) return
+      const offset = Number.parseFloat(getComputedStyle(sections[0]).scrollMarginTop) || 72
+      const edge = nav.getBoundingClientRect().top + offset + 2
+      let active = 0
+      sections.forEach((section, index) => {
+        if (section.getBoundingClientRect().top <= edge) active = index
+      })
+      const scroll = scrollParent()
+      if (scroll && scroll.scrollHeight > scroll.clientHeight && scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 2) active = sections.length - 1
+      select(active)
+    }
+    const schedule = () => { if (!frame) frame = window.requestAnimationFrame(update) }
+    document.addEventListener('scroll', schedule, true)
+    window.addEventListener('resize', schedule)
+    this.disposables.push(() => {
+      document.removeEventListener('scroll', schedule, true)
+      window.removeEventListener('resize', schedule)
+      if (frame) window.cancelAnimationFrame(frame)
+    })
+    return nav
   }
 
   private sync() {
@@ -259,6 +339,7 @@ export class OutlineSettingsTab extends SettingTab {
       for (const field of ['bold', 'italic', 'underline'] as const) {
         const button = row.querySelector<HTMLButtonElement>('[data-field="' + field + '"]')!
         const state = style[field] === null ? 'Theme' : style[field] ? 'On' : 'Off'
+        button.dataset.state = state.toLowerCase()
         button.setAttribute('aria-pressed', style[field] === null ? 'mixed' : String(style[field]))
         button.setAttribute('aria-label', 'H' + level + ' ' + field + ': ' + state)
         button.title = field + ': ' + state + '. Click to cycle Theme, On, Off.'
@@ -267,6 +348,7 @@ export class OutlineSettingsTab extends SettingTab {
       row.querySelector<HTMLSelectElement>('[data-field="color-mode"]')!.value = style.color ? 'custom' : 'theme'
       const color = row.querySelector<HTMLInputElement>('[data-field="color"]')!
       color.disabled = !style.color
+      color.hidden = !style.color
       if (style.color) color.value = style.color
     }
   }

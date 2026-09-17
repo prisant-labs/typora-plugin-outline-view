@@ -13,6 +13,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { afterEach, describe, expect, it } from 'vitest'
+import { unzipSync } from 'fflate'
 
 const executeFile = promisify(execFile)
 const temporaryDirectories: string[] = []
@@ -35,6 +36,9 @@ describe('plugin packaging', () => {
       writeFile(path.join(dist, 'main.js'), 'export default {}'),
       writeFile(path.join(dist, 'manifest.json'), '{"version":"0.1.0"}'),
       writeFile(path.join(dist, 'style.css'), '.outline-view {}'),
+      writeFile(path.join(dist, 'LICENSE.md'), 'MIT License - test fixture'),
+      writeFile(path.join(dist, 'THIRD-PARTY-NOTICES.md'), 'Third-party test fixture'),
+      writeFile(path.join(dist, 'private-notes.md'), 'must not ship'),
     ])
 
     const packScript = fileURLToPath(new URL('../pack.js', import.meta.url))
@@ -45,5 +49,8 @@ describe('plugin packaging', () => {
       path.join(root, 'plugin_typora-outline-view.zip'),
     )
     expect(branded).toEqual(canonical)
-  })
+    const entries = unzipSync(canonical)
+    expect(Object.keys(entries).sort()).toEqual(['LICENSE.md', 'THIRD-PARTY-NOTICES.md', 'main.js', 'manifest.json', 'style.css'])
+    expect(Buffer.from(entries['LICENSE.md']).toString()).toBe('MIT License - test fixture')
+  }, 30000)
 })

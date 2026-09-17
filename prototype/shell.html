@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-source-fingerprint="{{FINGERPRINT}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Outline View {{VERSION}} - Settings prototype</title>
+  <style>{{CSS}}</style>
+</head>
+<body>
+  <header class="prototype-header">
+    <div><h1>Outline View <span>{{VERSION}}</span></h1><p>Current settings experience · Shared production UI · Core {{CORE_VERSION}}</p></div>
+    <div class="prototype-tools" aria-label="Prototype environment">
+      <label>Theme <select id="prototype-theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+      <label>Width <select id="prototype-width"><option value="wide">Wide</option><option value="narrow">Narrow</option></select></label>
+      <label>Document <select id="prototype-document"><option value="hierarchy">H1–H6 hierarchy</option><option value="long">Long / skipped headings</option><option value="empty">Empty (sample fallback)</option></select></label>
+      <button id="prototype-reset" type="button">Reset settings</button>
+    </div>
+  </header>
+  <div class="typ-modal typ-settings-modal prototype-window" data-width="wide">
+    <div class="typ-modal__body">
+      <aside class="prototype-sidebar" aria-label="Settings context"><span>COMMUNITY PLUGINS</span><strong>Outline View</strong></aside>
+      <main class="typ-main" id="settings-mount" aria-label="Outline View settings"></main>
+    </div>
+  </div>
+  <footer class="prototype-footer">Offline demonstration. Changes stay in memory and never affect Typora or your documents. Use native Typora for final platform and theme validation.<details><summary>Build provenance and license</summary><p>Generated from checked-in source. Source fingerprint: <code>{{FINGERPRINT}}</code></p><pre>{{LICENSE}}</pre></details></footer>
+  <div id="write" hidden></div>
+  <script>{{JS}}</script>
+</body>
+</html>

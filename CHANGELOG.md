@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 - Unreleased
+
+- Keep settings controls close to labels and the live preview in a bordered, theme-aware card.
+- Add sticky settings section navigation and a compact sticky preview for narrow layouts.
+- Clarify Theme/On/Off emphasis controls, restore dropdown borders, and hide custom-color swatches in Theme mode.
+- Add an offline, self-contained settings prototype generated from production components, with CI enforcement against stale output.
+- Include MIT and third-party notices in release archives, validate archive contents and versions, and verify on Windows and Linux CI.
+- Update affected build/test dependencies and add dependency-update automation and contribution/security guidance.
+
 ## 0.2.0 - 2026-09-16
 
 - Choose both start and end heading levels with drag, click selection, or keyboard controls. Ranges are remembered per document during the session.
