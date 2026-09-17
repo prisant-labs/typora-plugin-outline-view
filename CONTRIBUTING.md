@@ -37,6 +37,23 @@ Use `pnpm run build:dev` for the existing development install loop. Keep persona
 notes and testing evidence under ignored `_local/`. Do not commit ZIPs, `dist/`,
 installed plugins, or local session logs.
 
+### Dependency updates
+
+During 0.2.1 native validation, automated npm version updates are limited to minor
+and patch releases. Optional major migrations are tracked in the
+[dependency maintenance backlog](docs/BACKLOG.md#dependency-maintenance).
+The `allow.update-types` filter does not restrict security updates; see
+[GitHub's Dependabot reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#update-types-allow).
+The separate core compatibility-baseline ignore remains in place, so core updates
+require manual review. Keep vulnerability alerts and the CI audit enabled.
+
+Dependabot does not regenerate the settings prototype. A dependency PR that fails
+`prototype:check` must be checked out, installed with the frozen lockfile, and have
+`pnpm prototype:build` run. Review and commit the generated HTML, then rerun the
+full verification commands above. A stale-prototype failure alone does not prove
+that a dependency is incompatible. Never skip the check or auto-commit arbitrary
+PR code from a privileged workflow just to make dependency checks green.
+
 ## Pull requests
 
 Include the user-visible change, test coverage, and native platforms/themes

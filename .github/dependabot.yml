@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Stabilize the native release candidate before optional major migrations.
+    # This version-update filter does not restrict security updates.
+    # Revisit after 0.2.1; see docs/BACKLOG.md (Dependency maintenance).
+    allow:
+      - dependency-name: "*"
+        update-types: [version-update:semver-minor, version-update:semver-patch]
     # Core is a deliberately tested compatibility baseline, updated manually.
     ignore:
       - dependency-name: "@typora-community-plugin/core"
