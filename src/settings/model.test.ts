@@ -85,7 +85,7 @@ describe('normalizeOutlineSettings', () => {
   it('adds appearance defaults without changing legacy range settings', () => {
     const settings = normalizeOutlineSettings({ minHeadingLevel: 2, maxHeadingLevel: 4 })
     expect(settings).toMatchObject({ showLevelSelector: true, selectorStyle: 'rail', selectorLabels: true, selectorColor: 'theme', minHeadingLevel: 2, maxHeadingLevel: 4 })
-    expect(settings.headingStyles[1]).toEqual({ size: 100, bold: null, italic: null, underline: null, casing: 'normal', color: null })
+    expect(settings.headingStyles[1]).toEqual({ size: 100, bold: false, italic: false, underline: false, casing: 'normal', color: null })
     expect(settings.headingStyles[6]).toEqual(settings.headingStyles[1])
     settings.headingStyles[1].size = 200
     expect(normalizeOutlineSettings().headingStyles[1].size).toBe(100)
@@ -98,12 +98,21 @@ describe('normalizeOutlineSettings', () => {
       2: { size: 12, bold: 'yes', casing: 'invalid', color: 'url(https://example.com)' },
       3: { size: 113 }, 4: { size: Infinity }, 5: null,
     }, selectorStyle: 'invalid', selectorColor: 'invalid' })
-    expect(settings.headingStyles[1]).toEqual({ size: 250, bold: true, italic: false, underline: null, casing: 'small-caps', color: '#aabbcc' })
-    expect(settings.headingStyles[2]).toMatchObject({ size: 50, bold: null, casing: 'normal', color: null })
+    expect(settings.headingStyles[1]).toEqual({ size: 250, bold: true, italic: false, underline: false, casing: 'small-caps', color: '#aabbcc' })
+    expect(settings.headingStyles[2]).toMatchObject({ size: 50, bold: false, casing: 'normal', color: null })
     expect(settings.headingStyles[3].size).toBe(115)
     expect(settings.headingStyles[4].size).toBe(100)
     expect(settings.headingStyles[5].size).toBe(100)
     expect(settings.selectorStyle).toBe('rail')
     expect(settings.selectorColor).toBe('theme')
+  })
+
+  it('migrates legacy theme emphasis to unselected while preserving explicit choices and color', () => {
+    const styles = normalizeOutlineSettings({ headingStyles: {
+      1: { bold: null, italic: true, underline: false, color: '#123456' },
+      2: { bold: true, italic: null, underline: null },
+    } }).headingStyles
+    expect(styles[1]).toMatchObject({ bold: false, italic: true, underline: false, color: '#123456' })
+    expect(styles[2]).toMatchObject({ bold: true, italic: false, underline: false, color: null })
   })
 })

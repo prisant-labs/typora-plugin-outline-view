@@ -138,13 +138,18 @@ alternation or hidden range crossing rules.
 
 ## D016 (0.2.0 appearance): Per-rank styles with live preview
 
-**Decision:** Use 50-250% size in 5% steps, independent tri-state theme/on/off
+**Decision:** Use 50-250% size in 5% steps, independent on/off
 emphasis, normal/uppercase/small-caps, and theme/custom native color input.
 Use the same outline renderer and range component in settings. Keep Markdown
 unchanged and retain active-heading accent/weight precedence.
 
 **Why:** Users can judge changes immediately; normalized defaults preserve old
-settings, theme inheritance, and a visible navigation cue.
+settings, theme color inheritance, and a visible navigation cue.
+
+**0.2.1 revision:** User feedback replaces the original tri-state emphasis with
+selected/unselected toggles. Legacy null (Theme) values normalize to false;
+explicit true/false values remain unchanged. Resets turn emphasis off. Theme
+color and the active-heading cue remain independent of these toggles.
 
 ## D017 (0.2.0 release boundary): Tag separately from marketplace publication
 
@@ -173,8 +178,21 @@ Browser checks complement, but do not replace, native platform/theme validation.
 **Decision:** Use sticky section links with keyboard focus and current-section
 feedback. The live preview stays beside controls at wide widths and above them
 as a compact sticky card at narrow widths. Restore bounded select-label columns
-and inherit supported core border/theme colors with fallbacks. Preserve the
-existing Theme/On/Off emphasis semantics while making the three states distinct.
+and inherit supported core border/theme colors with fallbacks. Use the binary
+emphasis semantics in D016 (per-rank styles), with inverse selected contrast.
+The wide Live outline view is 390px, with a single metadata/sample-control row
+and no guidance paragraph. Measure its actual top and visible scrollport bottom,
+reserving a bottom gutter instead of assuming the sticky offset is its position.
 
 **Why:** This keeps the preview accessible without adding another settings
 sidebar column or changing host-owned navigation internals.
+
+## D020 (dock containment): Follow only inside the outline viewport
+
+**Decision:** Explicitly constrain the independent view to the host leaf width.
+Auto-follow changes only its content viewport's vertical scroll position, never
+using ancestor-scrolling `scrollIntoView` for outline items. Document navigation
+still uses the live editor heading as described in D013 (initial navigation).
+
+**Why:** Long no-wrap headings must ellipsize without expanding or horizontally
+shifting the dock, its toolbar, or its balanced padding.

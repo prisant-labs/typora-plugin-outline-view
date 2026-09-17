@@ -336,7 +336,19 @@ export class OutlineView extends WorkspaceView {
     }
 
     if (autoScroll && activeItem) {
-      activeItem.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+      // scrollIntoView also scrolls host ancestors and can shift the whole dock
+      // horizontally. Follow only within our own vertical content viewport.
+      const top = this.contentEl.getBoundingClientRect().top + this.contentEl.clientTop
+      const bottom = top + this.contentEl.clientHeight
+      const item = activeItem.getBoundingClientRect()
+      if (this.contentEl.clientHeight > 0) {
+        const oversized = item.bottom - item.top > this.contentEl.clientHeight
+        if (item.top < top && item.bottom < bottom) {
+          this.contentEl.scrollTop += oversized ? item.bottom - bottom : item.top - top
+        } else if (item.bottom > bottom && item.top > top) {
+          this.contentEl.scrollTop += oversized ? item.top - top : item.bottom - bottom
+        }
+      }
     }
   }
 }

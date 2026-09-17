@@ -86,9 +86,11 @@ selection. Start never exceeds end, and equal endpoints show a single rank.
 Ranges are remembered per document for the session; Minimum/Maximum settings
 define saved defaults. The preview range is only for trying the control.
 
-Bold/italic/underline cycle **Theme > On > Off**. Theme inherits styling; On has
-inverse contrast; Off explicitly disables that emphasis. The color swatch only
-appears with **Custom color**. Resets restore defaults. The active-heading
+Bold/italic/underline are **On/Off** toggles: selected buttons have inverse
+contrast; unselected buttons disable that emphasis. Older Theme emphasis values
+become Off; existing On/Off choices are retained. The color swatch only appears
+with **Custom color**, and Theme color still follows the current theme. Resets
+restore defaults with emphasis Off. The active-heading
 navigation cue takes precedence over custom color/weight.
 
 ## Troubleshooting and limitations

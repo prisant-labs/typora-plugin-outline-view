@@ -19,7 +19,7 @@ describe('outline appearance', () => {
     expect(label.style.color).toBe('')
     expect(label.textContent).toBe('Mixed Case')
   })
-  it('removes overrides when reset so theme inheritance is restored', () => {
+  it('resets emphasis to off and restores theme color', () => {
     const root = document.createElement('section')
     applyOutlineAppearance(root, normalizeOutlineSettings({ density: 'compact', wrapHeadingLabels: false }))
     applyOutlineAppearance(root, normalizeOutlineSettings())
@@ -31,7 +31,9 @@ describe('outline appearance', () => {
     applyHeadingAppearance(row, label, normalizeOutlineSettings().headingStyles[1])
     expect(label.style.color).toBe('')
     expect(label.style.fontWeight).toBe('')
-    expect(label.style.getPropertyValue('--outline-heading-weight')).toBe('')
+    expect(label.style.getPropertyValue('--outline-heading-weight')).toBe('normal')
+    expect(label.style.fontStyle).toBe('normal')
+    expect(label.style.textDecoration).toBe('none')
     expect(label.style.getPropertyValue('--outline-heading-color')).toBe('')
     expect(label.style.textTransform).toBe('')
     expect(label.style.fontVariantCaps).toBe('')

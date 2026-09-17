@@ -8,7 +8,7 @@ sanitized results. Never count browser or CI runs as native Typora testing.
 
 | Platform | Current 0.2.1 native gate |
 | --- | --- |
-| Windows | Focused archive smoke test passed; full release matrix remains pending |
+| Windows | Earlier archive passed focused smoke; current UX fixes and full release matrix remain pending |
 | macOS | Pending final archive smoke test; earlier testing is not certification of this candidate |
 | Linux | Not advertised; native testing required before adding to the manifest |
 
@@ -55,12 +55,17 @@ fresh installation, lifecycle stress, keyboard coverage, and additional themes.
 ## Settings and accessibility
 
 - [ ] Wide/narrow settings: controls near labels, visible containers, sticky nav/preview.
-- [ ] Wide preview fills the available height after modal resizing, with short help
-      above the outline; narrow preview stays compact. No B/I/U corner badge or
-      short selector-endpoint dash; Theme/On/Off and keyboard focus stay legible.
+- [ ] Wide Live outline view is 390px and fills the available height after modal
+      resizing without clipping the bottom border/gutter. Use samples is beside
+      the source, with no guidance paragraph; narrow preview stays compact.
+- [ ] Long unwrapped labels ellipsize at narrow dock widths without shifting the
+      toolbar, rail or padding. Repeat after toggling wrap, at 250%, and while following.
+- [ ] No B/I/U corner badge or short selector-endpoint dash; binary On/Off and
+      keyboard focus stay legible.
 - [ ] Rail/Enclosure/Bracket, labels/dots, theme/grayscale, hidden selector.
 - [ ] Drag/click/keyboard endpoints, H2-H4, equal endpoints, crossing clamps, Escape.
-- [ ] All ranks: size limits, Theme/On/Off emphasis, case, custom colors, resets.
+- [ ] All ranks: size limits, binary emphasis, case, custom colors, resets; old
+      Theme emphasis migrates to Off while explicit On/Off values are retained.
 - [ ] Theme hides color swatches; native picker opens and applies a custom color.
 - [ ] Live/current-document and sample preview; no Markdown changes.
 - [ ] Settings modal close/reopen, tab changes, plugin unload during pending work.

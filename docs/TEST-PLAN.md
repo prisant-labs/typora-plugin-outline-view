@@ -278,11 +278,19 @@ archive in native Typora. Record platform checks separately as described in
   environments, document fixtures, reset, and browser back/forward restoration.
 - Check select controls remain close to labels and dropdown/preview borders are
   visible without a `--base-border` theme variable.
-- Confirm Theme emphasis has a subtle tint without a corner badge, On has inverse
-  contrast, Off has a neutral outline, and all states retain accessible names/tooltips.
+- Confirm B/I/U have only selected (inverse) and unselected (neutral) states,
+  retain accessible names/tooltips, and reset to unselected. Upgrading old null
+  emphasis produces Off without changing explicit On/Off or theme/custom colors.
 - Confirm the wide preview fills the available settings viewport as the modal is
-  resized; the narrow preview stays compact. The short style guidance appears
-  above the outline, with no footer paragraph below it.
+  resized, with the bottom border and gutter visible; the narrow preview stays
+  compact. The title is Live outline view, and Use samples is beside the document
+  information. There is no style guidance paragraph. Wide card width is 390px.
+- Toggle wrapping repeatedly with long H1 and nested H6 labels at narrow dock
+  widths and 250% size. No-wrap labels ellipsize; toolbar, rail and side padding
+  stay inside the dock. Follow headings up/down without horizontal shifts.
+- Automated coverage locks width/flex CSS constraints and tests viewport sizing,
+  clipping, vertical-only follow, migration, toggles and cleanup. These jsdom/CSS
+  checks do not perform browser layout; repeat the native visual checks above.
 - Confirm no short dash appears under either range endpoint for Rail, Enclosure,
   or Bracket with labels on or off; retain the main rail/bracket and visible
   keyboard focus cues.

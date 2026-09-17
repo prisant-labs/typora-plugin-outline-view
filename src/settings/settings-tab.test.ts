@@ -37,13 +37,22 @@ function settingRow(tab: OutlineSettingsTab, name: string) {
 }
 
 describe('OutlineSettingsTab', () => {
-  it('puts the concise preview guidance above the outline, not below it', () => {
-    const { tab } = createTab()
+  it('uses a compact live-view title and metadata row without guidance text', () => {
+    document.body.innerHTML = '<div id="write"><h1>Real heading</h1></div>'
+    const { tab } = createTab(document.body)
     const preview = tab.containerEl.querySelector('.outline-view-settings__preview')!
-    const help = preview.querySelector('.outline-view-settings__preview-help')!
+    const meta = preview.querySelector('.outline-view-settings__preview-meta')!
     const panel = preview.querySelector('.outline-view--preview')!
-    expect(help.textContent).toBe('Style changes apply immediately. Use this preview for quick visual experimentation.')
-    expect(help.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(preview.getAttribute('aria-label')).toBe('Live outline view')
+    expect(preview.querySelector('h3')!.textContent).toBe('Live outline view')
+    expect(preview.textContent).not.toContain('Style changes apply')
+    expect(meta.children[0].textContent).toBe('Active document · 1 headings')
+    expect(meta.children[1].textContent?.trim()).toBe('Use samples')
+    const checkbox = meta.querySelector<HTMLInputElement>('input')!
+    checkbox.click()
+    expect(meta.children[0].textContent).toBe('Sample outline · H1–H6')
+    checkbox.click()
+    expect(meta.children[0].textContent).toBe('Active document · 1 headings')
     expect(preview.lastElementChild).toBe(panel)
     tab.onhide()
   })
@@ -61,17 +70,19 @@ describe('OutlineSettingsTab', () => {
     scroll.style.cssText = 'overflow-y:auto; padding:20px 0 24px'
     let height = 800
     Object.defineProperty(scroll, 'clientHeight', { get: () => height })
+    scroll.getBoundingClientRect = () => ({ top: 10, bottom: 10 + height }) as DOMRect
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(1200)
     document.body.append(scroll)
     const { tab } = createTab(scroll)
     const preview = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__preview')!
-    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('688px')
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('696px')
     expect(observe).toHaveBeenCalledWith(scroll)
     height = 600
     resized()
-    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('488px')
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('496px')
     height = 0
     resized()
-    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('488px')
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('496px')
     tab.onhide()
     expect(disconnect).toHaveBeenCalledOnce()
   })
@@ -93,13 +104,63 @@ describe('OutlineSettingsTab', () => {
     tab.onhide()
   })
 
-  it.each(['bold', 'italic', 'underline'])('keeps %s Theme, On and Off named through the complete cycle', (field) => {
-    const { tab } = createTab()
+  it('leaves a bottom gutter when the card starts below its sticky offset or an ancestor clips it', () => {
+    const clip = document.createElement('div')
+    clip.style.overflowY = 'hidden'
+    Object.defineProperty(clip, 'clientHeight', { value: 650 })
+    clip.getBoundingClientRect = () => ({ top: 0, bottom: 650 }) as DOMRect
+    const scroll = document.createElement('div')
+    scroll.style.cssText = 'overflow-y:auto; padding-bottom:24px'
+    Object.defineProperty(scroll, 'clientHeight', { value: 800 })
+    scroll.getBoundingClientRect = () => ({ top: 10, bottom: 810 }) as DOMRect
+    clip.append(scroll)
+    document.body.append(clip)
+    const original = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('outline-view-settings__preview')
+        ? { top: 100, bottom: 700 } as DOMRect : original.call(this)
+    })
+    const { tab } = createTab(scroll)
+    const preview = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__preview')!
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('514px')
+    tab.onhide()
+  })
+
+  it('refits the card after scrolling and releases scheduled sizing on hide', () => {
+    const scroll = document.createElement('div')
+    scroll.style.overflowY = 'auto'
+    Object.defineProperty(scroll, 'clientHeight', { value: 600 })
+    scroll.getBoundingClientRect = () => ({ top: 10, bottom: 610 }) as DOMRect
+    document.body.append(scroll)
+    let cardTop = 110
+    const original = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('outline-view-settings__preview')
+        ? { top: cardTop } as DOMRect : original.call(this)
+    })
+    const { tab } = createTab(scroll)
+    const preview = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__preview')!
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('488px')
+    const frames: FrameRequestCallback[] = []
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => { frames.push(callback); return frames.length })
+    const cancel = vi.spyOn(window, 'cancelAnimationFrame')
+    const remove = vi.spyOn(scroll, 'removeEventListener')
+    cardTop = 78
+    scroll.dispatchEvent(new Event('scroll'))
+    frames.splice(0).forEach(callback => callback(0))
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('520px')
+    window.dispatchEvent(new Event('resize'))
+    tab.onhide()
+    expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function))
+    expect(cancel).toHaveBeenCalled()
+  })
+
+  it.each(['bold', 'italic', 'underline'] as const)('toggles %s only between selected and unselected, including after reset/reopen', (field) => {
+    const { tab, settings } = createTab()
     const button = tab.containerEl.querySelector<HTMLButtonElement>(`[data-field="${field}"]`)!
-    expect(button.dataset.state).toBe('theme')
-    expect(button.getAttribute('aria-pressed')).toBe('mixed')
-    expect(button.getAttribute('aria-label')).toBe(`H1 ${field}: Theme`)
-    expect(button.title).toContain('Theme')
+    expect(button.dataset.state).toBe('off')
+    expect(button.getAttribute('aria-pressed')).toBe('false')
+    expect(button.getAttribute('aria-label')).toBe(`H1 ${field}: Off`)
     button.click()
     expect(button.dataset.state).toBe('on')
     expect(button.getAttribute('aria-pressed')).toBe('true')
@@ -111,7 +172,14 @@ describe('OutlineSettingsTab', () => {
     expect(button.getAttribute('aria-label')).toBe(`H1 ${field}: Off`)
     expect(button.title).toContain(': Off.')
     button.click()
-    expect(button.dataset.state).toBe('theme')
+    expect(button.dataset.state).toBe('on')
+    expect(settings.get('headingStyles')[1][field]).toBe(true)
+    tab.onhide()
+    tab.onshow()
+    expect(tab.containerEl.querySelector(`[data-field="${field}"]`)!.getAttribute('aria-pressed')).toBe('true')
+    tab.containerEl.querySelector<HTMLButtonElement>('[data-action="reset-level"]')!.click()
+    expect(tab.containerEl.querySelector(`[data-field="${field}"]`)!.getAttribute('aria-pressed')).toBe('false')
+    expect(tab.containerEl.querySelector('[aria-pressed="mixed"]')).toBeNull()
     tab.onhide()
   })
 
