@@ -439,6 +439,12 @@ Use obgnail as UX/behavior reference only.
   adjusts only `.outline-view__content.scrollTop`, avoiding ancestor or horizontal
   scrolling when labels are truncated. Oversized rows spanning the viewport do
   not oscillate between top and bottom alignment.
+- Core 2.10.21's side-dock tab group also needs a scoped flex/min-width constraint;
+  see D020 (dock containment) in `DECISIONS.md`. CSS matches only direct dock tabs
+  containing our view and automatically stops matching when that view is removed.
+- The wrap toolbar button and settings checkbox use the same persisted setting.
+  `settings/sample-headings.ts` supplies the complete prefixed hierarchy to both
+  the preview and prototype; a test compares it with the manual Markdown fixture.
 
 Core 2.10.21 calls `SettingTab.onhide` when switching tabs but not when simply
 closing the settings modal. The tab observes its own layout visibility and

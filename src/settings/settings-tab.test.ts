@@ -9,6 +9,7 @@ import {
   type OutlineSettings,
 } from './model'
 import { OutlineSettingsTab } from './settings-tab'
+import { readFileSync } from 'node:fs'
 
 function createTab(parent?: HTMLElement) {
   const app = {}
@@ -37,6 +38,34 @@ function settingRow(tab: OutlineSettingsTab, name: string) {
 }
 
 describe('OutlineSettingsTab', () => {
+  it('uses the complete prefixed manual-test hierarchy for samples without touching the document', () => {
+    document.body.innerHTML = '<div id="write"><h1>Current document</h1></div>'
+    const original = document.querySelector('#write')!.innerHTML
+    const { tab } = createTab(document.body)
+    const expected = readFileSync('test/vault/heading-level-sample.md', 'utf8')
+      .split(/\r?\n/).filter(line => /^#{1,6} /.test(line)).map(line => line.replace(/^#{1,6} /, ''))
+    const checkbox = tab.containerEl.querySelector<HTMLInputElement>('.outline-view-settings__preview-meta input')!
+    checkbox.click()
+    const items = Array.from(tab.containerEl.querySelectorAll('.outline-view--preview .outline-view__item'))
+    expect(items.map(item => item.textContent)).toEqual(expected)
+    expect(items.map(item => item.getAttribute('data-heading-level'))).toEqual(expected.map(label => label[1]))
+    expect(items).toHaveLength(57)
+    expect(document.querySelector('#write')!.innerHTML).toBe(original)
+    checkbox.click()
+    expect(tab.containerEl.querySelectorAll('.outline-view--preview .outline-view__item')).toHaveLength(1)
+    tab.onhide()
+  })
+
+  it('updates the wrap checkbox and live preview after a toolbar setting change', () => {
+    const { tab, settings } = createTab()
+    const wrap = tab.containerEl.querySelector<HTMLInputElement>('[data-setting="wrapHeadingLabels"]')!
+    settings.set('wrapHeadingLabels', false)
+    expect(wrap.checked).toBe(false)
+    expect(tab.containerEl.querySelector('.outline-view--preview')!.classList.contains('outline-view--truncate')).toBe(true)
+    settings.set('wrapHeadingLabels', true)
+    expect(wrap.checked).toBe(true)
+    tab.onhide()
+  })
   it('uses a compact live-view title and metadata row without guidance text', () => {
     document.body.innerHTML = '<div id="write"><h1>Real heading</h1></div>'
     const { tab } = createTab(document.body)
@@ -393,7 +422,7 @@ describe('OutlineSettingsTab', () => {
     document.body.replaceChildren()
     tab.onshow()
     expect(tab.containerEl.querySelector('.outline-view-settings__preview')!.textContent).toContain('Sample outline')
-    expect(tab.containerEl.querySelectorAll('.outline-view-settings__preview .outline-view__item')).toHaveLength(6)
+    expect(tab.containerEl.querySelectorAll('.outline-view-settings__preview .outline-view__item')).toHaveLength(57)
     tab.onhide()
   })
 

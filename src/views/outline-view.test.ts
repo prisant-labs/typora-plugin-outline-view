@@ -131,12 +131,12 @@ describe('OutlineView', () => {
       Array.from(toolbar.querySelectorAll<HTMLButtonElement>('button')).map(
         ({ dataset }) => dataset.action,
       ),
-    ).toEqual(['collapse-all', 'expand-all', 'open-settings'])
+    ).toEqual(['collapse-all', 'expand-all', 'toggle-wrap', 'open-settings'])
     expect(
       Array.from(toolbar.querySelectorAll<HTMLButtonElement>('button')).map(
         ({ textContent }) => textContent?.trim(),
       ),
-    ).toEqual(['Collapse all', 'Expand all', ''])
+    ).toEqual(['Collapse all', 'Expand all', '', ''])
     expect(
       toolbar
         .querySelector('[data-action="open-settings"]')
@@ -485,6 +485,50 @@ describe('OutlineView', () => {
     active.getBoundingClientRect = () => ({ top: -220, bottom: -20 }) as DOMRect
     follow()
     expect(content.scrollTop).toBe(178)
+  })
+
+  it('shows current wrap state with two icons and persists clicks through the shared setting', () => {
+    vi.useFakeTimers()
+    const { app } = createApp()
+    const settings = new FakeSettings()
+    const view = new OutlineView({} as never, app as never, settings as never)
+    view.onOpen()
+    const button = view.containerEl.querySelector<HTMLButtonElement>('[data-action="toggle-wrap"]')!
+    expect(button).not.toBeNull()
+    const onIcon = button.innerHTML
+    expect(button.title).toBe('Word wrap on. Click to turn off.')
+    expect(button.getAttribute('aria-pressed')).toBe('true')
+    button.click()
+    expect(settings.get('wrapHeadingLabels')).toBe(false)
+    expect(button.title).toBe('Word wrap off. Click to turn on.')
+    expect(button.getAttribute('aria-pressed')).toBe('false')
+    expect(button.innerHTML).not.toBe(onIcon)
+    const offIcon = button.innerHTML
+    vi.advanceTimersByTime(120)
+    expect(view.containerEl.classList.contains('outline-view--truncate')).toBe(true)
+    button.click()
+    expect(settings.get('wrapHeadingLabels')).toBe(true)
+    expect(button.innerHTML).toBe(onIcon)
+    settings.set('wrapHeadingLabels', false)
+    vi.advanceTimersByTime(120)
+    expect(button.innerHTML).toBe(offIcon)
+    view.unload()
+    settings.set('wrapHeadingLabels', true)
+    vi.runAllTimers()
+    expect(button.innerHTML).toBe(offIcon)
+    button.click()
+    expect(settings.get('wrapHeadingLabels')).toBe(true)
+    expect(settings.listenerCount()).toBe(0)
+  })
+
+  it('uses a toothed gear with a center ring for settings', () => {
+    const { app } = createApp()
+    const view = new OutlineView({} as never, app as never)
+    const icon = view.containerEl.querySelector('[data-action="open-settings"] svg')!
+    expect(icon.querySelector('circle')?.getAttribute('cx')).toBe('12')
+    expect(icon.querySelector('circle')?.getAttribute('r')).toBe('3')
+    expect(icon.querySelector('path')?.getAttribute('d')).not.toBe('M4 7h16 M4 17h16 M8 4v6 M16 14v6')
+    expect(icon.getAttribute('aria-hidden')).toBe('true')
   })
 
   it('does not track or auto-scroll when follow mode is disabled', () => {

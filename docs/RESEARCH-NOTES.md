@@ -231,3 +231,18 @@ Important historical finding:
 There is no architectural reason to run an entire second Typora plugin framework merely to get the desired outline experience.
 
 Community Plugin already provides the workspace infrastructure necessary for a native implementation.
+
+## Core 2.10.21 side-dock width contract
+
+Verified against the pinned package's source maps for `ui/layout/sidedock`,
+`ui/layout/tabs`, and `ui/layout/split`. The side dock inserts tab groups into a
+flex `.sidedock-content` element. Unlike normal split children, those groups do
+not receive `flex: 1` or `min-width: 0`. Their intrinsic content can therefore
+leave unused width for short outlines or overflow for long ones, even when the
+outline itself has `width: 100%`.
+
+The plugin's correction targets only direct side-dock tab groups containing
+`.outline-view`, with zero-basis flex sizing and bounded width. This is a CSS DOM
+contract, not an exported layout API; recheck it when updating core. No private
+runtime property or internal import is used. Automated checks verify selector
+scope, computed constraints, and removal; they do not simulate browser geometry.

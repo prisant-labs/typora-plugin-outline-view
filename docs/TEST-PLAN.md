@@ -136,6 +136,8 @@ A normal document used for interactive mutation testing.
 
 - Collapse all and Expand all appear as small left-aligned controls
 - the right-aligned gear opens Community Plugins → Outline View
+- the wrap icon immediately left of the gear shows current state, switches on
+  click/keyboard, persists across restart, and agrees with the settings checkbox
 - the H1-H6 selector appears directly below the toolbar and above scrolling content
 - selecting each stop immediately shows headings through that level
 - a new document starts at the configured maximum heading level
@@ -146,6 +148,8 @@ A normal document used for interactive mutation testing.
 - the selected stop and track are legible in light and dark themes
 - the selector remains contained at narrow sidebar widths
 - outline content has balanced left and right padding
+- both a three-heading file and the 57-heading fixture fill the host tab group
+  width with wrapping on/off; resizing the dock keeps all toolbar icons visible
 - multiline disclosure arrows align with the center of the first heading line
 - the lower-right dock control reads Toggle outline sidebar
 - disabling the plugin restores the core dock tooltip
@@ -291,6 +295,11 @@ archive in native Typora. Record platform checks separately as described in
 - Automated coverage locks width/flex CSS constraints and tests viewport sizing,
   clipping, vertical-only follow, migration, toggles and cleanup. These jsdom/CSS
   checks do not perform browser layout; repeat the native visual checks above.
+- The host-boundary CSS test checks the actual side-dock/tabs/leaf selector
+  hierarchy in both wrap modes, short/long labels, removal, and unaffected other
+  views. Confirm native geometry separately; computed CSS is not pixel evidence.
+- Use samples and the default prototype fixture both show all 57 prefixed sample
+  headings, including long labels and skipped levels, without modifying #write.
 - Confirm no short dash appears under either range endpoint for Rail, Enclosure,
   or Bracket with labels on or off; retain the main rail/bracket and visible
   keyboard focus cues.

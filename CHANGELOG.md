@@ -9,6 +9,9 @@
 - Widen the Live outline view by 50px, combine document information and Use samples in one row, and remove preview guidance text.
 - Fit the live view within the visible settings viewport with bottom clearance; remove the selector's short endpoint dash.
 - Constrain long unwrapped headings to the dock and keep active-heading following inside its vertical viewport, preserving toolbar and side padding.
+- Stretch the containing side-dock tab group so both short and long outlines use the available width in either wrap mode.
+- Add a current-state word-wrap icon beside a toothed settings gear; the toolbar and settings checkbox share one saved preference.
+- Use the full 57-heading, h1.-h6.-prefixed sample hierarchy in settings and the standalone prototype.
 - Add an offline, self-contained settings prototype generated from production components, with CI enforcement against stale output.
 - Include MIT and third-party notices in release archives, validate archive contents and versions, and verify on Windows and Linux CI.
 - Update affected build/test dependencies and add dependency-update automation and contribution/security guidance.
