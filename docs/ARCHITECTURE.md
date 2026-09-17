@@ -430,9 +430,15 @@ Use obgnail as UX/behavior reference only.
   mutate the editor. Preview range changes do not change saved defaults.
 - `settings/settings-tab.ts` persists through public `PluginSettings`. The tab
   owns/disposes its subscriptions, debounce task, preview, and ResizeObserver.
+  Preview sizing uses actual card/scrollport geometry, respects clipping ancestors,
+  and reserves a bottom gutter; scroll/resize listeners and queued frames are disposed.
 - `selector.scss` and `settings.scss` hold scoped presentation. Both outlines use
   `.8125rem` as the theme-scaled base, avoiding the settings modal's different
   inherited size. The selector uses active-file accent/fill or neutral colors.
+- The view root explicitly fits the host flex leaf. Active-heading following
+  adjusts only `.outline-view__content.scrollTop`, avoiding ancestor or horizontal
+  scrolling when labels are truncated. Oversized rows spanning the viewport do
+  not oscillate between top and bottom alignment.
 
 Core 2.10.21 calls `SettingTab.onhide` when switching tabs but not when simply
 closing the settings modal. The tab observes its own layout visibility and

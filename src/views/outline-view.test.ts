@@ -439,11 +439,52 @@ describe('OutlineView', () => {
         'aria-expanded',
       ),
     ).toBe('true')
-    expect(scrollIntoView).toHaveBeenCalledWith({
-      block: 'nearest',
-      inline: 'nearest',
-    })
+    expect(scrollIntoView).not.toHaveBeenCalled()
     expect(refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('follows vertically inside the outline without shifting the dock or its horizontal padding', () => {
+    vi.useFakeTimers()
+    document.body.innerHTML = '<div id="write"><h1>Very long unwrapped heading</h1></div>'
+    setHeadingTops([10])
+    const { app, markdownEditor } = createApp()
+    const follow = () => { markdownEditor.emit('scroll'); vi.advanceTimersByTime(40) }
+    const settings = new FakeSettings()
+    settings.set('wrapHeadingLabels', false)
+    const view = new OutlineView({} as never, app as never, settings as never)
+    view.onOpen()
+    const content = view.containerEl.querySelector<HTMLElement>('.outline-view__content')!
+    content.getBoundingClientRect = () => ({ top: 100 }) as DOMRect
+    Object.defineProperties(content, { clientTop: { value: 2 }, clientHeight: { value: 100 } })
+    content.scrollLeft = 0
+    const active = view.containerEl.querySelector<HTMLElement>('.is-active')!
+    const scrollIntoView = vi.fn()
+    active.scrollIntoView = scrollIntoView
+    active.getBoundingClientRect = () => ({ top: 220, bottom: 250 }) as DOMRect
+    follow()
+    expect(content.scrollTop).toBe(48)
+    expect(content.scrollLeft).toBe(0)
+    expect(scrollIntoView).not.toHaveBeenCalled()
+    active.getBoundingClientRect = () => ({ top: 80, bottom: 110 }) as DOMRect
+    follow()
+    expect(content.scrollTop).toBe(26)
+    active.getBoundingClientRect = () => ({ top: 120, bottom: 160 }) as DOMRect
+    follow()
+    expect(content.scrollTop).toBe(26)
+    // An oversized wrapped/250% heading spanning both edges must not oscillate.
+    active.getBoundingClientRect = () => ({ top: 80, bottom: 250 }) as DOMRect
+    follow()
+    follow()
+    expect(content.scrollTop).toBe(26)
+    // Approach an oversized row from its nearer edge, not its opposite end.
+    content.scrollTop = 0
+    active.getBoundingClientRect = () => ({ top: 220, bottom: 520 }) as DOMRect
+    follow()
+    expect(content.scrollTop).toBe(118)
+    content.scrollTop = 400
+    active.getBoundingClientRect = () => ({ top: -220, bottom: -20 }) as DOMRect
+    follow()
+    expect(content.scrollTop).toBe(178)
   })
 
   it('does not track or auto-scroll when follow mode is disabled', () => {

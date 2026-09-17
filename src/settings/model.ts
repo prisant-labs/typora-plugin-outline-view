@@ -8,9 +8,9 @@ export const CASING_OPTIONS = ['normal', 'uppercase', 'small-caps'] as const
 
 export interface HeadingAppearance {
   size: number
-  bold: boolean | null
-  italic: boolean | null
-  underline: boolean | null
+  bold: boolean
+  italic: boolean
+  underline: boolean
   casing: (typeof CASING_OPTIONS)[number]
   color: string | null
 }
@@ -18,7 +18,7 @@ export interface HeadingAppearance {
 export type HeadingStyles = Record<HeadingLevel, HeadingAppearance>
 
 export function defaultHeadingAppearance(): HeadingAppearance {
-  return { size: 100, bold: null, italic: null, underline: null, casing: 'normal', color: null }
+  return { size: 100, bold: false, italic: false, underline: false, casing: 'normal', color: null }
 }
 
 function normalizeHeadingStyles(value: unknown): HeadingStyles {
@@ -29,9 +29,10 @@ function normalizeHeadingStyles(value: unknown): HeadingStyles {
     return [level, {
       size: typeof raw.size === 'number' && Number.isFinite(raw.size)
         ? Math.max(50, Math.min(250, Math.round(raw.size / 5) * 5)) : 100,
-      bold: typeof raw.bold === 'boolean' ? raw.bold : null,
-      italic: typeof raw.italic === 'boolean' ? raw.italic : null,
-      underline: typeof raw.underline === 'boolean' ? raw.underline : null,
+      // Legacy null (Theme) becomes unselected; explicit on/off is preserved.
+      bold: raw.bold === true,
+      italic: raw.italic === true,
+      underline: raw.underline === true,
       casing: isOption(raw.casing, CASING_OPTIONS) ? raw.casing : 'normal',
       color: typeof raw.color === 'string' && /^#[0-9a-f]{6}$/i.test(raw.color)
         ? raw.color.toLowerCase() : null,

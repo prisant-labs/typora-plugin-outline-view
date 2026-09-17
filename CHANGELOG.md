@@ -4,9 +4,11 @@
 
 - Keep settings controls close to labels and the live preview in a bordered, theme-aware card.
 - Add sticky settings section navigation and a compact sticky preview for narrow layouts.
-- Clarify Theme/On/Off emphasis controls, restore dropdown borders, and hide custom-color swatches in Theme mode.
-- Keep B/I/U glyphs centered without the tiny automatic-state badge; distinguish Theme with a subtle tint and retain explicit state tooltips.
-- Let the wide live preview fill the available settings height, with concise guidance above the outline, and remove the selector's short endpoint dash.
+- Simplify B/I/U to selected/unselected toggles without corner badges or a third state. Legacy Theme emphasis becomes Off; existing On/Off values are preserved.
+- Restore dropdown borders and hide custom-color swatches in Theme mode.
+- Widen the Live outline view by 50px, combine document information and Use samples in one row, and remove preview guidance text.
+- Fit the live view within the visible settings viewport with bottom clearance; remove the selector's short endpoint dash.
+- Constrain long unwrapped headings to the dock and keep active-heading following inside its vertical viewport, preserving toolbar and side padding.
 - Add an offline, self-contained settings prototype generated from production components, with CI enforcement against stale output.
 - Include MIT and third-party notices in release archives, validate archive contents and versions, and verify on Windows and Linux CI.
 - Update affected build/test dependencies and add dependency-update automation and contribution/security guidance.

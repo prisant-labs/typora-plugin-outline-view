@@ -20,9 +20,11 @@ export class OutlinePreview {
 
   constructor() {
     this.element.className = 'outline-view-settings__preview'
-    this.element.setAttribute('aria-label', 'Live outline preview')
+    this.element.setAttribute('aria-label', 'Live outline view')
     const title = document.createElement('h3')
-    title.textContent = 'Live outline preview'
+    title.textContent = 'Live outline view'
+    const metadata = document.createElement('div')
+    metadata.className = 'outline-view-settings__preview-meta'
     this.source.className = 'outline-view-settings__preview-source'
     const sampleLabel = document.createElement('label')
     const sampleCheckbox = document.createElement('input')
@@ -32,15 +34,13 @@ export class OutlinePreview {
       this.collapsed.clear()
       this.render()
     })
-    sampleLabel.append(sampleCheckbox, ' Use sample headings')
+    sampleLabel.append(sampleCheckbox, ' Use samples')
+    metadata.append(this.source, sampleLabel)
     this.panel.className = 'outline-view outline-view--preview'
     this.selector = new HeadingRangeSelector(range => { this.range = range; this.render() })
     this.content.className = 'outline-view__content'
     this.panel.append(this.selector.element, this.content)
-    const help = document.createElement('p')
-    help.className = 'outline-view-settings__preview-help'
-    help.textContent = 'Style changes apply immediately. Use this preview for quick visual experimentation.'
-    this.element.append(title, this.source, help, sampleLabel, this.panel)
+    this.element.append(title, metadata, this.panel)
     const sample = document.createElement('div')
     const labels = ['Project overview', 'Design and structure', 'Navigation details', 'Interaction behavior', 'Edge cases and accessibility', 'Implementation notes']
     labels.forEach((text, i) => {

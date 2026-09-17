@@ -23,8 +23,8 @@
 .outline-view-settings__nav a { flex: 0 0 auto; padding: 6px 9px; border: 1px solid transparent; border-radius: 5px; color: var(--settings-muted); font-size: 12px; text-decoration: none; }
 .outline-view-settings__nav a:hover { background: rgba(var(--typ-border-color, 190, 190, 190), .2); }
 .outline-view-settings__nav a[aria-current] { border-color: var(--settings-border); color: var(--settings-text); font-weight: 600; }
-.outline-view-settings__layout { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; max-width: 1120px; }
-.outline-view-settings__controls { flex: 1 1 560px; min-width: 0; }
+.outline-view-settings__layout { display: flex; align-items: flex-start; gap: 24px; max-width: 1170px; }
+.outline-view-settings__controls { flex: 1 1 0; min-width: 0; }
 .outline-view-settings__section { scroll-margin-top: 72px; margin-bottom: 24px; }
 .outline-view-settings__section:focus { outline: none; }
 .outline-view-settings__section:focus-visible { outline: 2px solid var(--settings-border); outline-offset: 4px; }
@@ -32,13 +32,13 @@
 .outline-view-settings__preview {
   position: sticky;
   top: 68px;
-  flex: 1 1 240px;
+  flex: 0 0 390px;
   display: flex;
   flex-direction: column;
   height: var(--outline-preview-height, calc(100vh - 140px));
   box-sizing: border-box;
   min-width: 0;
-  max-width: 340px;
+  max-width: 390px;
   padding: 16px;
   border: 1px solid var(--settings-border);
   border-radius: 8px;
@@ -48,11 +48,11 @@
 .outline-view-settings__preview > :not(.outline-view--preview) { flex: 0 0 auto; }
 .outline-view-settings__preview h3 { margin: 0 0 6px; font-size: 15px; }
 .outline-view-settings__preview-source,
-.outline-view-settings__preview-help,
 .outline-view-settings__help { color: var(--settings-muted); font-size: 12px; line-height: 1.5; }
-.outline-view-settings__preview-source { margin: 0 0 12px; }
-.outline-view-settings__preview-help { margin: 0 0 12px; }
-.outline-view-settings__preview > label { display: block; margin-bottom: 12px; font-size: 12px; }
+.outline-view-settings__preview-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 12px; }
+.outline-view-settings__preview-source { margin: 0; }
+.outline-view-settings__preview-meta > label { display: inline-flex; align-items: center; gap: 4px; padding-inline-start: 12px; border-inline-start: 1px solid var(--settings-border); font-size: 12px; white-space: nowrap; }
+.outline-view-settings__preview-meta input { margin: 0; }
 .outline-view.outline-view--preview { flex: 1 1 0; min-height: 0; height: auto; border: 1px solid var(--settings-border); border-radius: 5px; }
 .outline-view-settings .typ-setting-item { flex-wrap: wrap; gap: 8px; padding: 10px 0; }
 .outline-view-settings .typ-setting-item:has(> .typ-setting-controls.postfix > select) > .typ-setting-info { flex: 0 1 20rem; }
@@ -94,10 +94,6 @@
   background: var(--settings-on-bg);
   border-color: var(--settings-on-bg);
 }
-.outline-view-settings__heading-style button[aria-pressed='mixed'] {
-  color: var(--settings-muted);
-  background: var(--item-hover-bg-color, rgba(128, 128, 128, .12));
-}
 .outline-view-settings :disabled { cursor: default; opacity: .45; }
 .outline-view-settings [data-action='reset-all-styles'] { margin-top: 12px; font-size: 12px; }
 .outline-view-settings :is(button, select, input, a):focus-visible { outline: 2px solid var(--active-file-border-color, var(--settings-text)); outline-offset: 2px; }
@@ -106,9 +102,7 @@
   .outline-view-settings__controls { flex: auto; width: 100%; }
   .outline-view-settings__preview { order: -1; top: 56px; z-index: 1; flex: auto; max-width: none; width: 100%; height: auto; padding: 10px; }
   .outline-view-settings__preview h3 { font-size: 13px; margin-bottom: 2px; }
-  .outline-view-settings__preview-source { margin-bottom: 4px; }
-  .outline-view-settings__preview > label { margin-bottom: 6px; }
-  .outline-view-settings__preview-help { display: none; }
+  .outline-view-settings__preview-meta { margin-bottom: 6px; }
   .outline-view.outline-view--preview { flex: none; height: clamp(90px, 18vh, 150px); }
   .outline-view-settings__section { scroll-margin-top: 330px; }
 }

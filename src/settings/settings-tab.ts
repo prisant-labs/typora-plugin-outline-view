@@ -53,7 +53,7 @@ export class OutlineSettingsTab extends SettingTab {
     this.addSettingTitle('Heading styles')
     const help = document.createElement('p')
     help.className = 'outline-view-settings__help'
-    help.textContent = 'Size is relative to the theme-scaled outline font (50–250%). B, I and U cycle Theme (tinted) → On (filled) → Off (outlined). Colors and case affect only outline labels.'
+    help.textContent = 'Size is relative to the theme-scaled outline font (50–250%). B, I and U toggle on (filled) or off (outlined). Colors and case affect only outline labels.'
     this.containerEl.append(help)
     for (const level of HEADING_LEVEL_OPTIONS) this.addAppearanceRow(level)
     const resetAll = document.createElement('button')
@@ -75,17 +75,36 @@ export class OutlineSettingsTab extends SettingTab {
     layout.className = 'outline-view-settings__layout'
     layout.append(controls, this.preview.element)
     this.containerEl.append(navigation, layout)
+    const scroll = this.scrollParent()
     const sizePreview = () => {
-      const scroll = this.scrollParent()
       if (!scroll?.clientHeight || !this.preview) return
       const padding = getComputedStyle(scroll)
-      const top = Number.parseFloat(getComputedStyle(this.preview.element).top) || 68
-      const height = scroll.clientHeight - top
-        - (Number.parseFloat(padding.paddingTop) || 0)
-        - (Number.parseFloat(padding.paddingBottom) || 0)
-      this.preview.element.style.setProperty('--outline-preview-height', `${Math.max(0, height)}px`)
+      const scrollTop = scroll.getBoundingClientRect().top + scroll.clientTop
+      const stickyTop = Number.parseFloat(getComputedStyle(this.preview.element).top) || 68
+      // The card may start below the sticky offset before the settings scroll.
+      const top = Math.max(this.preview.element.getBoundingClientRect().top, scrollTop + stickyTop)
+      let bottom = Math.min(scrollTop + scroll.clientHeight, window.innerHeight)
+      // A host modal may clip the scrollport. Respect that visible boundary too.
+      for (let parent = scroll.parentElement; parent; parent = parent.parentElement) {
+        if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(parent).overflowY) && parent.clientHeight) {
+          bottom = Math.min(bottom, parent.getBoundingClientRect().top + parent.clientTop + parent.clientHeight)
+        }
+      }
+      const height = Math.max(0, bottom - top - (Number.parseFloat(padding.paddingBottom) || 0) - 12)
+      this.preview.element.style.setProperty('--outline-preview-height', `${height}px`)
     }
     sizePreview()
+    let sizeFrame = 0
+    const scheduleSize = () => {
+      if (!sizeFrame) sizeFrame = window.requestAnimationFrame(() => { sizeFrame = 0; sizePreview() })
+    }
+    scroll?.addEventListener('scroll', scheduleSize)
+    window.addEventListener('resize', scheduleSize)
+    this.disposables.push(() => {
+      scroll?.removeEventListener('scroll', scheduleSize)
+      window.removeEventListener('resize', scheduleSize)
+      if (sizeFrame) window.cancelAnimationFrame(sizeFrame)
+    })
     this.disposables.push(this.outlinePlugin.settings.onChange('*', () => this.sync()))
     if (this.app) {
       const refresh = createDebouncedTask(() => {
@@ -111,7 +130,6 @@ export class OutlineSettingsTab extends SettingTab {
         sizePreview()
       })
       visibility.observe(this.containerEl)
-      const scroll = this.scrollParent()
       if (scroll) visibility.observe(scroll)
       this.disposables.push(() => visibility.disconnect())
     }
@@ -310,7 +328,7 @@ export class OutlineSettingsTab extends SettingTab {
       button.textContent = text
       button.addEventListener('click', () => {
         const value = readOutlineSettings(this.outlinePlugin.settings).headingStyles[level][field]
-        this.changeStyle(level, { [field]: value === null ? true : value === true ? false : null })
+        this.changeStyle(level, { [field]: !value })
         this.syncAppearanceRows()
       })
       row.append(button)
@@ -353,11 +371,11 @@ export class OutlineSettingsTab extends SettingTab {
       row.querySelector<HTMLInputElement>('[data-field="size-slider"]')!.value = String(style.size)
       for (const field of ['bold', 'italic', 'underline'] as const) {
         const button = row.querySelector<HTMLButtonElement>('[data-field="' + field + '"]')!
-        const state = style[field] === null ? 'Theme' : style[field] ? 'On' : 'Off'
+        const state = style[field] ? 'On' : 'Off'
         button.dataset.state = state.toLowerCase()
-        button.setAttribute('aria-pressed', style[field] === null ? 'mixed' : String(style[field]))
+        button.setAttribute('aria-pressed', String(style[field]))
         button.setAttribute('aria-label', 'H' + level + ' ' + field + ': ' + state)
-        button.title = field + ': ' + state + '. Click to cycle Theme, On, Off.'
+        button.title = field + ': ' + state + '. Click to turn ' + (style[field] ? 'off' : 'on') + '.'
       }
       row.querySelector<HTMLSelectElement>('[data-field="casing"]')!.value = style.casing
       row.querySelector<HTMLSelectElement>('[data-field="color-mode"]')!.value = style.color ? 'custom' : 'theme'

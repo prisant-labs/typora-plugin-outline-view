@@ -16,10 +16,8 @@ function rule(source: string, selector: string) {
 describe('outline layout safeguards', () => {
   it('keeps emphasis glyphs centered without an automatic-state corner badge', async () => {
     const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
-    const theme = rule(source, ".outline-view-settings__heading-style button[aria-pressed='mixed']")
     expect(source).not.toContain("content: 'A'")
-    expect(theme).toContain('background:')
-    expect(theme).not.toContain('padding-right:')
+    expect(source).not.toContain("aria-pressed='mixed'")
   })
 
   it('fills the wide preview card while leaving a compact narrow preview', async () => {
@@ -29,6 +27,10 @@ describe('outline layout safeguards', () => {
     expect(preview).toContain('display: flex')
     expect(preview).toContain('flex-direction: column')
     expect(preview).toContain('height: var(--outline-preview-height')
+    expect(preview).toContain('max-width: 390px')
+    expect(preview).toContain('flex: 0 0 390px')
+    expect(rule(source, '.outline-view-settings__preview-meta')).toContain('display: flex')
+    expect(rule(source, '.outline-view-settings__layout')).toContain('max-width: 1170px')
     expect(panel).toContain('flex: 1 1 0')
     expect(panel).toContain('min-height: 0')
     expect(source).not.toContain('height: clamp(170px, 35vh, 340px)')
@@ -66,6 +68,16 @@ describe('outline layout safeguards', () => {
     expect(lists).toContain('box-sizing: border-box')
     expect(lists).toContain('min-width: 0')
     expect(lists).toContain('width: 100%')
+  })
+
+  it('bounds the root inside the host flex leaf even for long unwrapped headings', async () => {
+    const source = await stylesheet()
+    const root = rule(source, '.outline-view')
+    expect(root).toContain('width: 100%')
+    expect(root).toContain('max-width: 100%')
+    expect(root).toContain('flex: 1 1 0')
+    expect(rule(source, '.outline-view__content')).toContain('min-width: 0')
+    expect(rule(source, '.outline-view--truncate .outline-view__item')).toContain('text-overflow: ellipsis')
   })
 
   it('uses text-only active-heading emphasis', async () => {

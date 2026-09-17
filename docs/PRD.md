@@ -289,13 +289,16 @@ defaults. Offer Rail, Enclosure, and Bracket, all-label visibility, theme/graysc
 and an option to hide the selector.
 
 Each heading rank supports 50-250% size in 5% steps using a slider plus number
-field, independent bold/italic/underline, Normal/ALL CAPS/Small Caps, and theme
-or custom color via the native picker. Resets restore theme-friendly defaults.
+field, independent on/off bold/italic/underline, Normal/ALL CAPS/Small Caps, and
+theme or custom color via the native picker. Emphasis defaults and resets are
+off; legacy Theme emphasis becomes off, preserving explicit on/off choices.
 Font scaling is relative to a shared theme-root-based outline size and does not
 compound through the hierarchy. The active-heading cue remains visible.
 
 Settings include a live outline preview using the active document or fallback
 H1-H6 samples, beside controls at wide widths and in a compact sticky card above
-controls at narrow widths. Its
+controls at narrow widths. The wide Live outline view is 390px with visible
+bottom clearance. Active-document information and Use samples share a compact
+row, without a guidance paragraph. Its
 renderer and selector are the production components. Changing presentation
 must never modify heading text, markup, or document contents.
