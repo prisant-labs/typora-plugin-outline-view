@@ -5,6 +5,7 @@ import { applyOutlineAppearance } from '../outline/appearance'
 import { parseHeadings } from '../outline/parser'
 import { buildOutlineTree, filterHeadings } from '../outline/tree'
 import { renderOutline } from '../outline/render'
+import { SAMPLE_HEADINGS } from './sample-headings'
 
 export class OutlinePreview {
   readonly element = document.createElement('aside')
@@ -42,9 +43,8 @@ export class OutlinePreview {
     this.panel.append(this.selector.element, this.content)
     this.element.append(title, metadata, this.panel)
     const sample = document.createElement('div')
-    const labels = ['Project overview', 'Design and structure', 'Navigation details', 'Interaction behavior', 'Edge cases and accessibility', 'Implementation notes']
-    labels.forEach((text, i) => {
-      const heading = document.createElement(`h${i + 1}`)
+    SAMPLE_HEADINGS.forEach(([level, text]) => {
+      const heading = document.createElement(`h${level}`)
       heading.textContent = text
       sample.append(heading)
     })

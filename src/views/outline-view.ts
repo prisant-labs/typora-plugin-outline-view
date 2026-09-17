@@ -51,6 +51,7 @@ export class OutlineView extends WorkspaceView {
   icon = 'fa-list-ul'
 
   private readonly contentEl: HTMLElement
+  private readonly wrapButton = document.createElement('button')
   private readonly rangeSelector: HeadingRangeSelector
   private readonly rangeByFile = new Map<string, HeadingRange>()
   private renderedFileKey?: string
@@ -102,6 +103,13 @@ export class OutlineView extends WorkspaceView {
     toolbarSpacer.className = 'outline-view__toolbar-spacer'
     toolbarSpacer.setAttribute('aria-hidden', 'true')
 
+    this.wrapButton.className = 'outline-view__wrap-button'
+    this.wrapButton.type = 'button'
+    this.wrapButton.dataset.action = 'toggle-wrap'
+    this.wrapButton.setAttribute('aria-label', 'Word wrap')
+    this.wrapButton.disabled = !this.settings
+    this.syncWrapButton()
+
     const settingsButton = document.createElement('button')
     settingsButton.className = 'outline-view__config-button'
     settingsButton.type = 'button'
@@ -110,7 +118,7 @@ export class OutlineView extends WorkspaceView {
     settingsButton.setAttribute('aria-label', 'Configure Outline View')
     settingsButton.append(outlineIcon('settings'))
     settingsButton.addEventListener('click', () => this.onOpenSettings())
-    toolbar.append(toolbarSpacer, settingsButton)
+    toolbar.append(toolbarSpacer, this.wrapButton, settingsButton)
 
     this.rangeSelector = new HeadingRangeSelector(range => {
       this.rangeByFile.set(this.renderedFileKey ?? this.activeFileKey(), range)
@@ -125,6 +133,12 @@ export class OutlineView extends WorkspaceView {
 
   onOpen() {
     this.refresh()
+    const toggleWrap = () => {
+      this.settings?.set('wrapHeadingLabels', !this.currentSettings().wrapHeadingLabels)
+      this.syncWrapButton()
+    }
+    this.wrapButton.addEventListener('click', toggleWrap)
+    this.register(() => this.wrapButton.removeEventListener('click', toggleWrap))
 
     this.register(
       this.app.workspace.on('file:open', () => {
@@ -147,6 +161,7 @@ export class OutlineView extends WorkspaceView {
     if (this.settings) {
       this.register(
         this.settings.onChange('*', (key) => {
+          if (key === 'wrapHeadingLabels') this.syncWrapButton()
           if (key === 'minHeadingLevel' || key === 'maxHeadingLevel') {
             this.rangeSelector.endGesture()
             this.rangeByFile.clear()
@@ -162,6 +177,7 @@ export class OutlineView extends WorkspaceView {
   }
 
   refresh() {
+    this.syncWrapButton()
     const fileKey = this.activeFileKey()
     if (fileKey !== this.renderedFileKey) this.rangeSelector.endGesture()
     this.renderedFileKey = fileKey
@@ -243,6 +259,15 @@ export class OutlineView extends WorkspaceView {
 
   private currentSettings() {
     return readOutlineSettings(this.settings)
+  }
+
+  private syncWrapButton() {
+    const wrap = this.currentSettings().wrapHeadingLabels
+    const state = String(wrap)
+    if (this.wrapButton.getAttribute('aria-pressed') === state) return
+    this.wrapButton.setAttribute('aria-pressed', state)
+    this.wrapButton.title = wrap ? 'Word wrap on. Click to turn off.' : 'Word wrap off. Click to turn on.'
+    this.wrapButton.replaceChildren(outlineIcon(wrap ? 'wrap' : 'nowrap'))
   }
 
   private activeFileKey() {

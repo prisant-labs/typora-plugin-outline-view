@@ -196,3 +196,24 @@ still uses the live editor heading as described in D013 (initial navigation).
 
 **Why:** Long no-wrap headings must ellipsize without expanding or horizontally
 shifting the dock, its toolbar, or its balanced padding.
+
+**Host-boundary revision:** Core 2.10.21 side-dock tabs do not inherit the flex
+sizing provided to ordinary workspace split children. Constrain the direct
+side-dock tab group containing `.outline-view` with flex growth, zero basis,
+zero minimum width, and a 100% maximum. Scope the CSS using `:has`, so other dock
+groups and main panes are unaffected and removing our view removes the match.
+Do not set the host dock's width, mutate its private state, or relocate its DOM.
+
+## D021 (wrap shortcut and samples): Share state and sample content
+
+**Decision:** Put a two-icon current-state wrap shortcut immediately before the
+settings gear. It changes the existing persisted `wrapHeadingLabels` preference;
+settings and dock remain synchronized. Keep both icons visually neutral instead
+of adding a second selected/unselected visual state.
+
+The built-in preview and prototype hierarchy share the full 57-heading sample
+matching `test/vault/heading-level-sample.md`. Literal `h1.`-`h6.` prefixes are
+part of these synthetic labels only.
+
+**Why:** Wrap mode is useful while reading, and a realistic long outline makes
+padding, truncation, and heading styling easier to evaluate without a real file.

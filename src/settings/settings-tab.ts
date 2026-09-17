@@ -225,6 +225,8 @@ export class OutlineSettingsTab extends SettingTab {
 
   private sync() {
     const settings = readOutlineSettings(this.outlinePlugin.settings)
+    const wrap = this.containerEl.querySelector<HTMLInputElement>('[data-setting="wrapHeadingLabels"]')
+    if (wrap) wrap.checked = settings.wrapHeadingLabels
     this.dependent.forEach(input => { input.disabled = !settings.showLevelSelector })
     for (const key of ['minHeadingLevel', 'maxHeadingLevel'] as const) {
       const input = this.containerEl.querySelector<HTMLSelectElement>('[data-setting="' + key + '"]')

@@ -1,6 +1,23 @@
 @use './selector';
 @use './settings';
 
+// Core 2.10.21 gives split children flex sizing, but not side-dock tabs.
+// Scope the correction to a dock tab group that actually hosts our view.
+// :has follows mounting/removal without changing host DOM or other panes.
+.typ-workspace-sidedock > .sidedock-content > .typ-workspace-tabs:has(.outline-view) {
+  box-sizing: border-box;
+  flex: 1 1 0px;
+  min-width: 0px;
+  max-width: 100%;
+  min-height: 0;
+}
+
+.typ-workspace-sidedock .typ-workspace-tab-content:has(> .typ-workspace-leaf > .outline-view),
+.typ-workspace-sidedock .typ-workspace-leaf:has(> .outline-view) {
+  min-width: 0;
+  min-height: 0;
+}
+
 .outline-view {
   --outline-indent: 14px;
   --outline-row-block-padding: 5px;
@@ -71,11 +88,13 @@
   flex: 1 1 auto;
 }
 
-.outline-view__config-button {
+.outline-view__config-button,
+.outline-view__wrap-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 24px;
+  flex: 0 0 24px;
   height: 24px;
   padding: 0;
   color: var(--text-muted);
@@ -85,13 +104,15 @@
   border-radius: 4px;
 }
 
-.outline-view__config-button:hover {
+.outline-view__config-button:hover,
+.outline-view__wrap-button:hover {
   color: var(--text-color);
   background: var(--item-hover-bg-color);
 }
 
 .outline-view__toolbar-button:focus-visible,
 .outline-view__config-button:focus-visible,
+.outline-view__wrap-button:focus-visible,
 .outline-view__disclosure:focus-visible,
 .outline-view__item:focus-visible {
   outline: none;

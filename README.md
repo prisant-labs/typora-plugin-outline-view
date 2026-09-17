@@ -74,6 +74,9 @@ them. Avoid duplicate global/vault copies while testing.
 Open a Markdown document and keep Files visible. In the F1 command palette, run
 **Outline View: Toggle**. Click a heading to navigate. The outline's gear opens
 **Community Plugins > Outline View** settings.
+The icon immediately to its left shows the current word-wrap mode: a returning
+arrow for wrapped lines, straight lines for no wrapping. Click it to switch;
+this saves the same preference as **Wrap long heading labels** in settings.
 
 Commands: **Toggle**, **Refresh**, **Expand All**, and **Collapse All**, each
 prefixed with **Outline View:**.
@@ -85,6 +88,9 @@ users can focus an endpoint and use arrows, Home, or End; Escape cancels an arme
 selection. Start never exceeds end, and equal endpoints show a single rank.
 Ranges are remembered per document for the session; Minimum/Maximum settings
 define saved defaults. The preview range is only for trying the control.
+**Use samples** shows a 57-heading hierarchy with `h1.`-`h6.` prefixes, long
+labels, repeated labels, and skipped levels. The standalone prototype uses the
+same hierarchy. Prefixes are sample text only, never added to your document.
 
 Bold/italic/underline are **On/Off** toggles: selected buttons have inverse
 contrast; unselected buttons disable that emphasis. Older Theme emphasis values

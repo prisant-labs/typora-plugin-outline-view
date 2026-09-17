@@ -2,6 +2,7 @@ import { Plugin, PluginSettings } from './host'
 import { normalizeOutlineSettings, type OutlineSettings } from '../src/settings/model'
 import { OutlineSettingsTab } from '../src/settings/settings-tab'
 import manifest from '../src/manifest.json'
+import { SAMPLE_HEADINGS } from '../src/settings/sample-headings'
 
 const app = {
   workspace: { on: () => () => {} },
@@ -18,16 +19,12 @@ mount.append(tab.containerEl)
 
 function fixture(value: string) {
   editor.replaceChildren()
-  const headings: Array<[number, string]> = value === 'empty' ? [] : value === 'long' ? [
+  const headings: ReadonlyArray<readonly [number, string]> = value === 'empty' ? [] : value === 'long' ? [
     [1, 'A deliberately long heading to evaluate wrapping, truncation, and font scaling'],
     [3, 'Skipped levels remain attached to the nearest parent'],
     [6, 'Deeply nested details with enough text to wrap across several lines'],
     [2, 'Another branch with international text: Café, 日本語, Ελληνικά'],
-  ] : [
-    [1, 'Project overview'], [2, 'Design and structure'], [3, 'Navigation details'],
-    [4, 'Interaction behavior'], [5, 'Accessibility details'], [6, 'Implementation notes'],
-    [2, 'Testing and release'], [3, 'Theme compatibility'], [1, 'Next steps'],
-  ]
+  ] : SAMPLE_HEADINGS
   for (const [level, label] of headings) {
     const heading = document.createElement('h' + level)
     heading.textContent = label
