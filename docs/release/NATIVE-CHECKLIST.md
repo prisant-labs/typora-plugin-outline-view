@@ -8,9 +8,29 @@ sanitized results. Never count browser or CI runs as native Typora testing.
 
 | Platform | Current 0.2.1 native gate |
 | --- | --- |
-| Windows | Pending final archive smoke test |
+| Windows | Focused archive smoke test passed; full release matrix remains pending |
 | macOS | Pending final archive smoke test; earlier testing is not certification of this candidate |
 | Linux | Not advertised; native testing required before adding to the manifest |
+
+## Windows smoke evidence - 2026-09-16
+
+- Candidate commit: `1dc902225efde14948c5402a779ad506a0c7298e`.
+- Archive SHA-256: `8d88b738cb6d5e99c5b44db998d79d8597687f3bcbfa760e400092974aa2252d`.
+- Environment: Windows build 26220, Typora 1.14.10, Community Plugin 2.10.21,
+  GitHub theme, Outline View 0.2.1. Upgraded the installed 0.2.0 copy after backup.
+- Passed: command-palette toggle; independent outline alongside Files; heading
+  navigation; dragging both endpoints to H2-H4; switching between two documents
+  and restoring the first document's temporary range after refresh.
+- Passed: visible settings icon; nearby dropdown controls; contained current-document
+  preview; sticky section navigation; bordered style dropdowns; filled Bold On state;
+  custom swatch visibility; native color picker live update and Escape cancellation;
+  H1 reset returning to Theme and hiding the swatch; sample preview switch.
+- The synthetic 57-heading Markdown fixture remained byte-identical after the settings
+  tests. Temporary H1 style changes were reset. No private document content was used.
+
+This is a focused smoke test, not full platform certification. The checklist below
+remains the complete release gate and requires a per-platform record, including
+fresh installation, lifecycle stress, keyboard coverage, and additional themes.
 
 ## Installation and lifecycle
 
