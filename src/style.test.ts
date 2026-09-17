@@ -14,6 +14,37 @@ function rule(source: string, selector: string) {
 }
 
 describe('outline layout safeguards', () => {
+  it('keeps emphasis glyphs centered without an automatic-state corner badge', async () => {
+    const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
+    const theme = rule(source, ".outline-view-settings__heading-style button[aria-pressed='mixed']")
+    expect(source).not.toContain("content: 'A'")
+    expect(theme).toContain('background:')
+    expect(theme).not.toContain('padding-right:')
+  })
+
+  it('fills the wide preview card while leaving a compact narrow preview', async () => {
+    const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
+    const preview = rule(source, '.outline-view-settings__preview')
+    const panel = rule(source, '.outline-view.outline-view--preview')
+    expect(preview).toContain('display: flex')
+    expect(preview).toContain('flex-direction: column')
+    expect(preview).toContain('height: var(--outline-preview-height')
+    expect(panel).toContain('flex: 1 1 0')
+    expect(panel).toContain('min-height: 0')
+    expect(source).not.toContain('height: clamp(170px, 35vh, 340px)')
+    const narrow = source.slice(source.indexOf('@container'))
+    expect(rule(narrow, '.outline-view-settings__preview')).toContain('height: auto')
+    expect(rule(narrow, '.outline-view.outline-view--preview')).toContain('flex: none')
+  })
+
+  it('does not draw a short armed-endpoint dash in any selector style', async () => {
+    const source = await readFile(new URL('./selector.scss', import.meta.url), 'utf8')
+    expect(source).not.toContain('.outline-view__range-handle.is-armed::after')
+    expect(rule(source, '.outline-view__range-handle:focus-visible')).toContain('outline:')
+    expect(source).toContain('.outline-view__range-active')
+    expect(source).toContain("[data-style='bracket']")
+  })
+
   it('keeps setting selects close and contains preview using host-safe border colors', async () => {
     const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
     expect(source).toContain('flex: 0 1 20rem')

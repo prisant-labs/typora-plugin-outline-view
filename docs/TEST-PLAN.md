@@ -278,8 +278,14 @@ archive in native Typora. Record platform checks separately as described in
   environments, document fixtures, reset, and browser back/forward restoration.
 - Check select controls remain close to labels and dropdown/preview borders are
   visible without a `--base-border` theme variable.
-- Confirm Theme emphasis has the automatic indicator, On has inverse contrast,
-  Off has a neutral outline, and all states retain accessible names/tooltips.
+- Confirm Theme emphasis has a subtle tint without a corner badge, On has inverse
+  contrast, Off has a neutral outline, and all states retain accessible names/tooltips.
+- Confirm the wide preview fills the available settings viewport as the modal is
+  resized; the narrow preview stays compact. The short style guidance appears
+  above the outline, with no footer paragraph below it.
+- Confirm no short dash appears under either range endpoint for Rail, Enclosure,
+  or Bracket with labels on or off; retain the main rail/bracket and visible
+  keyboard focus cues.
 - Confirm Theme hides/disables the swatch, Custom reveals it, and reset hides it.
 - Test section links with pointer/keyboard, focus transfer, current section at
   the bottom, narrow sticky preview, and repeated settings hide/show cleanup.
