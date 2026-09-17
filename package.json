@@ -36,7 +36,7 @@
     "@types/jquery": "^3.5.32",
     "@types/node": "^22.10.1",
     "@typora-community-plugin/core": "2.10.21",
-    "archiver": "^7.0.1",
+    "archiver": "^8.0.0",
     "esbuild": "0.28.2",
     "esbuild-plugin-typora": "npm:@typora-community-plugin/esbuild-plugin-typora@^1.0.12",
     "esbuild-sass-plugin": "3.7.0",
