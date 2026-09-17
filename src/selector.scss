@@ -90,17 +90,6 @@
   outline: 1px solid var(--range-accent);
   outline-offset: -1px;
 }
-.outline-view__range-handle.is-armed::after {
-  position: absolute;
-  bottom: 0;
-  left: calc(50% - 2px);
-  width: 4px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--range-accent);
-  content: '';
-  opacity: .7;
-}
 // A single equal-range handle is visibly different from a simple endpoint.
 .outline-view__level-selector[data-merged='true'] .is-start .outline-view__level-mark {
   box-shadow: 0 0 0 2px var(--range-accent), 0 0 0 3px var(--bg-color, white), 0 0 0 4px var(--range-accent);

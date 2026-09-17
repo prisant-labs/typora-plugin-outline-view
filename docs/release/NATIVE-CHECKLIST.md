@@ -14,6 +14,10 @@ sanitized results. Never count browser or CI runs as native Typora testing.
 
 ## Windows smoke evidence - 2026-09-16
 
+These results describe the preserved archive identified below. Subsequent B/I/U,
+preview-height and selector-marker refinements require a new native UI pass on
+their own packaged archive; do not transfer the previous checksum's certification.
+
 - Candidate commit: `1dc902225efde14948c5402a779ad506a0c7298e`.
 - Archive SHA-256: `8d88b738cb6d5e99c5b44db998d79d8597687f3bcbfa760e400092974aa2252d`.
 - Environment: Windows build 26220, Typora 1.14.10, Community Plugin 2.10.21,
@@ -51,6 +55,9 @@ fresh installation, lifecycle stress, keyboard coverage, and additional themes.
 ## Settings and accessibility
 
 - [ ] Wide/narrow settings: controls near labels, visible containers, sticky nav/preview.
+- [ ] Wide preview fills the available height after modal resizing, with short help
+      above the outline; narrow preview stays compact. No B/I/U corner badge or
+      short selector-endpoint dash; Theme/On/Off and keyboard focus stay legible.
 - [ ] Rail/Enclosure/Bracket, labels/dots, theme/grayscale, hidden selector.
 - [ ] Drag/click/keyboard endpoints, H2-H4, equal endpoints, crossing clamps, Escape.
 - [ ] All ranks: size limits, Theme/On/Off emphasis, case, custom colors, resets.

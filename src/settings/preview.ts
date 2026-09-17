@@ -39,8 +39,8 @@ export class OutlinePreview {
     this.panel.append(this.selector.element, this.content)
     const help = document.createElement('p')
     help.className = 'outline-view-settings__preview-help'
-    help.textContent = 'Appearance changes apply immediately. The range in this preview is for trying the control; use Minimum/Maximum heading level to save defaults.'
-    this.element.append(title, this.source, sampleLabel, this.panel, help)
+    help.textContent = 'Style changes apply immediately. Use this preview for quick visual experimentation.'
+    this.element.append(title, this.source, help, sampleLabel, this.panel)
     const sample = document.createElement('div')
     const labels = ['Project overview', 'Design and structure', 'Navigation details', 'Interaction behavior', 'Edge cases and accessibility', 'Implementation notes']
     labels.forEach((text, i) => {

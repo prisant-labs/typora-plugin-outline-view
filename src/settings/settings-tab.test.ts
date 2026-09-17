@@ -10,7 +10,7 @@ import {
 } from './model'
 import { OutlineSettingsTab } from './settings-tab'
 
-function createTab() {
+function createTab(parent?: HTMLElement) {
   const app = {}
   const plugin = new (class extends Plugin<OutlineSettings> {})(
     app as never,
@@ -25,6 +25,7 @@ function createTab() {
   plugin.registerSettings(settings)
 
   const tab = new OutlineSettingsTab(plugin)
+  parent?.append(tab.containerEl)
   tab.onshow()
   return { plugin, settings, tab }
 }
@@ -36,6 +37,45 @@ function settingRow(tab: OutlineSettingsTab, name: string) {
 }
 
 describe('OutlineSettingsTab', () => {
+  it('puts the concise preview guidance above the outline, not below it', () => {
+    const { tab } = createTab()
+    const preview = tab.containerEl.querySelector('.outline-view-settings__preview')!
+    const help = preview.querySelector('.outline-view-settings__preview-help')!
+    const panel = preview.querySelector('.outline-view--preview')!
+    expect(help.textContent).toBe('Style changes apply immediately. Use this preview for quick visual experimentation.')
+    expect(help.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(preview.lastElementChild).toBe(panel)
+    tab.onhide()
+  })
+
+  it('fits the wide preview to its scroll viewport and tracks viewport resizing', () => {
+    let resized!: () => void
+    const observe = vi.fn()
+    const disconnect = vi.fn()
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: () => void) { resized = callback }
+      observe = observe
+      disconnect = disconnect
+    })
+    const scroll = document.createElement('div')
+    scroll.style.cssText = 'overflow-y:auto; padding:20px 0 24px'
+    let height = 800
+    Object.defineProperty(scroll, 'clientHeight', { get: () => height })
+    document.body.append(scroll)
+    const { tab } = createTab(scroll)
+    const preview = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__preview')!
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('688px')
+    expect(observe).toHaveBeenCalledWith(scroll)
+    height = 600
+    resized()
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('488px')
+    height = 0
+    resized()
+    expect(preview.style.getPropertyValue('--outline-preview-height')).toBe('488px')
+    tab.onhide()
+    expect(disconnect).toHaveBeenCalledOnce()
+  })
+
   it('hides theme color swatches, shows custom color, and hides them again on reset', () => {
     const { tab } = createTab()
     const row = tab.containerEl.querySelector('[data-appearance-level="1"]')!
@@ -53,16 +93,23 @@ describe('OutlineSettingsTab', () => {
     tab.onhide()
   })
 
-  it('exposes distinct automatic, on, and off emphasis states without changing the cycle', () => {
+  it.each(['bold', 'italic', 'underline'])('keeps %s Theme, On and Off named through the complete cycle', (field) => {
     const { tab } = createTab()
-    const button = tab.containerEl.querySelector<HTMLButtonElement>('[data-field="bold"]')!
+    const button = tab.containerEl.querySelector<HTMLButtonElement>(`[data-field="${field}"]`)!
     expect(button.dataset.state).toBe('theme')
     expect(button.getAttribute('aria-pressed')).toBe('mixed')
+    expect(button.getAttribute('aria-label')).toBe(`H1 ${field}: Theme`)
+    expect(button.title).toContain('Theme')
     button.click()
     expect(button.dataset.state).toBe('on')
     expect(button.getAttribute('aria-pressed')).toBe('true')
+    expect(button.getAttribute('aria-label')).toBe(`H1 ${field}: On`)
+    expect(button.title).toContain(': On.')
     button.click()
     expect(button.dataset.state).toBe('off')
+    expect(button.getAttribute('aria-pressed')).toBe('false')
+    expect(button.getAttribute('aria-label')).toBe(`H1 ${field}: Off`)
+    expect(button.title).toContain(': Off.')
     button.click()
     expect(button.dataset.state).toBe('theme')
     tab.onhide()

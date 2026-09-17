@@ -53,7 +53,7 @@ export class OutlineSettingsTab extends SettingTab {
     this.addSettingTitle('Heading styles')
     const help = document.createElement('p')
     help.className = 'outline-view-settings__help'
-    help.textContent = 'Size is relative to the theme-scaled outline font (50–250%). B, I and U cycle Theme (A) → On (filled) → Off (outlined). Colors and case affect only outline labels.'
+    help.textContent = 'Size is relative to the theme-scaled outline font (50–250%). B, I and U cycle Theme (tinted) → On (filled) → Off (outlined). Colors and case affect only outline labels.'
     this.containerEl.append(help)
     for (const level of HEADING_LEVEL_OPTIONS) this.addAppearanceRow(level)
     const resetAll = document.createElement('button')
@@ -75,6 +75,17 @@ export class OutlineSettingsTab extends SettingTab {
     layout.className = 'outline-view-settings__layout'
     layout.append(controls, this.preview.element)
     this.containerEl.append(navigation, layout)
+    const sizePreview = () => {
+      const scroll = this.scrollParent()
+      if (!scroll?.clientHeight || !this.preview) return
+      const padding = getComputedStyle(scroll)
+      const top = Number.parseFloat(getComputedStyle(this.preview.element).top) || 68
+      const height = scroll.clientHeight - top
+        - (Number.parseFloat(padding.paddingTop) || 0)
+        - (Number.parseFloat(padding.paddingBottom) || 0)
+      this.preview.element.style.setProperty('--outline-preview-height', `${Math.max(0, height)}px`)
+    }
+    sizePreview()
     this.disposables.push(this.outlinePlugin.settings.onChange('*', () => this.sync()))
     if (this.app) {
       const refresh = createDebouncedTask(() => {
@@ -97,8 +108,11 @@ export class OutlineSettingsTab extends SettingTab {
           this.sync()
         } else if (!visible) this.preview?.suspend()
         this.previewVisible = visible
+        sizePreview()
       })
       visibility.observe(this.containerEl)
+      const scroll = this.scrollParent()
+      if (scroll) visibility.observe(scroll)
       this.disposables.push(() => visibility.disconnect())
     }
     this.syncAppearanceRows()
@@ -111,20 +125,21 @@ export class OutlineSettingsTab extends SettingTab {
     this.preview = undefined
   }
 
+  private scrollParent() {
+    let parent = this.containerEl.parentElement
+    while (parent) {
+      if (/(auto|scroll)/.test(getComputedStyle(parent).overflowY)) return parent
+      parent = parent.parentElement
+    }
+    return undefined
+  }
+
   private addSectionNavigation(controls: HTMLElement) {
     const nav = document.createElement('nav')
     nav.className = 'outline-view-settings__nav'
     nav.setAttribute('aria-label', 'Outline View settings sections')
     const sections: HTMLElement[] = []
     const links: HTMLAnchorElement[] = []
-    const scrollParent = () => {
-      let parent = this.containerEl.parentElement
-      while (parent) {
-        if (/(auto|scroll)/.test(getComputedStyle(parent).overflowY)) return parent
-        parent = parent.parentElement
-      }
-      return undefined
-    }
     let current: HTMLElement | undefined
     const select = (index: number) => links.forEach((link, i) => {
       if (i === index) link.setAttribute('aria-current', 'location')
@@ -149,7 +164,7 @@ export class OutlineSettingsTab extends SettingTab {
         link.textContent = slug === 'selector' ? 'Selector' : name
         const navigate = (event: Event) => {
           event.preventDefault()
-          const scroll = scrollParent()
+          const scroll = this.scrollParent()
           if (scroll) {
             const offset = Number.parseFloat(getComputedStyle(target).scrollMarginTop) || 72
             scroll.scrollTo({ top: scroll.scrollTop + target.getBoundingClientRect().top - scroll.getBoundingClientRect().top - offset, behavior: 'instant' })
@@ -175,7 +190,7 @@ export class OutlineSettingsTab extends SettingTab {
       sections.forEach((section, index) => {
         if (section.getBoundingClientRect().top <= edge) active = index
       })
-      const scroll = scrollParent()
+      const scroll = this.scrollParent()
       if (scroll && scroll.scrollHeight > scroll.clientHeight && scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 2) active = sections.length - 1
       select(active)
     }
