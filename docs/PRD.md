@@ -295,6 +295,7 @@ Font scaling is relative to a shared theme-root-based outline size and does not
 compound through the hierarchy. The active-heading cue remains visible.
 
 Settings include a live outline preview using the active document or fallback
-H1-H6 samples, beside controls at wide widths and below at narrow widths. Its
+H1-H6 samples, beside controls at wide widths and in a compact sticky card above
+controls at narrow widths. Its
 renderer and selector are the production components. Changing presentation
 must never modify heading text, markup, or document contents.

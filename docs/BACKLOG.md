@@ -69,6 +69,17 @@
 - heading level display
 - context menu
 
+## P2: Outline presentation options
+
+- Selectable expand/collapse icon styles. Offer a small set of paired icons,
+  retaining the current default, keyboard behavior, accessible labels, and
+  font-independent rendering on Windows and macOS.
+- Optional vertical hierarchy guide lines connecting nested outline levels.
+  Keep them subtle and theme-aware, align them with indentation, and preserve
+  correct branch boundaries for collapsed branches and skipped heading levels.
+
+These are future options, not requirements for the first marketplace listing.
+
 ## P2: Placement exploration
 
 - workspace tab

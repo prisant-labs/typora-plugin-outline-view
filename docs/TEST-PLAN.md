@@ -269,3 +269,29 @@ Before every release:
 Automated/browser component coverage is not a substitute for installing the
 archive in native Typora. Record platform checks separately as described in
 [0.2.0 release notes](release/0.2.0.md).
+
+## 0.2.1 settings polish and prototype checks
+
+- Run `pnpm prototype:build` when source changes; `pnpm prototype:check` must
+  pass without modifying the artifact. Check rejects missing or stale output.
+- Open `docs/prototype/settings.html` offline. Test its light/dark and wide/narrow
+  environments, document fixtures, reset, and browser back/forward restoration.
+- Check select controls remain close to labels and dropdown/preview borders are
+  visible without a `--base-border` theme variable.
+- Confirm Theme emphasis has the automatic indicator, On has inverse contrast,
+  Off has a neutral outline, and all states retain accessible names/tooltips.
+- Confirm Theme hides/disables the swatch, Custom reveals it, and reset hides it.
+- Test section links with pointer/keyboard, focus transfer, current section at
+  the bottom, narrow sticky preview, and repeated settings hide/show cleanup.
+- Repeat native Windows/macOS checks with the packed candidate, including small
+  settings windows, theme contrast, live preview and native color picker.
+
+## Release gate
+
+- Run `pnpm run pack` and `pnpm release:check` against the actual production ZIP.
+- Check exact entries, nonempty matching payloads, version/core consistency,
+  both identical archive names, and current MIT/third-party notices.
+- Run `pnpm audit --audit-level=moderate` after dependency changes.
+- CI runs tests/types/prototype/pack checks on Linux and Windows. `CI required`
+  fails if either platform fails or is cancelled. Native validation is recorded
+  separately in [the release checklist](release/NATIVE-CHECKLIST.md).

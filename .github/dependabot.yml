@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # Core is a deliberately tested compatibility baseline, updated manually.
+    ignore:
+      - dependency-name: "@typora-community-plugin/core"
+    groups:
+      development-patches:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      workflow-actions:
+        patterns: ["*"]
