@@ -80,13 +80,18 @@ describe('outline layout safeguards', () => {
     expect(rule(source, '.outline-view--truncate .outline-view__item')).toContain('text-overflow: ellipsis')
   })
 
-  it('uses text-only active-heading emphasis', async () => {
+  it('uses a theme-accent marker without overriding the selected heading styles', async () => {
     const source = await stylesheet()
     const active = rule(source, '.outline-view__item.is-active')
+    const marker = rule(source, '.outline-view__item.is-active::before')
 
-    expect(active).toContain('--active-file-border-color')
-    expect(active).not.toContain('background:')
-    expect(active).not.toContain('box-shadow:')
+    expect(active).not.toContain('color:')
+    expect(active).not.toContain('font-weight:')
+    expect(marker).toContain('--active-file-border-color')
+    expect(marker).toContain('var(--text-color)')
+    expect(marker).toContain('position: absolute')
+    expect(marker).not.toContain('box-shadow:')
+    expect(rule(source, '.outline-view__item')).toContain('position: relative')
   })
 
   it('keeps the heading-level selector fixed, contained, and theme-aware', async () => {

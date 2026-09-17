@@ -2,6 +2,8 @@
 
 ## 0.2.1 - Unreleased
 
+- Fix active-heading tracking against the stationary editor viewport instead of the scrolling document's top edge.
+- Mark the active heading with the theme's accent without overriding its configured text color or font weight.
 - Keep settings controls close to labels and the live preview in a bordered, theme-aware card.
 - Add sticky settings section navigation and a compact sticky preview for narrow layouts.
 - Simplify B/I/U to selected/unselected toggles without corner badges or a third state. Legacy Theme emphasis becomes Off; existing On/Off values are preserved.

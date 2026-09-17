@@ -423,8 +423,8 @@ Use obgnail as UX/behavior reference only.
   keyboard handling, range clamping, and display settings are shared by workspace
   and preview. File switches and unload release active gestures.
 - `outline/appearance.ts` applies normalized per-rank styles. Row-local percent
-  sizing cannot compound into child lists. Weight/color custom properties allow
-  active-heading CSS to take precedence without erasing user settings.
+  sizing cannot compound into child lists. A separate theme-accent active marker
+  leaves the configured weight, color, and other styles unchanged.
 - `settings/preview.ts` reads `#write` or detached sample headings and calls the
   same parser/tree/renderer as the workspace. Preview clicks never navigate or
   mutate the editor. Preview range changes do not change saved defaults.
@@ -439,6 +439,9 @@ Use obgnail as UX/behavior reference only.
   adjusts only `.outline-view__content.scrollTop`, avoiding ancestor or horizontal
   scrolling when labels are truncated. Oversized rows spanning the viewport do
   not oscillate between top and bottom alignment.
+- Active selection measures the heading against the stationary editor scroll
+  viewport, not the moving `#write` rectangle. The same scroll-container lookup
+  drives end-of-document detection, with viewport zero for root scrolling.
 - Core 2.10.21's side-dock tab group also needs a scoped flex/min-width constraint;
   see D020 (dock containment) in `DECISIONS.md`. CSS matches only direct dock tabs
   containing our view and automatically stops matching when that view is removed.

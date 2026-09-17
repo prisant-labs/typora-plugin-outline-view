@@ -107,6 +107,10 @@ A normal document used for interactive mutation testing.
 - scroll above first heading
 - scroll below final heading
 - document with one heading
+- scroll down and back up while the document container itself moves; the active
+  item must leave the first H1 and follow the current section, including at bottom
+- active and inactive labels retain the same configured color/weight; only the
+  theme-accent marker and accessible current-location state distinguish selection
 
 ### Collapse
 
