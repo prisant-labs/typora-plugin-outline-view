@@ -141,7 +141,7 @@ alternation or hidden range crossing rules.
 **Decision:** Use 50-250% size in 5% steps, independent on/off
 emphasis, normal/uppercase/small-caps, and theme/custom native color input.
 Use the same outline renderer and range component in settings. Keep Markdown
-unchanged and retain active-heading accent/weight precedence.
+unchanged and retain a separate theme-accent active-heading marker.
 
 **Why:** Users can judge changes immediately; normalized defaults preserve old
 settings, theme color inheritance, and a visible navigation cue.
@@ -150,6 +150,12 @@ settings, theme color inheritance, and a visible navigation cue.
 selected/unselected toggles. Legacy null (Theme) values normalize to false;
 explicit true/false values remain unchanged. Resets turn emphasis off. Theme
 color and the active-heading cue remain independent of these toggles.
+
+**Active-cue revision:** The current heading must also honor those choices.
+Replace the previous color/weight override with a slim marker using
+`--active-file-border-color`, falling back to `--text-color`. The marker is
+absolutely positioned inside the existing label padding, so tracking does not
+shift text or change wrapping. Keep `aria-current` and keyboard focus cues.
 
 ## D017 (0.2.0 release boundary): Tag separately from marketplace publication
 
@@ -217,3 +223,15 @@ part of these synthetic labels only.
 
 **Why:** Wrap mode is useful while reading, and a realistic long outline makes
 padding, truncation, and heading styling easier to evaluate without a real file.
+
+## D022 (active viewport): Measure tracking from the scroll viewport
+
+**Decision:** Compare heading rectangles with the nearest actual scroll
+container's viewport top plus the existing offset, not with `#write`'s top.
+Use the same scroll container for end-of-document detection; root scrolling
+uses viewport zero. Ignore ordinary overflowing wrappers without scrollable
+CSS. Continue using the exported editor scroll event and existing cleanup.
+
+**Why:** `#write` and its headings move together during scroll. Using its top as
+the threshold can keep the first heading active forever. Tests must move the
+editor rectangle as well as its headings to reproduce this native geometry.

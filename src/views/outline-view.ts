@@ -6,6 +6,7 @@ import {
 } from '@typora-community-plugin/core'
 
 import {
+  getEditorViewportTop,
   isEditorAtBottom,
   selectActiveHeading,
 } from '../outline/active-heading'
@@ -321,7 +322,7 @@ export class OutlineView extends WorkspaceView {
     }
 
     const thresholdTop =
-      editor.getBoundingClientRect().top + ACTIVE_HEADING_OFFSET_PX
+      getEditorViewportTop(editor) + ACTIVE_HEADING_OFFSET_PX
     const active = selectActiveHeading(this.headings, {
       thresholdTop,
       atDocumentEnd: isEditorAtBottom(editor),

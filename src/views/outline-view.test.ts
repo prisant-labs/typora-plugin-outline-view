@@ -443,6 +443,44 @@ describe('OutlineView', () => {
     expect(refresh).toHaveBeenCalledTimes(1)
   })
 
+  it('tracks against the stationary editor viewport when #write moves during scrolling', () => {
+    vi.useFakeTimers()
+    document.body.innerHTML = '<div id="editor-scroll" style="overflow-y:auto"><div id="write"><h1 cid="one">One</h1><h2 cid="two">Two</h2><h1 cid="three">Three</h1></div></div>'
+    const scroller = document.querySelector<HTMLElement>('#editor-scroll')!
+    const editor = document.querySelector<HTMLElement>('#write')!
+    Object.defineProperties(scroller, {
+      clientHeight: { value: 500 }, scrollHeight: { value: 2000 }, clientTop: { value: 2 },
+    })
+    scroller.getBoundingClientRect = () => ({ top: 60, bottom: 562 }) as DOMRect
+    let editorTop = 80
+    editor.getBoundingClientRect = () => ({ top: editorTop }) as DOMRect
+    setHeadingTops([100, 580, 1200])
+    const { app, markdownEditor } = createApp()
+    const settings = new FakeSettings()
+    const view = new OutlineView({} as never, app as never, settings as never)
+    const refresh = vi.spyOn(view, 'refresh')
+    const active = () => view.containerEl.querySelector('[aria-current="location"]')?.textContent
+    const scroll = (offset: number, top: number, headings: number[]) => {
+      scroller.scrollTop = offset
+      editorTop = top
+      setHeadingTops(headings)
+      markdownEditor.emit('scroll')
+      vi.advanceTimersByTime(40)
+    }
+    view.onOpen()
+    expect(active()).toBe('One')
+    scroll(500, -420, [-400, 80, 700])
+    expect(active()).toBe('Two')
+    expect(view.containerEl.querySelector('[data-heading-key="cid:one"]')!.classList.contains('is-active')).toBe(false)
+    scroll(200, -120, [-100, 380, 1000])
+    expect(active()).toBe('One')
+    // At document end, even a short final section becomes current.
+    scroll(1500, -1420, [-1400, -920, 250])
+    expect(active()).toBe('Three')
+    expect(refresh).toHaveBeenCalledTimes(1)
+    view.unload()
+  })
+
   it('follows vertically inside the outline without shifting the dock or its horizontal padding', () => {
     vi.useFakeTimers()
     document.body.innerHTML = '<div id="write"><h1>Very long unwrapped heading</h1></div>'

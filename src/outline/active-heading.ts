@@ -22,19 +22,35 @@ export function selectActiveHeading(
   return active
 }
 
-function nearestScrollableAncestor(editor: HTMLElement) {
-  let candidate: HTMLElement | null = editor.parentElement
+function editorScroller(editor: HTMLElement) {
+  const doc = editor.ownerDocument
+  const root = doc.scrollingElement ?? doc.documentElement
+  let candidate: HTMLElement | null = editor
 
-  while (candidate) {
-    if (candidate.scrollHeight > candidate.clientHeight) return candidate
+  while (candidate && candidate !== root) {
+    // Overflowing content alone does not make a wrapper a scroll viewport.
+    const overflowY = getComputedStyle(candidate).overflowY
+    if (
+      candidate.clientHeight > 0 &&
+      candidate.scrollHeight > candidate.clientHeight &&
+      /^(auto|scroll|overlay)$/.test(overflowY)
+    ) return candidate
     candidate = candidate.parentElement
   }
 
-  return document.scrollingElement
+  return root
+}
+
+export function getEditorViewportTop(editor: HTMLElement) {
+  const scroller = editorScroller(editor)
+  const doc = editor.ownerDocument
+  // Root scrolling uses the browser viewport; the document rect itself moves.
+  if (scroller === (doc.scrollingElement ?? doc.documentElement)) return 0
+  return Math.max(0, scroller.getBoundingClientRect().top + scroller.clientTop)
 }
 
 export function isEditorAtBottom(editor: HTMLElement) {
-  const scroller = nearestScrollableAncestor(editor)
+  const scroller = editorScroller(editor)
   if (!scroller || scroller.scrollHeight <= scroller.clientHeight) return false
 
   return (

@@ -10,7 +10,7 @@ export function applyOutlineAppearance(container: HTMLElement, settings: Outline
 export function applyHeadingAppearance(row: HTMLElement, label: HTMLElement, style: HeadingAppearance) {
   // A row is a sibling of its child group, so percentages never compound by depth.
   row.style.fontSize = `${style.size}%`
-  // Variables let the active-heading rule override weight/color temporarily.
+  // The active-heading marker is separate, so these styles apply in both states.
   label.style.setProperty('--outline-heading-weight', style.bold ? '700' : 'normal')
   label.style.fontStyle = style.italic ? 'italic' : 'normal'
   label.style.textDecoration = style.underline ? 'underline' : 'none'

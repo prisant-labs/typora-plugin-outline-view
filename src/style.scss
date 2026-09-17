@@ -193,6 +193,7 @@
 }
 
 .outline-view__item {
+  position: relative;
   box-sizing: border-box;
   max-width: 100%;
   min-width: 0;
@@ -221,9 +222,15 @@
   white-space: nowrap;
 }
 
-.outline-view__item.is-active {
-  color: var(--active-file-border-color, var(--text-color));
-  font-weight: 600;
+.outline-view__item.is-active::before {
+  content: '';
+  position: absolute;
+  inset-block: var(--outline-row-block-padding);
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--active-file-border-color, var(--text-color));
+  pointer-events: none;
 }
 
 .outline-view__empty {
