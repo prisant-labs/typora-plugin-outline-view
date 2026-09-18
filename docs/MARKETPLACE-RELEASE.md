@@ -6,11 +6,13 @@ Release version: **0.2.1**. Existing `0.2.0` is an immutable historical tag.
 
 ## 0.2.1 publication decision
 
-The maintainer approved public GitHub publication on 2026-09-18 while final
-native Windows/macOS checks remain incomplete. The release notes disclose this
-version-specific exception; it is not a native compatibility certification.
-Marketplace submission remains pending the native checks below. This exception
-does not waive privacy review, artifact validation, or required CI.
+The maintainer approved public GitHub publication on 2026-09-18 with native
+checks initially pending, then confirmed Windows/macOS validation complete for
+the released archive on the same date. The
+[validation record](release/NATIVE-CHECKLIST.md) identifies the exact release
+commit and ZIP checksum and distinguishes maintainer signoff from automated tests.
+This clears the native gate for marketplace submission; upstream acceptance
+still controls listing. The release tag and assets remain unchanged.
 
 ## Validate before publishing
 
@@ -77,8 +79,8 @@ intentionally keeps publication behind a human gate.
 
 ## Marketplace entry
 
-Windows and macOS are currently candidate platforms. Keep `darwin` only after
-the current native check passes; do not infer Linux support from Linux CI.
+Windows and macOS have maintainer-confirmed native validation for 0.2.1. Do not
+infer Linux support from Linux CI or add it without native validation.
 
 ```json
 {

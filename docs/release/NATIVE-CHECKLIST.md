@@ -4,23 +4,35 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
-The maintainer approved the public GitHub release of 0.2.1 on 2026-09-18 with
-the final native checks still pending. Publication does not mark any box below
-as passed. Complete these checks before marketplace submission.
+## 0.2.1 maintainer signoff - 2026-09-18
+
+After the initial public GitHub release, the maintainer confirmed validation
+complete for the released 0.2.1 archive, clearing the Windows/macOS native gate
+for marketplace submission. This records maintainer-reported completion, not
+an agent-executed native test run or independently reproduced certification.
+
+- Release: [0.2.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.2.1).
+- Release commit: `1ea35e425e9168d9eb6e12c9ebde2ce837f7c55d`.
+- `plugin.zip` SHA-256: `7d1b46076f6695d76adb4a851d04c73c76fcc061544da2890d5e6cb13ac5fe95`.
+- Platforms covered by the signoff: Windows and macOS.
+- Detailed OS/Typora/core versions, themes, and per-case observations were not
+  supplied with this confirmation. No such details are inferred from earlier runs.
+- The declared Typora 1.4.0 minimum remains independently uncertified. Linux is
+  not advertised. The published tag and archive have not been changed.
 
 ## Platform record
 
 | Platform | Current 0.2.1 native gate |
 | --- | --- |
-| Windows | Earlier archive passed focused smoke; current UX fixes and full release matrix remain pending |
-| macOS | Pending final archive smoke test; earlier testing is not certification of this candidate |
+| Windows | Complete - maintainer confirmation for the released archive |
+| macOS | Complete - maintainer confirmation for the released archive |
 | Linux | Not advertised; native testing required before adding to the manifest |
 
 ## Windows smoke evidence - 2026-09-16
 
-These results describe the preserved archive identified below. Subsequent B/I/U,
-preview-height and selector-marker refinements require a new native UI pass on
-their own packaged archive; do not transfer the previous checksum's certification.
+These historical results describe only the preserved archive identified below,
+not the final released ZIP. The final archive's maintainer signoff is recorded
+above; the earlier checksum's observations are not transferred to it.
 
 - Candidate commit: `1dc902225efde14948c5402a779ad506a0c7298e`.
 - Archive SHA-256: `8d88b738cb6d5e99c5b44db998d79d8597687f3bcbfa760e400092974aa2252d`.
@@ -36,11 +48,16 @@ their own packaged archive; do not transfer the previous checksum's certificatio
 - The synthetic 57-heading Markdown fixture remained byte-identical after the settings
   tests. Temporary H1 style changes were reset. No private document content was used.
 
-This is a focused smoke test, not full platform certification. The checklist below
-remains the complete release gate and requires a per-platform record, including
-fresh installation, lifecycle stress, keyboard coverage, and additional themes.
+This historical run was a focused smoke test, not full platform certification.
 
-## Installation and lifecycle
+## Reusable regression checklist
+
+The unchecked boxes below are a coverage template for future test runs, not open
+0.2.1 gates. The maintainer's overall signoff above is not expanded into fabricated
+per-case results. For future releases, record a per-platform run including fresh
+installation, lifecycle stress, keyboard coverage, and additional themes.
+
+### Installation and lifecycle
 
 - [ ] Fresh installation from `plugin.zip`, without a dev override or duplicate copy.
 - [ ] Upgrade from 0.2.0 preserves existing settings and defaults new settings safely.
@@ -48,7 +65,7 @@ fresh installation, lifecycle stress, keyboard coverage, and additional themes.
 - [ ] Disable/re-enable and repeatedly close/open the dock; no duplicate view or errors.
 - [ ] Files remain visible alongside the independent outline.
 
-## Editing and navigation
+### Editing and navigation
 
 - [ ] Navigate headings; rename/add/delete/change levels and undo/redo.
 - [ ] Switch files rapidly; no stale headings, ranges, or active drag remain.
@@ -58,7 +75,7 @@ fresh installation, lifecycle stress, keyboard coverage, and additional themes.
       H1, reveals collapsed ancestors, and reaches the final heading at bottom.
 - [ ] Enter/exit source mode gracefully; rendered mode recovers.
 
-## Settings and accessibility
+### Settings and accessibility
 
 - [ ] Wide/narrow settings: controls near labels, visible containers, sticky nav/preview.
 - [ ] Wide Live outline view is 390px and fills the available height after modal
