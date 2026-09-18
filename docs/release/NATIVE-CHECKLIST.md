@@ -4,6 +4,10 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+The maintainer approved the public GitHub release of 0.2.1 on 2026-09-18 with
+the final native checks still pending. Publication does not mark any box below
+as passed. Complete these checks before marketplace submission.
+
 ## Platform record
 
 | Platform | Current 0.2.1 native gate |
