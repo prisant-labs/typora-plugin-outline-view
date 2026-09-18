@@ -5,8 +5,10 @@ is an independent, synchronized heading navigator for
 [Typora Community Plugin](https://github.com/typora-community-plugin/typora-community-plugin).
 It does not replace or move Typora's native outline.
 
-**Status:** 0.2.1 release candidate. Marketplace publication is pending final
-native-platform checks. A Git tag alone is not a marketplace release.
+**Release:** [0.2.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.2.1)
+is available for manual installation. Marketplace enrollment is still pending.
+Final native Windows/macOS checks remain incomplete; see the
+[validation record](docs/release/NATIVE-CHECKLIST.md) before adopting it.
 
 ## Features
 
@@ -26,8 +28,8 @@ download the file to interact. [How it stays current](docs/prototype/README.md).
 
 ![Production settings UI in the browser prototype with synthetic headings](docs/assets/screenshots/settings-prototype.png)
 
-*Browser prototype, not a native Typora screenshot. Native OS/theme integration
-is checked separately before publication.*
+*Browser prototype, not a native Typora screenshot. Native OS/theme validation
+is tracked separately and remains incomplete for the final release archive.*
 
 ## Requirements
 
@@ -41,16 +43,19 @@ is checked separately before publication.*
 
 ## Installation
 
-### Marketplace (after publication)
+### Marketplace (after registry acceptance)
+
+Outline View is not yet listed in the marketplace. Once its registry entry is
+accepted, use the following steps; until then, install manually below.
 
 In Community Plugin settings, open **Marketplace**, search for **Outline View**,
 install it, then enable it under **Installed Plugins**.
 
 ### Manual installation or candidate testing
 
-Download the exact `plugin.zip` asset from a published GitHub Release. Until a
-release exists, build the candidate using the commands below. GitHub's automatic
-source-code ZIPs are not plugin packages.
+Download [plugin.zip from release 0.2.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.2.1/plugin.zip).
+GitHub's automatic source-code ZIPs are not plugin packages. The release includes
+a SHA-256 checksum for verifying the downloaded archive.
 
 1. Close Typora. Back up an existing Outline View plugin folder before upgrading.
 2. Extract `plugin.zip` directly into one of these locations:

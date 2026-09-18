@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1 - Unreleased
+## 0.2.1 - 2026-09-18
 
 - Fix active-heading tracking against the stationary editor viewport instead of the scrolling document's top edge.
 - Identify the active heading with a theme-derived row fill and fine outline without overriding its configured text color or font weight.

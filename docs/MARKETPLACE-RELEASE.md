@@ -2,7 +2,15 @@
 
 Repository: `prisant-labs/typora-plugin-outline-view`.
 Plugin identity: `prisant-labs.outline-view` / **Outline View**.
-Current candidate: **0.2.1**. Existing `0.2.0` is an immutable historical tag.
+Release version: **0.2.1**. Existing `0.2.0` is an immutable historical tag.
+
+## 0.2.1 publication decision
+
+The maintainer approved public GitHub publication on 2026-09-18 while final
+native Windows/macOS checks remain incomplete. The release notes disclose this
+version-specific exception; it is not a native compatibility certification.
+Marketplace submission remains pending the native checks below. This exception
+does not waive privacy review, artifact validation, or required CI.
 
 ## Validate before publishing
 
@@ -60,8 +68,8 @@ is a different package-manager operation.
    adding an entry to `community-plugins.json`. Copy identity, description, and
    validated platforms from `src/manifest.json`; do not edit generated
    translations/statistics. Upstream acceptance controls marketplace listing.
-6. Verify installation/update from the marketplace once accepted. Change the
-   README candidate banner and changelog date to reflect actual publication.
+6. Verify installation/update from the marketplace once accepted. Update the
+   README's marketplace enrollment status; retain the original GitHub release date.
 
 No PR to the core repository README is needed for registry enrollment. Manual
 releases are supported; no automatic publish workflow is required. This repo
