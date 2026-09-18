@@ -7,8 +7,8 @@ It does not replace or move Typora's native outline.
 
 **Release:** [0.2.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.2.1)
 is available for manual installation. Marketplace enrollment is still pending.
-Final native Windows/macOS checks remain incomplete; see the
-[validation record](docs/release/NATIVE-CHECKLIST.md) before adopting it.
+The maintainer confirmed Windows/macOS validation complete for the released
+archive; see the [validation record](docs/release/NATIVE-CHECKLIST.md).
 
 ## Features
 
@@ -28,8 +28,8 @@ download the file to interact. [How it stays current](docs/prototype/README.md).
 
 ![Production settings UI in the browser prototype with synthetic headings](docs/assets/screenshots/settings-prototype.png)
 
-*Browser prototype, not a native Typora screenshot. Native OS/theme validation
-is tracked separately and remains incomplete for the final release archive.*
+*Browser prototype, not a native Typora screenshot. Maintainer-confirmed native
+validation is recorded separately from browser and CI coverage.*
 
 ## Requirements
 
@@ -38,7 +38,7 @@ is tracked separately and remains incomplete for the final release archive.*
 - The manifest declares Typora **1.4.0** as its minimum; that oldest version has
   not been independently certified. Use a current Typora release and consult the
   [native validation checklist](docs/release/NATIVE-CHECKLIST.md).
-- Windows and macOS are candidate platforms. Linux runtime support is not yet
+- Windows and macOS are supported platforms. Linux runtime support is not yet
   advertised; Linux CI checks build tools, not native Typora compatibility.
 
 ## Installation
