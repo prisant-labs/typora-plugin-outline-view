@@ -96,9 +96,10 @@ Bold/italic/underline are **On/Off** toggles: selected buttons have inverse
 contrast; unselected buttons disable that emphasis. Older Theme emphasis values
 become Off; existing On/Off choices are retained. The color swatch only appears
 with **Custom color**, and Theme color still follows the current theme. Resets
-restore defaults with emphasis Off. A narrow marker uses the theme's active-file
-accent to identify the current heading without changing its selected text color,
-font weight, or other styles.
+restore defaults with emphasis Off. A row fill and fine outline use the theme's
+active-file background and border colors to identify the current heading without
+changing its selected text color, font weight, or other styles. Keyboard focus
+remains separately visible on the focused control.
 
 ## Troubleshooting and limitations
 

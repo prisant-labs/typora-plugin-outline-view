@@ -50,7 +50,7 @@ fresh installation, lifecycle stress, keyboard coverage, and additional themes.
 - [ ] Switch files rapidly; no stale headings, ranges, or active drag remain.
 - [ ] Empty, duplicate/skipped levels, long Unicode labels, and 500+ headings.
 - [ ] Active following and branch collapse work without lag during scrolling/typing.
-- [ ] Scroll a long document down and back up; the active marker leaves the first
+- [ ] Scroll a long document down and back up; the active fill/outline leaves the first
       H1, reveals collapsed ancestors, and reaches the final heading at bottom.
 - [ ] Enter/exit source mode gracefully; rendered mode recovers.
 
@@ -73,7 +73,7 @@ fresh installation, lifecycle stress, keyboard coverage, and additional themes.
 - [ ] Settings modal close/reopen, tab changes, plugin unload during pending work.
 - [ ] Keyboard focus is visible; section navigation and controls remain reachable.
 - [ ] Light, dark, and one third-party Typora theme; active cue remains clear.
-- [ ] Active marker uses the theme accent while preserving each heading's selected
+- [ ] Active fill/outline uses theme background/border colors while preserving each heading's selected
       color, bold/italic/underline, size and case; keyboard focus remains visible.
 - [ ] SVG settings/dock toggle icons appear, especially on macOS.
 

@@ -141,7 +141,7 @@ alternation or hidden range crossing rules.
 **Decision:** Use 50-250% size in 5% steps, independent on/off
 emphasis, normal/uppercase/small-caps, and theme/custom native color input.
 Use the same outline renderer and range component in settings. Keep Markdown
-unchanged and retain a separate theme-accent active-heading marker.
+unchanged and retain a separate theme-derived active-heading cue.
 
 **Why:** Users can judge changes immediately; normalized defaults preserve old
 settings, theme color inheritance, and a visible navigation cue.
@@ -152,10 +152,15 @@ explicit true/false values remain unchanged. Resets turn emphasis off. Theme
 color and the active-heading cue remain independent of these toggles.
 
 **Active-cue revision:** The current heading must also honor those choices.
-Replace the previous color/weight override with a slim marker using
-`--active-file-border-color`, falling back to `--text-color`. The marker is
-absolutely positioned inside the existing label padding, so tracking does not
-shift text or change wrapping. Keep `aria-current` and keyboard focus cues.
+After testing Soft fill, the user approved Fill + outline for stronger visibility.
+Fill only the current row, including its disclosure control, with
+`--active-file-bg-color`, then `--item-hover-bg-color`, then a neutral translucent
+fallback. Add a one-pixel inset shadow using `--active-file-border-color`, then
+`--text-color`, then `currentColor`. Match the direct active label so ancestors
+and descendants are not highlighted. Do not override text styles or change
+padding, borders, or wrapping. Keep `aria-current` and the separate keyboard
+focus cue on the focused control. This replaces the caret-like marker and does
+not introduce a multi-style setting.
 
 ## D017 (0.2.0 release boundary): Tag separately from marketplace publication
 
