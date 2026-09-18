@@ -166,6 +166,11 @@
   background: var(--item-hover-bg-color);
 }
 
+.outline-view__row:has(> .outline-view__item.is-active) {
+  background: var(--active-file-bg-color, var(--item-hover-bg-color, rgba(127, 127, 127, .12)));
+  box-shadow: inset 0 0 0 1px var(--active-file-border-color, var(--text-color, currentColor));
+}
+
 .outline-view__disclosure,
 .outline-view__disclosure-spacer {
   box-sizing: border-box;
@@ -220,17 +225,6 @@
 .outline-view--truncate .outline-view__item {
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.outline-view__item.is-active::before {
-  content: '';
-  position: absolute;
-  inset-block: var(--outline-row-block-padding);
-  inset-inline-start: 0;
-  width: 2px;
-  border-radius: 1px;
-  background: var(--active-file-border-color, var(--text-color));
-  pointer-events: none;
 }
 
 .outline-view__empty {

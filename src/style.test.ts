@@ -80,18 +80,15 @@ describe('outline layout safeguards', () => {
     expect(rule(source, '.outline-view--truncate .outline-view__item')).toContain('text-overflow: ellipsis')
   })
 
-  it('uses a theme-accent marker without overriding the selected heading styles', async () => {
+  it('fills and outlines only the active row without overriding typography or changing geometry', async () => {
     const source = await stylesheet()
-    const active = rule(source, '.outline-view__item.is-active')
-    const marker = rule(source, '.outline-view__item.is-active::before')
-
-    expect(active).not.toContain('color:')
-    expect(active).not.toContain('font-weight:')
-    expect(marker).toContain('--active-file-border-color')
-    expect(marker).toContain('var(--text-color)')
-    expect(marker).toContain('position: absolute')
-    expect(marker).not.toContain('box-shadow:')
-    expect(rule(source, '.outline-view__item')).toContain('position: relative')
+    const active = rule(source, '.outline-view__row:has(> .outline-view__item.is-active)')
+    expect(active).toContain('background: var(--active-file-bg-color, var(--item-hover-bg-color, rgba(127, 127, 127, .12)))')
+    expect(active).toContain('box-shadow: inset 0 0 0 1px var(--active-file-border-color, var(--text-color, currentColor))')
+    // Paint only: inset outline cannot shift padding/borders or override text styles.
+    expect(active.trim().split(';').filter(value => value.trim())).toHaveLength(2)
+    expect(source).not.toContain('.outline-view__item.is-active::before')
+    expect(rule(source, '.outline-view__item:focus-visible')).toContain('box-shadow: inset 0 0 0 1px var(--active-file-border-color)')
   })
 
   it('keeps the heading-level selector fixed, contained, and theme-aware', async () => {

@@ -423,7 +423,7 @@ Use obgnail as UX/behavior reference only.
   keyboard handling, range clamping, and display settings are shared by workspace
   and preview. File switches and unload release active gestures.
 - `outline/appearance.ts` applies normalized per-rank styles. Row-local percent
-  sizing cannot compound into child lists. A separate theme-accent active marker
+  sizing cannot compound into child lists. A separate theme-derived active row fill and outline
   leaves the configured weight, color, and other styles unchanged.
 - `settings/preview.ts` reads `#write` or detached sample headings and calls the
   same parser/tree/renderer as the workspace. Preview clicks never navigate or

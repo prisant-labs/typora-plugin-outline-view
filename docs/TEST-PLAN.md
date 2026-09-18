@@ -110,7 +110,10 @@ A normal document used for interactive mutation testing.
 - scroll down and back up while the document container itself moves; the active
   item must leave the first H1 and follow the current section, including at bottom
 - active and inactive labels retain the same configured color/weight; only the
-  theme-accent marker and accessible current-location state distinguish selection
+  theme-derived row fill/outline and accessible current-location state distinguish selection
+- active fill/outline covers the current row and its disclosure control, not ancestor or
+  descendant rows; hovering the active row retains its fill/outline and keyboard focus
+  remains separately visible; no caret-like line appears beside the label
 
 ### Collapse
 
