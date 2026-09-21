@@ -53,3 +53,32 @@ export function flattenOutlineTree(nodes: OutlineNode[]): OutlineNode[] {
   nodes.forEach(visit)
   return flattened
 }
+
+export function pathToOutlineNode(
+  nodes: OutlineNode[],
+  key: string,
+  ancestors: OutlineNode[] = [],
+): OutlineNode[] {
+  for (const node of nodes) {
+    const path = [...ancestors, node]
+    if (node.key === key) return path
+    const found = pathToOutlineNode(node.children, key, path)
+    if (found.length > 0) return found
+  }
+  return []
+}
+
+function cloneOutlineSubtree(node: OutlineNode): OutlineNode {
+  return { ...node, children: node.children.map(cloneOutlineSubtree) }
+}
+
+export function focusOutlineTree(nodes: OutlineNode[], key: string): OutlineNode[] {
+  const path = pathToOutlineNode(nodes, key)
+  if (path.length === 0) return nodes
+
+  let branch = cloneOutlineSubtree(path[path.length - 1])
+  for (let index = path.length - 2; index >= 0; index -= 1) {
+    branch = { ...path[index], children: [branch] }
+  }
+  return [branch]
+}

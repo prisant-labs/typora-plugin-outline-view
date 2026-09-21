@@ -228,6 +228,21 @@ Important historical finding:
 
 # Research conclusion
 
+## Heading text and inline Markdown markers
+
+The heading parser previously included all descendant `textContent`, including
+Typora's editor-only syntax. A user report showed `**Next steps**` in Outline
+View while the document displayed a bold heading. The installed Typora 1.14.10
+`style/base-control.css` defines `.md-meta`, `.md-meta-none`, and `.md-content`
+as hidden metadata and exposes markers/content under `.md-expand` during editing.
+
+The parser excludes these metadata subtrees from a detached heading clone before
+normalizing whitespace. It retains the original element and CID for navigation,
+does not mutate the document, and does not strip Markdown-looking punctuation
+from ordinary text or code. This is a DOM-class assumption, not a public API;
+recheck it after Typora updates. Tests cover synthetic DOM fixtures based on
+these classes; native verification against the affected document is still needed.
+
 There is no architectural reason to run an entire second Typora plugin framework merely to get the desired outline experience.
 
 Community Plugin already provides the workspace infrastructure necessary for a native implementation.

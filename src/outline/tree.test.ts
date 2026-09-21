@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import type { HeadingLevel, OutlineHeading, OutlineNode } from './model'
-import { buildOutlineTree, filterHeadings, flattenOutlineTree } from './tree'
+import {
+  buildOutlineTree,
+  filterHeadings,
+  flattenOutlineTree,
+  focusOutlineTree,
+  pathToOutlineNode,
+} from './tree'
 
 function heading(key: string, level: HeadingLevel): OutlineHeading {
   const element = document.createElement(`h${level}`)
@@ -101,6 +107,34 @@ describe('buildOutlineTree', () => {
       'child',
       'two',
     ])
+  })
+
+  it('finds the root-to-node path and returns an empty path for an unknown key', () => {
+    const tree = buildOutlineTree([
+      heading('root', 1), heading('sibling', 2), heading('parent', 2), heading('selected', 4), heading('child', 6),
+    ])
+    expect(pathToOutlineNode(tree, 'selected').map(({ key }) => key)).toEqual(['root', 'parent', 'selected'])
+    expect(pathToOutlineNode(tree, 'missing')).toEqual([])
+  })
+
+  it('focuses the selected branch while preserving ancestors and the complete selected subtree', () => {
+    const tree = buildOutlineTree([
+      heading('root', 1), heading('sibling', 2), heading('parent', 2), heading('selected', 4), heading('child', 6),
+      heading('other-root', 1), heading('other-child', 2),
+    ])
+    const before = shape(tree)
+
+    expect(shape(focusOutlineTree(tree, 'selected'))).toEqual([{
+      key: 'root', parentKey: undefined, children: [{
+        key: 'parent', parentKey: 'root', children: [{
+          key: 'selected', parentKey: 'parent', children: [
+            { key: 'child', parentKey: 'selected', children: [] },
+          ],
+        }],
+      }],
+    }])
+    expect(shape(tree)).toEqual(before)
+    expect(focusOutlineTree(tree, 'missing')).toBe(tree)
   })
 })
 

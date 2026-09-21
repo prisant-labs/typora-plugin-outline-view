@@ -57,6 +57,39 @@ describe('parseHeadings', () => {
     ])
   })
 
+  it('excludes Typora editing markers without modifying the editor or navigation target', () => {
+    const root = createEditor(
+      '<h3 cid="next" class="md-focus"><span class="md-meta">### </span><span class="md-strong md-expand"><span class="md-meta">**</span><strong>Next steps</strong><span class="md-meta">**</span></span></h3>',
+    )
+    const original = root.innerHTML
+    const heading = root.firstElementChild
+    expect(parseHeadings(root)[0]).toMatchObject({ key: 'cid:next', text: 'Next steps', element: heading })
+    root.querySelector('.md-expand')!.classList.remove('md-expand')
+    expect(parseHeadings(root)[0].text).toBe('Next steps')
+    root.querySelector('.md-strong')!.classList.add('md-expand')
+    expect(root.innerHTML).toBe(original)
+  })
+
+  it('keeps readable nested inline content and omits link source metadata', () => {
+    const root = createEditor(
+      '<h2><span class="md-meta">*</span><em>Read <span class="md-meta">**</span><strong>this</strong><span class="md-meta">**</span></em><span class="md-meta">*</span> ' +
+      '<span class="md-meta">`</span><code>some_value * 2</code><span class="md-meta">`</span> ' +
+      '<span class="md-meta">[</span><a href="https://example.com">guide</a><span class="md-meta">](</span><span class="md-content">https://example.com</span><span class="md-meta">)</span>' +
+      '<span class="md-meta-none">hidden marker</span></h2>',
+    )
+    expect(parseHeadings(root)[0].text).toBe('Read this some_value * 2 guide')
+  })
+
+  it('preserves literal punctuation and readable rendered HTML', () => {
+    const root = createEditor('<h2>Literal **stars**, snake_case, [brackets], C# &amp; <code>&lt;tag&gt;</code></h2>')
+    expect(parseHeadings(root)[0].text).toBe('Literal **stars**, snake_case, [brackets], C# & <tag>')
+  })
+
+  it('uses the empty-heading fallback when only editor markers remain', () => {
+    const root = createEditor('<h2><span class="md-meta">##</span> </h2>')
+    expect(parseHeadings(root)[0].text).toBe('Untitled heading')
+  })
+
   it('treats a blank cid as missing', () => {
     const root = createEditor('<h1 cid="  ">One</h1>')
 

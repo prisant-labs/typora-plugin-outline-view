@@ -63,7 +63,7 @@
 ## P2: Outline power features
 
 - filter headings
-- focus current branch
+- focus current branch - implemented for 0.3.0
 - copy heading text
 - copy section anchor/link if meaningful
 - heading level display
@@ -78,7 +78,8 @@
   Keep them subtle and theme-aware, align them with indentation, and preserve
   correct branch boundaries for collapsed branches and skipped heading levels.
 
-These are future options, not requirements for the first marketplace listing.
+These presentation options are implemented for 0.3.0, alongside alternating row
+colors and path aids. See [the release notes](release/0.3.0.md).
 
 ## Dependency maintenance
 

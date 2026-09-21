@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 - Unreleased
+
+- Choose triangle, small bullet, line arrow, open/closed folder, or no collapse icon, with closer label spacing and the same accessible collapse target.
+- Add optional vertical hierarchy guides with quiet/clear strength and lines extending to each branch container's bottom.
+- Add alternating row colors across visible headings, with independent row A and row B colors.
+- Choose Theme, Plugin default, or Custom for guides and row colors, including separate light/dark colors, a shared-color option, and opacity.
+- Add section spacing/dividers, active-path emphasis, a clickable current-path bar, and focus-current-branch mode.
+- Hide and indent dependent settings when their feature is disabled, preserving saved choices. Place custom color editors below their dropdowns.
+- Include the new options in the live settings preview and generated offline prototype.
+- Fix Markdown delimiters and source-only metadata leaking into heading labels while preserving literal punctuation and heading navigation.
+- Preserve hover feedback over alternating row colors and auto-scroll immediately after revealing or focusing the active branch.
+- Record maintainer-reported native validation on Windows and macOS for the tested development candidate.
+
 ## 0.2.1 - 2026-09-18
 
 - Fix active-heading tracking against the stationary editor viewport instead of the scrolling document's top edge.

@@ -1,7 +1,8 @@
 import type { OutlineHeading, OutlineNode } from './model'
 import { buildOutlineTree } from './tree'
-import type { HeadingStyles } from '../settings/model'
+import type { CollapseIcon, HeadingStyles } from '../settings/model'
 import { applyHeadingAppearance } from './appearance'
+import { disclosureIcon } from '../integration/icons'
 
 export type NavigateHandler = (heading: OutlineHeading) => void
 
@@ -10,6 +11,8 @@ export interface RenderOutlineOptions {
   activeKey?: string
   emptyMessage?: string
   headingStyles?: HeadingStyles
+  collapseIcon?: CollapseIcon
+  activePathKeys?: ReadonlySet<string>
   onNavigate: NavigateHandler
   onToggle(node: OutlineNode): void
 }
@@ -31,6 +34,8 @@ function renderNodes(
   options: RenderOutlineOptions,
   role: 'tree' | 'group',
   depth: number,
+  visibleIndex: { value: number },
+  visible: boolean,
 ) {
   const list = document.createElement('ul')
   list.className =
@@ -45,6 +50,13 @@ function renderNodes(
 
     const row = document.createElement('div')
     row.className = 'outline-view__row'
+    if (visible) {
+      row.classList.add(visibleIndex.value % 2 === 0 ? 'is-zebra-a' : 'is-zebra-b')
+      visibleIndex.value += 1
+    }
+    if (options.activePathKeys?.has(node.key) && node.key !== options.activeKey) {
+      row.classList.add('is-active-path')
+    }
 
     if (node.children.length > 0) {
       const collapsed = options.collapsedKeys.has(node.key)
@@ -57,7 +69,8 @@ function renderNodes(
         'aria-label',
         `${collapsed ? 'Expand' : 'Collapse'} ${node.text}`,
       )
-      disclosure.textContent = collapsed ? '▸' : '▾'
+      const icon = disclosureIcon(options.collapseIcon ?? 'triangle', !collapsed)
+      if (icon) disclosure.append(icon)
       disclosure.addEventListener('click', () => options.onToggle(node))
       row.append(disclosure)
     } else {
@@ -92,8 +105,9 @@ function renderNodes(
     listItem.append(row)
 
     if (node.children.length > 0) {
-      const group = renderNodes(node.children, options, 'group', depth + 1)
-      group.hidden = options.collapsedKeys.has(node.key)
+      const collapsed = options.collapsedKeys.has(node.key)
+      const group = renderNodes(node.children, options, 'group', depth + 1, visibleIndex, visible && !collapsed)
+      group.hidden = collapsed
       listItem.append(group)
     }
 
@@ -129,5 +143,5 @@ export function renderOutline(
   const nodes = headings.every(hasChildren)
     ? headings
     : buildOutlineTree(headings as OutlineHeading[])
-  container.replaceChildren(renderNodes(nodes, options, 'tree', 1))
+  container.replaceChildren(renderNodes(nodes, options, 'tree', 1, { value: 0 }, true))
 }

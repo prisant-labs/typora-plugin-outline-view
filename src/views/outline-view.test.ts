@@ -397,6 +397,44 @@ describe('OutlineView', () => {
     expect(view.containerEl.classList.contains('outline-view--wrap')).toBe(false)
   })
 
+  it('applies approved appearance aids and focuses the current branch without losing navigation', () => {
+    vi.useFakeTimers()
+    document.body.innerHTML = '<div id="write"><h1 cid="field">Field notes</h1><h2 cid="research">Research</h2><h3 cid="observations">Observations</h3><h4 cid="child">A familiar pattern</h4><h2 cid="sibling">Design direction</h2><h1 cid="appendix">Appendix</h1></div>'
+    setHeadingTops([-300, -150, 10, 200, 400, 600])
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView })
+    const { app } = createApp()
+    const settings = new FakeSettings()
+    settings.set('collapseIcon', 'arrow')
+    settings.set('showVerticalGuides', true)
+    settings.set('verticalGuideStrength', 'clear')
+    settings.set('zebraRows', true)
+    settings.set('sectionSeparation', 'divider')
+    settings.set('emphasizeActivePath', true)
+    settings.set('showCurrentPathBar', true)
+    const view = new OutlineView({} as never, app as never, settings as never)
+    view.onOpen()
+
+    expect(view.containerEl.classList).toContain('outline-view--guides')
+    expect(view.containerEl.classList).toContain('outline-view--guides-clear')
+    expect(view.containerEl.classList).toContain('outline-view--zebra')
+    expect(view.containerEl.classList).toContain('outline-view--sections-divider')
+    expect(view.containerEl.querySelector('svg[data-disclosure-icon="arrow"]')).not.toBeNull()
+    expect(view.containerEl.querySelector('[data-heading-key="cid:field"]')?.parentElement?.classList.contains('is-active-path')).toBe(true)
+    expect(view.containerEl.querySelector('[data-heading-key="cid:research"]')?.parentElement?.classList.contains('is-active-path')).toBe(true)
+    expect(Array.from(view.containerEl.querySelectorAll('.outline-view__current-path button')).map(button => button.textContent)).toEqual(['Field notes', 'Research', 'Observations'])
+
+    settings.set('focusCurrentBranch', true)
+    vi.advanceTimersByTime(120)
+    expect(labels(view)).toEqual(['Field notes', 'Research', 'Observations', 'A familiar pattern'])
+    view.containerEl.querySelectorAll<HTMLButtonElement>('.outline-view__current-path button')[1].click()
+    expect(scrollIntoView).toHaveBeenCalled()
+    settings.set('focusCurrentBranch', false)
+    vi.advanceTimersByTime(120)
+    expect(labels(view)).toEqual(['Field notes', 'Research', 'Observations', 'A familiar pattern', 'Design direction', 'Appendix'])
+    view.unload()
+  })
+
   it('shows a specific state when level settings hide every heading', () => {
     document.body.innerHTML = '<div id="write"><h1>One</h1></div>'
     setHeadingTops([10])
@@ -523,6 +561,35 @@ describe('OutlineView', () => {
     active.getBoundingClientRect = () => ({ top: -220, bottom: -20 }) as DOMRect
     follow()
     expect(content.scrollTop).toBe(178)
+  })
+
+  it.each([
+    ['reveal', true], ['focus', true], ['reveal', false], ['focus', false],
+  ] as const)('honors auto-scroll after the first %s rerender with auto-scroll=%s', (mode, autoScroll) => {
+    vi.useFakeTimers()
+    document.body.innerHTML = '<div id="write"><h1 cid="one">One</h1><h2 cid="two">Two</h2><h3 cid="three">Three</h3></div>'
+    setHeadingTops([10, 300, 400])
+    const { app, markdownEditor } = createApp()
+    const settings = new FakeSettings()
+    settings.set('expandThroughLevel', mode === 'reveal' ? 1 : 6)
+    settings.set('focusCurrentBranch', mode === 'focus')
+    settings.set('autoScrollOutline', autoScroll)
+    const view = new OutlineView({} as never, app as never, settings as never)
+    view.onOpen()
+    const content = view.containerEl.querySelector<HTMLElement>('.outline-view__content')!
+    content.getBoundingClientRect = () => ({ top: 100 }) as DOMRect
+    Object.defineProperties(content, { clientTop: { value: 0 }, clientHeight: { value: 100 } })
+    const originalRect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return this.dataset.headingKey === 'cid:three'
+        ? { top: 220, bottom: 250 } as DOMRect : originalRect.call(this)
+    })
+    setHeadingTops([-400, -100, 10])
+    markdownEditor.emit('scroll')
+    vi.advanceTimersByTime(40)
+    expect(content.querySelector('.is-active')?.textContent).toBe('Three')
+    expect(content.scrollTop).toBe(autoScroll ? 50 : 0)
+    view.unload()
   })
 
   it('shows current wrap state with two icons and persists clicks through the shared setting', () => {

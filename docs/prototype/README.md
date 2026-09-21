@@ -46,3 +46,9 @@ Windows and macOS native smoke testing remains required before publication.
 Review minimum/maximum ranges, all selector styles, labels/dots, theme/grayscale,
 hidden controls, size, emphasis states, case, custom/theme colors, resets,
 section navigation, and narrow-width preview access.
+
+Enable Vertical guides or Alternating row colors to reveal their indented
+settings. Choose Custom under any color source to show its editor below the
+dropdown. "Use light color in both themes" reuses the light swatch and retains
+the dark swatch for when separate theme colors are enabled again. Turning a
+feature off and on preserves its choices for the current prototype session.

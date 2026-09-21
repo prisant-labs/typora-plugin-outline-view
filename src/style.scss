@@ -129,6 +129,55 @@
   overscroll-behavior: contain;
 }
 
+.outline-view__current-path {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 3px;
+  align-items: center;
+  min-width: 0;
+  padding: 6px 9px;
+  margin: 0;
+  overflow-x: auto;
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--base-border);
+  background: color-mix(in srgb, var(--active-file-bg-color, transparent) 42%, var(--bg-color));
+}
+
+.outline-view__current-path[hidden] {
+  display: none;
+}
+
+.outline-view__current-path button {
+  max-width: 120px;
+  padding: 2px 3px;
+  overflow: hidden;
+  color: inherit;
+  font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+}
+
+.outline-view__current-path button:last-of-type {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.outline-view__current-path button:hover {
+  color: var(--text-color);
+  background: var(--item-hover-bg-color);
+}
+
+.outline-view__current-path button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--active-file-border-color);
+}
+
 .outline-view__tree,
 .outline-view__group {
   box-sizing: border-box;
@@ -140,7 +189,24 @@
 }
 
 .outline-view__group {
+  position: relative;
   padding-inline-start: var(--outline-indent);
+}
+
+.outline-view--guides .outline-view__group::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 10px;
+  width: 1px;
+  pointer-events: none;
+  content: '';
+  background: var(--outline-guide-color);
+  opacity: .58;
+}
+
+.outline-view--guides-clear .outline-view__group::before {
+  opacity: 1;
 }
 
 .outline-view__group[hidden] {
@@ -154,12 +220,30 @@
   margin: 0;
 }
 
+.outline-view--sections-space .outline-view__tree > .outline-view__node + .outline-view__node {
+  margin-block-start: 10px;
+}
+
+.outline-view--sections-divider .outline-view__tree > .outline-view__node + .outline-view__node {
+  padding-block-start: 7px;
+  margin-block-start: 7px;
+  border-top: 1px solid var(--base-border, var(--outline-guide-color));
+}
+
 .outline-view__row {
   display: flex;
   width: 100%;
   min-width: 0;
   align-items: flex-start;
   border-radius: 4px;
+}
+
+.outline-view--zebra .outline-view__row:where(.is-zebra-a) {
+  background: var(--outline-zebra-a);
+}
+
+.outline-view--zebra .outline-view__row:where(.is-zebra-b) {
+  background: var(--outline-zebra-b);
 }
 
 .outline-view__row:hover {
@@ -169,6 +253,16 @@
 .outline-view__row:has(> .outline-view__item.is-active) {
   background: var(--active-file-bg-color, var(--item-hover-bg-color, rgba(127, 127, 127, .12)));
   box-shadow: inset 0 0 0 1px var(--active-file-border-color, var(--text-color, currentColor));
+}
+
+.outline-view--active-path .outline-view__row.is-active-path > .outline-view__item {
+  color: var(--active-file-border-color, var(--text-color));
+  font-weight: 600;
+}
+
+.outline-view--active-path .outline-view__node:has(> .outline-view__row.is-active-path) > .outline-view__group::before {
+  background: var(--active-file-border-color, var(--outline-guide-color));
+  opacity: 1;
 }
 
 .outline-view__disclosure,
@@ -197,6 +291,19 @@
   color: var(--text-color);
 }
 
+.outline-view__triangle {
+  display: block;
+  line-height: 1;
+}
+
+.outline-view__bullet {
+  display: block;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
 .outline-view__item {
   position: relative;
   box-sizing: border-box;
@@ -214,6 +321,7 @@
   background: transparent;
   border: 0;
   border-radius: 4px;
+  padding-inline-start: 2px;
 }
 
 .outline-view--wrap .outline-view__item {

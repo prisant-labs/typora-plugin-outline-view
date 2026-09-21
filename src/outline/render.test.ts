@@ -72,6 +72,31 @@ describe('renderOutline', () => {
     expect(disclosures[0].getAttribute('aria-label')).toBe('Collapse Parent')
   })
 
+  it('renders every approved disclosure icon without changing the accessible control', () => {
+    const expected = {
+      triangle: '.outline-view__triangle',
+      bullet: '.outline-view__bullet',
+      arrow: 'svg[data-disclosure-icon="arrow"]',
+      folder: 'svg[data-disclosure-icon="folder"]',
+      none: null,
+    }
+    for (const [collapseIcon, selector] of Object.entries(expected)) {
+      const container = document.createElement('div')
+      const nodes = buildOutlineTree([heading('parent', 1, 'Parent'), heading('child', 2, 'Child')])
+      renderOutline(container, nodes, options({ collapseIcon }))
+      const disclosure = container.querySelector<HTMLButtonElement>('.outline-view__disclosure')!
+      expect(disclosure.getAttribute('aria-label')).toBe('Collapse Parent')
+      expect(disclosure.getAttribute('aria-expanded')).toBe('true')
+      if (selector) expect(disclosure.querySelector(selector), collapseIcon).not.toBeNull()
+      else expect(disclosure.childNodes, collapseIcon).toHaveLength(0)
+    }
+
+    const collapsed = document.createElement('div')
+    const nodes = buildOutlineTree([heading('parent', 1), heading('child', 2)])
+    renderOutline(collapsed, nodes, options({ collapseIcon: 'folder', collapsedKeys: new Set(['parent']) }))
+    expect(collapsed.querySelector('svg[data-disclosure-icon="folder"]')?.getAttribute('data-expanded')).toBe('false')
+  })
+
   it('hides descendants and exposes collapsed accessibility state', () => {
     const container = document.createElement('div')
     const nodes = buildOutlineTree([
@@ -104,6 +129,33 @@ describe('renderOutline', () => {
     const item = container.querySelector('.outline-view__item')
     expect(item?.classList.contains('is-active')).toBe(true)
     expect(item?.getAttribute('aria-current')).toBe('location')
+  })
+
+  it('marks active ancestors separately from the current heading', () => {
+    const container = document.createElement('div')
+    const nodes = buildOutlineTree([
+      heading('root', 1), heading('parent', 2), heading('active', 3), heading('sibling', 2),
+    ])
+    renderOutline(container, nodes, options({
+      activeKey: 'active',
+      activePathKeys: new Set(['root', 'parent']),
+    }))
+    expect(container.querySelector('[data-heading-key="root"]')?.parentElement?.classList.contains('is-active-path')).toBe(true)
+    expect(container.querySelector('[data-heading-key="parent"]')?.parentElement?.classList.contains('is-active-path')).toBe(true)
+    expect(container.querySelector('[data-heading-key="active"]')?.parentElement?.classList.contains('is-active-path')).toBe(false)
+    expect(container.querySelector('[data-heading-key="sibling"]')?.parentElement?.classList.contains('is-active-path')).toBe(false)
+  })
+
+  it('alternates zebra classes across the flattened visible order', () => {
+    const container = document.createElement('div')
+    const nodes = buildOutlineTree([
+      heading('root', 1), heading('child', 2), heading('deep', 3), heading('sibling', 2), heading('other', 1),
+    ])
+    renderOutline(container, nodes, options({ collapsedKeys: new Set(['child']) }))
+    const visibleRows = Array.from(container.querySelectorAll<HTMLElement>('.outline-view__row')).filter(row => !row.closest('[hidden]'))
+    expect(visibleRows.map(row => row.classList.contains('is-zebra-a') ? 'a' : row.classList.contains('is-zebra-b') ? 'b' : '-')).toEqual(['a', 'b', 'a', 'b'])
+    expect(container.querySelector('[data-heading-key="deep"]')?.parentElement?.classList.contains('is-zebra-a')).toBe(false)
+    expect(container.querySelector('[data-heading-key="deep"]')?.parentElement?.classList.contains('is-zebra-b')).toBe(false)
   })
 
   it('invokes navigation and disclosure callbacks with selected nodes', () => {

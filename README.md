@@ -6,9 +6,12 @@ is an independent, synchronized heading navigator for
 It does not replace or move Typora's native outline.
 
 **Release:** [0.2.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.2.1)
-is available for manual installation. Marketplace enrollment is still pending.
+is available for installation. Outline View is listed in the Community Plugin marketplace.
 The maintainer confirmed Windows/macOS validation complete for the released
 archive; see the [validation record](docs/release/NATIVE-CHECKLIST.md).
+
+**Development:** [0.3.0 release notes](docs/release/0.3.0.md) describe the new
+appearance and browsing options on this branch. Version 0.3.0 is not yet published.
 
 ## Features
 
@@ -17,6 +20,9 @@ archive; see the [validation record](docs/release/NATIVE-CHECKLIST.md).
 - Rail, Enclosure, or Bracket selectors; labels/dots; Theme/Grayscale; or hide the selector.
 - Per-rank size (50-250%), bold/italic/underline, ALL CAPS/Small Caps, theme/custom colors.
 - Live settings preview, compact controls, and sticky section navigation.
+- Optional collapse icon styles, vertical guides, alternating row colors, and
+  section spacing/dividers with theme or custom light/dark colors.
+- Optional active-path emphasis, clickable current path, and current-branch focus.
 - Presentation changes never modify document text.
 
 ## Preview the settings
@@ -28,7 +34,8 @@ download the file to interact. [How it stays current](docs/prototype/README.md).
 
 ![Production settings UI in the browser prototype with synthetic headings](docs/assets/screenshots/settings-prototype.png)
 
-*Browser prototype, not a native Typora screenshot. Maintainer-confirmed native
+*0.2.1 browser prototype screenshot. Open the generated HTML above for current
+settings. Maintainer-confirmed native
 validation is recorded separately from browser and CI coverage.*
 
 ## Requirements
@@ -43,10 +50,7 @@ validation is recorded separately from browser and CI coverage.*
 
 ## Installation
 
-### Marketplace (after registry acceptance)
-
-Outline View is not yet listed in the marketplace. Once its registry entry is
-accepted, use the following steps; until then, install manually below.
+### Marketplace
 
 In Community Plugin settings, open **Marketplace**, search for **Outline View**,
 install it, then enable it under **Installed Plugins**.

@@ -1,13 +1,21 @@
 import type { HeadingLevel, OutlineHeading } from './model'
 
 const HEADING_TAG = /^H([1-6])$/
+// Typora keeps Markdown delimiters and source-only metadata in the editor DOM,
+// even when CSS hides them. Exclude them regardless of the current edit state.
+const HEADING_METADATA = '.md-meta, .md-meta-none, .md-content'
 const fallbackIdentityByEditor = new WeakMap<
   HTMLElement,
   { nextId: number; keys: WeakMap<HTMLElement, string> }
 >()
 
 function normalizeHeadingText(element: HTMLElement) {
-  const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim()
+  let content = element
+  if (element.querySelector(HEADING_METADATA)) {
+    content = element.cloneNode(true) as HTMLElement
+    content.querySelectorAll(HEADING_METADATA).forEach(metadata => metadata.remove())
+  }
+  const text = (content.textContent ?? '').replace(/\s+/g, ' ').trim()
   return text || 'Untitled heading'
 }
 
