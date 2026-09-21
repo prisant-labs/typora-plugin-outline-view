@@ -4,6 +4,22 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+## 0.3.0 development candidate signoff - 2026-09-21
+
+The maintainer reported that the appearance options and heading-label fix looked
+good in both macOS and Windows, then authorized release documentation and PR
+merge. This records the maintainer's overall report, not independently observed
+per-case results or authorization to publish a release.
+
+- Tested development candidate: appearance options plus Markdown heading-label fix.
+- Candidate manifest version: 0.2.1, before the 0.3.0 release-preparation bump.
+- Candidate ZIP SHA-256: `48e512a991312b011b7b1156e7668b7d874da88db8ed9df826f222bb4d8b0af7`.
+- Platforms: Windows and macOS. Exact OS/Typora/core versions and themes were not supplied.
+- The candidate was built from uncommitted development changes; no immutable
+  release commit was associated with that ZIP. Do not transfer its checksum or
+  native report to a later package as if they were the same artifact.
+- See [0.3.0 release notes](0.3.0.md) for scope and publication status.
+
 ## 0.2.1 maintainer signoff - 2026-09-18
 
 After the initial public GitHub release, the maintainer confirmed validation
@@ -20,7 +36,7 @@ an agent-executed native test run or independently reproduced certification.
 - The declared Typora 1.4.0 minimum remains independently uncertified. Linux is
   not advertised. The published tag and archive have not been changed.
 
-## Platform record
+## Published 0.2.1 platform record
 
 | Platform | Current 0.2.1 native gate |
 | --- | --- |

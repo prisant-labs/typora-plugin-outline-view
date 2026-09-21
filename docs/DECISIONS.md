@@ -240,3 +240,33 @@ CSS. Continue using the exported editor scroll event and existing cleanup.
 **Why:** `#write` and its headings move together during scroll. Using its top as
 the threshold can keep the first heading active forever. Tests must move the
 editor rectangle as well as its headings to reproduce this native geometry.
+
+## D023 (outline appearance): Compose optional structural aids
+
+**Decision:** Keep the existing triangle, guides off, alternating row colors off, no section
+separation, and no path aids as defaults. Offer triangle, bullet, line arrow,
+folder, and no-icon disclosures while retaining the same accessible collapse
+button. Add independently configurable bottom-complete vertical guides,
+visible-order alternating row colors, root spacing/dividers, active-path emphasis, a
+clickable current-path bar, and focus-current-branch projection.
+
+Guide and alternating row A/B colors each use Theme, Plugin default, or Custom.
+Custom values use native HTML color inputs, separate light/dark swatches, an
+optional shared swatch, and opacity. Determine the active custom pair from the
+computed outline surface, and refresh after standard document/theme stylesheet
+mutations; do not bind to an undocumented Typora theme flag. Selected, hovered,
+and keyboard-focused rows remain visually dominant over alternating row or path styling.
+
+The settings preview and offline artifact use the production renderer,
+projection helpers, current-path component, and appearance resolver.
+
+Dependent guide, alternating row color, and selector settings are hidden and
+indented beneath their enable option. Disabling a feature retains its choices.
+Color-source selects use Theme / Plugin default / Custom; custom swatches and
+opacity live below the select, outside its horizontal control container.
+"Use light color in both themes" replaces the ambiguous shared-color label and
+preserves the dark swatch when that choice is temporarily hidden.
+
+**Why:** The aids improve scanning and location awareness at narrow dock widths
+without changing Markdown or forcing a noisier default. Shared production
+components keep design review aligned with shipped behavior.

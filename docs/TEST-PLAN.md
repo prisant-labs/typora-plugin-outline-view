@@ -64,6 +64,17 @@ A normal document used for interactive mutation testing.
 
 ## Functional test matrix
 
+### Inline Markdown in headings
+
+Use `test/vault/inline-heading-formatting.md` in Typora. Confirm **Next steps**,
+italic text, strike-through text, inline code, and links appear as readable
+outline labels without formatting delimiters or link destinations. Check both
+while editing each heading and after moving the caret elsewhere. Confirm literal
+asterisks, underscores, and brackets remain where intended, and click navigation
+still targets the original heading. Verify the settings live preview and current
+path bar show the same clean labels. These checks require native Typora; parser
+DOM tests alone do not certify every inline extension or Typora version.
+
 ### Loading
 
 - plugin loads
@@ -160,6 +171,39 @@ A normal document used for interactive mutation testing.
 - multiline disclosure arrows align with the center of the first heading line
 - the lower-right dock control reads Toggle outline sidebar
 - disabling the plugin restores the core dock tooltip
+
+### Outline appearance and browsing aids
+
+- each disclosure option shows only on branches and retains Expand/Collapse
+  labeling, keyboard focus, and the full hit target
+- heading labels remain close to triangle, bullet, arrow, folder, and empty
+  disclosure treatments at compact/comfortable density and wrapped text
+- guides follow real tree ancestry, end at each child container's bottom, and
+  remain aligned for small/medium/large indentation
+- quiet/clear guide strength remains legible in light, dark, and a third-party
+  theme without overpowering heading labels
+- alternating row A/B counts only visible flattened rows after collapse, expansion,
+  filtering, branch focus, and file changes
+- hover, current-row fill/outline, and keyboard focus remain above alternating row colors
+- Theme and Plugin default resolve without stale custom inline colors
+- Custom guide and alternating row A/B colors use native light/dark swatches, shared-color
+  mode, and 0%, partial, and 100% opacity; invalid persisted values normalize
+- guide, alternating row color, and heading-level selector subsettings are
+  indented and hidden when disabled; re-enabling restores saved choices
+- color-source selects remain normal height with Custom selected; the editor
+  sits below the source row without overlap at wide and narrow settings widths
+- "Use light color in both themes" hides and disables the dark swatch; unchecking
+  restores its saved value, including after closing and reopening settings
+- changing Typora theme refreshes the selected custom light/dark pair, including
+  after settings preview hide/show, with no observer left after unload
+- section spacing and divider appear only between root sections
+- active-path emphasis marks ancestors but not siblings or the current row
+- current-path buttons show root through current heading and navigate to each
+  represented heading
+- focus-current-branch retains ancestors plus the full selected subtree, follows
+  active-heading changes, and restores the complete filtered outline when off
+- reset restores the conservative production defaults without changing heading
+  typography settings or document contents
 
 ## Performance
 

@@ -302,3 +302,33 @@ bottom clearance. Active-document information and Use samples share a compact
 row, without a guidance paragraph. Its
 renderer and selector are the production components. Changing presentation
 must never modify heading text, markup, or document contents.
+
+## Approved outline appearance and browsing extension
+
+The outline offers Current triangle, Small bullet, Line arrow, Open / closed
+folder, and No icon disclosure treatments. Every treatment retains the same
+focusable 20px collapse target and accessible expanded/collapsed label. Heading
+labels sit closer to that target without reducing it.
+
+Vertical hierarchy guides and visible-order alternating row colors are independently
+optional. Guides use quiet or clear strength and continue to the bottom of each
+real child-list container. Row A and row B alternate across the flattened visible
+outline, so collapsed descendants do not affect the sequence. Active, hover,
+and keyboard-focus states take precedence over alternating row colors.
+
+Guide, row A, and row B colors each support Theme, Plugin
+default, and Custom. Custom mode uses native color inputs, separate light and
+dark values, a "Use light color in both themes" shortcut, and 0-100% opacity. Theme changes
+must update these presentation variables without private Typora APIs.
+
+Guide, alternating row color, and heading-level selector subsettings appear in
+indented groups only when their parent option is enabled. Hiding a group preserves
+its settings and disables its controls. Each Custom editor occupies a full-width
+row beneath its color-source dropdown. Shared-color mode reuses the light swatch
+in both themes while retaining the separate dark choice for later use.
+
+Optional browsing aids include none/space/divider top-level section separation,
+active-ancestor emphasis, a clickable current-path bar, and focus-current-branch.
+Focus mode retains the selected heading's ancestor chain and complete subtree,
+and disabling it restores the full filtered outline. These settings affect only
+the outline view and its production-backed settings preview.

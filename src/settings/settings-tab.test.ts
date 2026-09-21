@@ -66,6 +66,29 @@ describe('OutlineSettingsTab', () => {
     expect(wrap.checked).toBe(true)
     tab.onhide()
   })
+
+  it('previews icons, guides, zebra rows, active paths, current path, sections, and branch focus', () => {
+    document.body.innerHTML = '<div id="write"><h1>Field notes</h1><h2>Research</h2><h3>Observations</h3><h4>A familiar pattern</h4><h2>Design direction</h2><h1>Appendix</h1></div>'
+    const { tab, settings } = createTab(document.body)
+    settings.set('collapseIcon', 'folder')
+    settings.set('showVerticalGuides', true)
+    settings.set('verticalGuideStrength', 'clear')
+    settings.set('zebraRows', true)
+    settings.set('sectionSeparation', 'divider')
+    settings.set('emphasizeActivePath', true)
+    settings.set('showCurrentPathBar', true)
+    settings.set('focusCurrentBranch', true)
+    const preview = tab.containerEl.querySelector<HTMLElement>('.outline-view--preview')!
+    expect(preview.classList).toContain('outline-view--guides')
+    expect(preview.classList).toContain('outline-view--guides-clear')
+    expect(preview.classList).toContain('outline-view--zebra')
+    expect(preview.classList).toContain('outline-view--sections-divider')
+    expect(preview.querySelector('svg[data-disclosure-icon="folder"]')).not.toBeNull()
+    expect(Array.from(preview.querySelectorAll('.outline-view__current-path button')).map(button => button.textContent)).toEqual(['Field notes', 'Research', 'Observations'])
+    expect(Array.from(preview.querySelectorAll('.outline-view__item')).map(button => button.textContent)).toEqual(['Field notes', 'Research', 'Observations', 'A familiar pattern'])
+    expect(preview.querySelector('[data-heading-key="heading:0"]')?.parentElement?.classList.contains('is-active-path')).toBe(true)
+    tab.onhide()
+  })
   it('uses a compact live-view title and metadata row without guidance text', () => {
     document.body.innerHTML = '<div id="write"><h1>Real heading</h1></div>'
     const { tab } = createTab(document.body)
@@ -229,7 +252,7 @@ describe('OutlineSettingsTab', () => {
     expect(settings.get('headingStyles')).toEqual(DEFAULT_OUTLINE_SETTINGS.headingStyles)
     tab.onhide()
     tab.onshow()
-    expect(tab.containerEl.querySelectorAll('nav')).toHaveLength(1)
+    expect(tab.containerEl.querySelectorAll('nav.outline-view-settings__nav')).toHaveLength(1)
     tab.onhide()
   })
 
@@ -326,6 +349,17 @@ describe('OutlineSettingsTab', () => {
       'Wrap long heading labels',
       'Density',
       'Indentation',
+      'Collapse icon',
+      'Vertical guides',
+      'Guide strength',
+      'Guide color',
+      'Alternating row colors',
+      'Row A color',
+      'Row B color',
+      'Section separation',
+      'Emphasize active path',
+      'Show current path bar',
+      'Focus current branch',
       'Show heading-level selector',
       'Selector style',
       'Show heading-level labels',
@@ -368,6 +402,109 @@ describe('OutlineSettingsTab', () => {
     expect(settings.get('autoOpen')).toBe(true)
     expect(settings.get('density')).toBe('compact')
     expect(settings.get('wrapHeadingLabels')).toBe(false)
+  })
+
+  it('uses native light/dark color swatches, opacity, dependencies, and appearance reset', () => {
+    const { settings, tab } = createTab()
+    const guides = settingRow(tab, 'Vertical guides')!.querySelector<HTMLInputElement>('input')!
+    const strength = settingRow(tab, 'Guide strength')!.querySelector<HTMLSelectElement>('select')!
+    const guideRow = settingRow(tab, 'Guide color')!
+    const source = guideRow.querySelector<HTMLSelectElement>('select')!
+    const details = guideRow.querySelector<HTMLElement>('[data-color-details]')!
+    const light = guideRow.querySelector<HTMLInputElement>('[data-color-field="light"]')!
+    const dark = guideRow.querySelector<HTMLInputElement>('[data-color-field="dark"]')!
+    const same = guideRow.querySelector<HTMLInputElement>('[data-color-field="same"]')!
+    const opacity = guideRow.querySelector<HTMLInputElement>('[data-color-field="opacity"]')!
+    const opacityNumber = guideRow.querySelector<HTMLInputElement>('[data-color-field="opacity-number"]')!
+
+    expect(light.type).toBe('color')
+    expect(dark.type).toBe('color')
+    expect(source.value).toBe('theme')
+    expect(source.disabled).toBe(true)
+    expect(strength.disabled).toBe(true)
+    expect(details.hidden).toBe(true)
+    guides.checked = true; guides.dispatchEvent(new Event('change'))
+    expect(settings.get('showVerticalGuides')).toBe(true)
+    expect(source.disabled).toBe(false)
+    expect(strength.disabled).toBe(false)
+    source.value = 'custom'; source.dispatchEvent(new Event('change'))
+    expect(details.hidden).toBe(false)
+    light.value = '#123456'; light.dispatchEvent(new Event('input'))
+    dark.value = '#abcdef'; dark.dispatchEvent(new Event('input'))
+    opacity.value = '42'; opacity.dispatchEvent(new Event('input'))
+    expect(opacityNumber.value).toBe('42')
+    expect(settings.get('verticalGuideColor')).toEqual({ source: 'custom', light: '#123456', dark: '#abcdef', sameInBothThemes: false, opacity: 42 })
+    same.checked = true; same.dispatchEvent(new Event('change'))
+    expect(dark.closest('label')?.hidden).toBe(true)
+    expect(settings.get('verticalGuideColor').sameInBothThemes).toBe(true)
+    opacityNumber.value = '200'; opacityNumber.dispatchEvent(new Event('change'))
+    expect(settings.get('verticalGuideColor').opacity).toBe(100)
+    expect(opacity.value).toBe('100')
+
+    const zebra = settingRow(tab, 'Alternating row colors')!.querySelector<HTMLInputElement>('input')!
+    const zebraA = settingRow(tab, 'Row A color')!.querySelector<HTMLSelectElement>('select')!
+    const zebraB = settingRow(tab, 'Row B color')!.querySelector<HTMLSelectElement>('select')!
+    expect(zebraA.disabled).toBe(true)
+    expect(zebraB.disabled).toBe(true)
+    zebra.checked = true; zebra.dispatchEvent(new Event('change'))
+    expect(zebraA.disabled).toBe(false)
+    expect(zebraB.disabled).toBe(false)
+
+    tab.containerEl.querySelector<HTMLButtonElement>('[data-action="reset-outline-appearance"]')!.click()
+    expect(settings.get('showVerticalGuides')).toBe(false)
+    expect(settings.get('zebraRows')).toBe(false)
+    expect(settings.get('verticalGuideColor')).toEqual(DEFAULT_OUTLINE_SETTINGS.verticalGuideColor)
+    expect(source.value).toBe('theme')
+    expect(details.hidden).toBe(true)
+    tab.onhide()
+  })
+
+  it.each([
+    ['showVerticalGuides', 'verticalGuideColor'],
+    ['zebraRows', 'zebraRowAColor'],
+    ['zebraRows', 'zebraRowBColor'],
+  ] as const)('hides %s subsettings while preserving %s custom choices', (toggleKey, colorKey) => {
+    const { settings, tab } = createTab()
+    const group = tab.containerEl.querySelector<HTMLElement>(`[data-settings-group="${toggleKey}"]`)!
+    const toggle = tab.containerEl.querySelector<HTMLInputElement>(`[data-setting="${toggleKey}"]`)!
+    const source = group.querySelector<HTMLSelectElement>(`[data-setting="${colorKey}"]`)!
+    const details = group.querySelector<HTMLElement>(`[data-color-details="${colorKey}"]`)!
+    expect(group.hidden).toBe(true)
+    expect(toggle.getAttribute('aria-controls')).toBe(group.id)
+    expect(group.contains(toggle)).toBe(false)
+    expect(details.parentElement).toBe(source.closest('.typ-setting-item'))
+    expect(source.parentElement!.children).toHaveLength(1)
+
+    toggle.checked = true; toggle.dispatchEvent(new Event('change'))
+    expect(group.hidden).toBe(false)
+    source.value = 'custom'; source.dispatchEvent(new Event('change'))
+    const light = details.querySelector<HTMLInputElement>('[data-color-field="light"]')!
+    const dark = details.querySelector<HTMLInputElement>('[data-color-field="dark"]')!
+    const same = details.querySelector<HTMLInputElement>('[data-color-field="same"]')!
+    light.value = '#123456'; light.dispatchEvent(new Event('input'))
+    dark.value = '#abcdef'; dark.dispatchEvent(new Event('input'))
+    same.checked = true; same.dispatchEvent(new Event('change'))
+    expect(dark.disabled).toBe(true)
+    expect(dark.closest('label')!.hidden).toBe(true)
+    const saved = settings.get(colorKey)
+
+    toggle.checked = false; toggle.dispatchEvent(new Event('change'))
+    expect(group.hidden).toBe(true)
+    expect(details.hidden).toBe(true)
+    expect(Array.from(group.querySelectorAll('input, select')).every(input => (input as HTMLInputElement).disabled)).toBe(true)
+    expect(settings.get(colorKey)).toEqual(saved)
+    toggle.checked = true; toggle.dispatchEvent(new Event('change'))
+    expect(details.hidden).toBe(false)
+    expect(light.value).toBe('#123456')
+    same.checked = false; same.dispatchEvent(new Event('change'))
+    expect(dark.disabled).toBe(false)
+    expect(dark.closest('label')!.hidden).toBe(false)
+    expect(dark.value).toBe('#abcdef')
+    tab.onhide()
+    tab.onshow()
+    expect(tab.containerEl.querySelector<HTMLElement>(`[data-settings-group="${toggleKey}"]`)!.hidden).toBe(false)
+    expect(tab.containerEl.querySelector<HTMLSelectElement>(`[data-setting="${colorKey}"]`)!.value).toBe('custom')
+    tab.onhide()
   })
 
   it('keeps the minimum level from exceeding the maximum', () => {
@@ -417,6 +554,7 @@ describe('OutlineSettingsTab', () => {
     show.checked = false
     show.dispatchEvent(new Event('change'))
     expect(settingRow(tab, 'Selector style')!.querySelector<HTMLSelectElement>('select')!.disabled).toBe(true)
+    expect(tab.containerEl.querySelector<HTMLElement>('[data-settings-group="showLevelSelector"]')!.hidden).toBe(true)
     expect(tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__preview .outline-view__level-selector')!.hidden).toBe(true)
     tab.onhide()
     document.body.replaceChildren()

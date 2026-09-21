@@ -1,3 +1,5 @@
+import type { CollapseIcon } from '../settings/model'
+
 /** Small DOM-native icons remain visible without the host's icon font. */
 export function outlineIcon(kind: 'settings' | 'dock' | 'wrap' | 'nowrap') {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -26,6 +28,52 @@ export function outlineIcon(kind: 'settings' | 'dock' | 'wrap' | 'nowrap') {
     center.setAttribute('cy', '12')
     center.setAttribute('r', '3')
     svg.append(center)
+  }
+  return svg
+}
+
+export function disclosureIcon(kind: CollapseIcon, expanded: boolean): HTMLElement | SVGElement | undefined {
+  if (kind === 'none') return undefined
+
+  if (kind === 'triangle' || kind === 'bullet') {
+    const span = document.createElement('span')
+    span.className = kind === 'triangle' ? 'outline-view__triangle' : 'outline-view__bullet'
+    span.setAttribute('aria-hidden', 'true')
+    if (kind === 'triangle') span.textContent = expanded ? '▾' : '▸'
+    return span
+  }
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', '0 0 20 20')
+  svg.setAttribute('width', '16')
+  svg.setAttribute('height', '16')
+  svg.setAttribute('fill', 'none')
+  svg.setAttribute('stroke', 'currentColor')
+  svg.setAttribute('stroke-width', '1.35')
+  svg.setAttribute('stroke-linecap', 'round')
+  svg.setAttribute('stroke-linejoin', 'round')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+  svg.dataset.disclosureIcon = kind
+  svg.dataset.expanded = String(expanded)
+
+  const addPath = (d: string, fill = false) => {
+    const path = document.createElementNS(svg.namespaceURI, 'path')
+    path.setAttribute('d', d)
+    if (fill) {
+      path.setAttribute('fill', 'currentColor')
+      path.setAttribute('fill-opacity', '.1')
+    }
+    svg.append(path)
+  }
+
+  if (kind === 'arrow') {
+    addPath(expanded ? 'm6 8 4 4 4-4' : 'm8 6 4 4-4 4')
+  } else if (expanded) {
+    addPath('M2.5 15.5V5.2a1 1 0 0 1 1-1h4l2 2h6a1 1 0 0 1 1 1v2')
+    addPath('M2.5 15.5 5 9.2h12.5l-2.5 6.3Z', true)
+  } else {
+    addPath('M2.5 15.5V5.2a1 1 0 0 1 1-1h4l2 2h7a1 1 0 0 1 1 1v8.3Z', true)
   }
   return svg
 }

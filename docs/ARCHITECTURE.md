@@ -137,6 +137,11 @@ If a tree representation is useful, separate:
 
 V1 should parse the active editor DOM.
 
+Extract readable heading text after excluding Typora's editor metadata
+(`.md-meta`, `.md-meta-none`, `.md-content`) from a detached clone. Preserve the
+original heading element for navigation and leave literal punctuation intact.
+See `RESEARCH-NOTES.md` for the DOM assumption and validation boundary.
+
 Initial selector:
 
 ```css

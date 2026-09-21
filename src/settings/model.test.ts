@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  COLLAPSE_ICON_OPTIONS,
+  COLOR_SOURCE_OPTIONS,
   DEFAULT_OUTLINE_SETTINGS,
   DENSITY_OPTIONS,
+  GUIDE_STRENGTH_OPTIONS,
   HEADING_LEVEL_OPTIONS,
   INDENTATION_OPTIONS,
+  SECTION_SEPARATION_OPTIONS,
   normalizeOutlineSettings,
 } from './model'
 
@@ -21,8 +25,78 @@ describe('normalizeOutlineSettings', () => {
       expandThroughLevel: 3,
       density: 'comfortable',
       indentation: 'medium',
+      collapseIcon: 'triangle',
+      showVerticalGuides: false,
+      verticalGuideStrength: 'quiet',
+      zebraRows: false,
+      sectionSeparation: 'none',
+      emphasizeActivePath: false,
+      showCurrentPathBar: false,
+      focusCurrentBranch: false,
+    })
+    expect(normalizeOutlineSettings().verticalGuideColor).toEqual({
+      source: 'theme', light: '#cbd0d4', dark: '#505861', sameInBothThemes: false, opacity: 100,
+    })
+    expect(normalizeOutlineSettings().zebraRowAColor).toEqual({
+      source: 'theme', light: '#ffffff', dark: '#24272c', sameInBothThemes: false, opacity: 100,
+    })
+    expect(normalizeOutlineSettings().zebraRowBColor).toEqual({
+      source: 'theme', light: '#f5f6f7', dark: '#2c3036', sameInBothThemes: false, opacity: 100,
     })
     expect(DEFAULT_OUTLINE_SETTINGS).toEqual(normalizeOutlineSettings())
+  })
+
+  it('preserves approved outline appearance and browsing choices', () => {
+    expect(normalizeOutlineSettings({
+      collapseIcon: 'folder',
+      showVerticalGuides: true,
+      verticalGuideStrength: 'clear',
+      verticalGuideColor: { source: 'custom', light: '#AABBCC', dark: '#112233', sameInBothThemes: true, opacity: 63 },
+      zebraRows: true,
+      zebraRowAColor: { source: 'default', light: '#abcdef', dark: '#123456', sameInBothThemes: false, opacity: 75 },
+      zebraRowBColor: { source: 'custom', light: '#FFEEDD', dark: '#334455', sameInBothThemes: false, opacity: 41 },
+      sectionSeparation: 'divider',
+      emphasizeActivePath: true,
+      showCurrentPathBar: true,
+      focusCurrentBranch: true,
+    })).toMatchObject({
+      collapseIcon: 'folder',
+      showVerticalGuides: true,
+      verticalGuideStrength: 'clear',
+      verticalGuideColor: { source: 'custom', light: '#aabbcc', dark: '#112233', sameInBothThemes: true, opacity: 63 },
+      zebraRows: true,
+      zebraRowAColor: { source: 'default', light: '#abcdef', dark: '#123456', sameInBothThemes: false, opacity: 75 },
+      zebraRowBColor: { source: 'custom', light: '#ffeedd', dark: '#334455', sameInBothThemes: false, opacity: 41 },
+      sectionSeparation: 'divider',
+      emphasizeActivePath: true,
+      showCurrentPathBar: true,
+      focusCurrentBranch: true,
+    })
+  })
+
+  it('normalizes unsafe outline appearance values and creates independent color records', () => {
+    const settings = normalizeOutlineSettings({
+      collapseIcon: 'emoji',
+      showVerticalGuides: 'yes',
+      verticalGuideStrength: 'heavy',
+      verticalGuideColor: { source: 'custom', light: 'red', dark: '#ABCDEF', sameInBothThemes: 'yes', opacity: 130 },
+      zebraRows: 1,
+      zebraRowAColor: { source: 'unknown', light: '#123456', dark: '#654321', sameInBothThemes: true, opacity: -5 },
+      zebraRowBColor: null,
+      sectionSeparation: 'rule',
+      emphasizeActivePath: 'true',
+      showCurrentPathBar: {},
+      focusCurrentBranch: null,
+    })
+    expect(settings).toMatchObject({
+      collapseIcon: 'triangle', showVerticalGuides: false, verticalGuideStrength: 'quiet', zebraRows: false,
+      sectionSeparation: 'none', emphasizeActivePath: false, showCurrentPathBar: false, focusCurrentBranch: false,
+    })
+    expect(settings.verticalGuideColor).toEqual({ source: 'custom', light: '#cbd0d4', dark: '#abcdef', sameInBothThemes: false, opacity: 100 })
+    expect(settings.zebraRowAColor).toEqual({ source: 'theme', light: '#123456', dark: '#654321', sameInBothThemes: true, opacity: 0 })
+    expect(settings.zebraRowBColor).toEqual(DEFAULT_OUTLINE_SETTINGS.zebraRowBColor)
+    settings.verticalGuideColor.light = '#000000'
+    expect(normalizeOutlineSettings().verticalGuideColor.light).toBe('#cbd0d4')
   })
 
   it('preserves valid persisted settings', () => {
@@ -80,6 +154,10 @@ describe('normalizeOutlineSettings', () => {
     expect(HEADING_LEVEL_OPTIONS).toEqual([1, 2, 3, 4, 5, 6])
     expect(DENSITY_OPTIONS).toEqual(['compact', 'comfortable'])
     expect(INDENTATION_OPTIONS).toEqual(['small', 'medium', 'large'])
+    expect(COLLAPSE_ICON_OPTIONS).toEqual(['triangle', 'bullet', 'arrow', 'folder', 'none'])
+    expect(GUIDE_STRENGTH_OPTIONS).toEqual(['quiet', 'clear'])
+    expect(SECTION_SEPARATION_OPTIONS).toEqual(['none', 'space', 'divider'])
+    expect(COLOR_SOURCE_OPTIONS).toEqual(['theme', 'default', 'custom'])
   })
 
   it('adds appearance defaults without changing legacy range settings', () => {

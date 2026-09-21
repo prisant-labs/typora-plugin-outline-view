@@ -5,6 +5,28 @@ export const DENSITY_OPTIONS = ['compact', 'comfortable'] as const
 export const INDENTATION_OPTIONS = ['small', 'medium', 'large'] as const
 export const SELECTOR_STYLES = ['rail', 'enclosure', 'bracket'] as const
 export const CASING_OPTIONS = ['normal', 'uppercase', 'small-caps'] as const
+export const COLLAPSE_ICON_OPTIONS = ['triangle', 'bullet', 'arrow', 'folder', 'none'] as const
+export const GUIDE_STRENGTH_OPTIONS = ['quiet', 'clear'] as const
+export const SECTION_SEPARATION_OPTIONS = ['none', 'space', 'divider'] as const
+export const COLOR_SOURCE_OPTIONS = ['theme', 'default', 'custom'] as const
+
+export interface AppearanceColor {
+  source: (typeof COLOR_SOURCE_OPTIONS)[number]
+  light: string
+  dark: string
+  sameInBothThemes: boolean
+  opacity: number
+}
+
+const GUIDE_COLOR_DEFAULTS: Readonly<AppearanceColor> = {
+  source: 'theme', light: '#cbd0d4', dark: '#505861', sameInBothThemes: false, opacity: 100,
+}
+const ZEBRA_A_COLOR_DEFAULTS: Readonly<AppearanceColor> = {
+  source: 'theme', light: '#ffffff', dark: '#24272c', sameInBothThemes: false, opacity: 100,
+}
+const ZEBRA_B_COLOR_DEFAULTS: Readonly<AppearanceColor> = {
+  source: 'theme', light: '#f5f6f7', dark: '#2c3036', sameInBothThemes: false, opacity: 100,
+}
 
 export interface HeadingAppearance {
   size: number
@@ -42,6 +64,29 @@ function normalizeHeadingStyles(value: unknown): HeadingStyles {
 
 export type OutlineDensity = (typeof DENSITY_OPTIONS)[number]
 export type OutlineIndentation = (typeof INDENTATION_OPTIONS)[number]
+export type CollapseIcon = (typeof COLLAPSE_ICON_OPTIONS)[number]
+export type GuideStrength = (typeof GUIDE_STRENGTH_OPTIONS)[number]
+export type SectionSeparation = (typeof SECTION_SEPARATION_OPTIONS)[number]
+
+function normalizeHexColor(value: unknown, fallback: string) {
+  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)
+    ? value.toLowerCase()
+    : fallback
+}
+
+function normalizeAppearanceColor(value: unknown, fallback: Readonly<AppearanceColor>): AppearanceColor {
+  const raw = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+  const opacity = typeof raw.opacity === 'number' && Number.isFinite(raw.opacity)
+    ? Math.max(0, Math.min(100, Math.round(raw.opacity)))
+    : fallback.opacity
+  return {
+    source: isOption(raw.source, COLOR_SOURCE_OPTIONS) ? raw.source : fallback.source,
+    light: normalizeHexColor(raw.light, fallback.light),
+    dark: normalizeHexColor(raw.dark, fallback.dark),
+    sameInBothThemes: booleanOrDefault(raw.sameInBothThemes, fallback.sameInBothThemes),
+    opacity,
+  }
+}
 
 export interface OutlineSettings {
   autoOpen: boolean
@@ -59,6 +104,17 @@ export interface OutlineSettings {
   selectorLabels: boolean
   selectorColor: 'theme' | 'grayscale'
   headingStyles: HeadingStyles
+  collapseIcon: CollapseIcon
+  showVerticalGuides: boolean
+  verticalGuideStrength: GuideStrength
+  verticalGuideColor: AppearanceColor
+  zebraRows: boolean
+  zebraRowAColor: AppearanceColor
+  zebraRowBColor: AppearanceColor
+  sectionSeparation: SectionSeparation
+  emphasizeActivePath: boolean
+  showCurrentPathBar: boolean
+  focusCurrentBranch: boolean
 }
 
 export const DEFAULT_OUTLINE_SETTINGS: Readonly<OutlineSettings> = {
@@ -77,6 +133,17 @@ export const DEFAULT_OUTLINE_SETTINGS: Readonly<OutlineSettings> = {
   selectorLabels: true,
   selectorColor: 'theme',
   headingStyles: normalizeHeadingStyles(undefined),
+  collapseIcon: 'triangle',
+  showVerticalGuides: false,
+  verticalGuideStrength: 'quiet',
+  verticalGuideColor: { ...GUIDE_COLOR_DEFAULTS },
+  zebraRows: false,
+  zebraRowAColor: { ...ZEBRA_A_COLOR_DEFAULTS },
+  zebraRowBColor: { ...ZEBRA_B_COLOR_DEFAULTS },
+  sectionSeparation: 'none',
+  emphasizeActivePath: false,
+  showCurrentPathBar: false,
+  focusCurrentBranch: false,
 }
 
 function isOption<T>(value: unknown, options: readonly T[]): value is T {
@@ -113,6 +180,17 @@ export function normalizeOutlineSettings(
     selectorLabels: booleanOrDefault(value.selectorLabels, true),
     selectorColor: value.selectorColor === 'grayscale' ? 'grayscale' : 'theme',
     headingStyles: normalizeHeadingStyles(value.headingStyles),
+    collapseIcon: isOption(value.collapseIcon, COLLAPSE_ICON_OPTIONS) ? value.collapseIcon : 'triangle',
+    showVerticalGuides: booleanOrDefault(value.showVerticalGuides, false),
+    verticalGuideStrength: isOption(value.verticalGuideStrength, GUIDE_STRENGTH_OPTIONS) ? value.verticalGuideStrength : 'quiet',
+    verticalGuideColor: normalizeAppearanceColor(value.verticalGuideColor, GUIDE_COLOR_DEFAULTS),
+    zebraRows: booleanOrDefault(value.zebraRows, false),
+    zebraRowAColor: normalizeAppearanceColor(value.zebraRowAColor, ZEBRA_A_COLOR_DEFAULTS),
+    zebraRowBColor: normalizeAppearanceColor(value.zebraRowBColor, ZEBRA_B_COLOR_DEFAULTS),
+    sectionSeparation: isOption(value.sectionSeparation, SECTION_SEPARATION_OPTIONS) ? value.sectionSeparation : 'none',
+    emphasizeActivePath: booleanOrDefault(value.emphasizeActivePath, false),
+    showCurrentPathBar: booleanOrDefault(value.showCurrentPathBar, false),
+    focusCurrentBranch: booleanOrDefault(value.focusCurrentBranch, false),
     autoOpen: booleanOrDefault(
       value.autoOpen,
       DEFAULT_OUTLINE_SETTINGS.autoOpen,

@@ -25,7 +25,12 @@ import { navigateToHeading } from '../outline/navigation'
 import { parseHeadings } from '../outline/parser'
 import { renderOutline } from '../outline/render'
 import { createDebouncedTask } from '../outline/scheduler'
-import { buildOutlineTree, filterHeadings } from '../outline/tree'
+import {
+  buildOutlineTree,
+  filterHeadings,
+  focusOutlineTree,
+  pathToOutlineNode,
+} from '../outline/tree'
 import { OUTLINE_VIEW_TYPE } from '../placement/right-dock'
 import {
   readOutlineSettings,
@@ -33,8 +38,9 @@ import {
 } from '../settings/model'
 
 import { HeadingRangeSelector, type HeadingRange } from '../outline/range-selector'
-import { applyOutlineAppearance } from '../outline/appearance'
+import { applyOutlineAppearance, observeThemeChanges } from '../outline/appearance'
 import { outlineIcon } from '../integration/icons'
+import { createCurrentPath, renderCurrentPath } from '../outline/current-path'
 
 const REFRESH_DELAY_MS = 120
 const ACTIVE_HEADING_DELAY_MS = 32
@@ -52,6 +58,7 @@ export class OutlineView extends WorkspaceView {
   icon = 'fa-list-ul'
 
   private readonly contentEl: HTMLElement
+  private readonly currentPathEl = createCurrentPath()
   private readonly wrapButton = document.createElement('button')
   private readonly rangeSelector: HeadingRangeSelector
   private readonly rangeByFile = new Map<string, HeadingRange>()
@@ -61,6 +68,7 @@ export class OutlineView extends WorkspaceView {
     RememberedCollapseState
   >()
   private fullTree: OutlineNode[] = []
+  private unfocusedTree: OutlineNode[] = []
   private tree: OutlineNode[] = []
   private headings: OutlineHeading[] = []
   private collapsedKeys = new Set<string>()
@@ -129,7 +137,7 @@ export class OutlineView extends WorkspaceView {
     this.contentEl = document.createElement('div')
     this.contentEl.className = 'outline-view__content'
 
-    this.containerEl.append(toolbar, this.rangeSelector.element, this.contentEl)
+    this.containerEl.append(toolbar, this.rangeSelector.element, this.currentPathEl, this.contentEl)
   }
 
   onOpen() {
@@ -172,6 +180,7 @@ export class OutlineView extends WorkspaceView {
         }),
       )
     }
+    this.register(observeThemeChanges(() => applyOutlineAppearance(this.containerEl, this.currentSettings())))
     this.register(() => this.rangeSelector.destroy())
     this.register(this.refreshTask.cancel)
     this.register(this.activeHeadingTask.cancel)
@@ -190,10 +199,12 @@ export class OutlineView extends WorkspaceView {
 
     if (!editor) {
       this.fullTree = []
+      this.unfocusedTree = []
       this.tree = []
       this.headings = []
       this.activeKey = undefined
       this.showStatus('Open a Markdown document to see its outline.')
+      renderCurrentPath(this.currentPathEl, [], navigateToHeading, false)
       return
     }
 
@@ -204,7 +215,8 @@ export class OutlineView extends WorkspaceView {
       range.start,
       range.end,
     )
-    this.tree = buildOutlineTree(this.headings)
+    this.unfocusedTree = buildOutlineTree(this.headings)
+    this.tree = this.unfocusedTree
     this.emptyMessage =
       parsedHeadings.length > 0 && this.headings.length === 0
         ? 'No headings match the current level settings.'
@@ -293,14 +305,26 @@ export class OutlineView extends WorkspaceView {
   }
 
   private renderTree() {
+    const settings = this.currentSettings()
+    this.syncPresentationTree(settings)
+    const path = this.activeKey ? pathToOutlineNode(this.unfocusedTree, this.activeKey) : []
     renderOutline(this.contentEl, this.tree, {
       collapsedKeys: this.collapsedKeys,
       activeKey: this.activeKey,
       emptyMessage: this.emptyMessage,
-      headingStyles: this.currentSettings().headingStyles,
+      headingStyles: settings.headingStyles,
+      collapseIcon: settings.collapseIcon,
+      activePathKeys: settings.emphasizeActivePath ? new Set(path.slice(0, -1).map(node => node.key)) : undefined,
       onNavigate: navigateToHeading,
       onToggle: (node) => this.toggleBranch(node),
     })
+    renderCurrentPath(this.currentPathEl, path, navigateToHeading, settings.showCurrentPathBar)
+  }
+
+  private syncPresentationTree(settings = this.currentSettings()) {
+    this.tree = settings.focusCurrentBranch && this.activeKey
+      ? focusOutlineTree(this.unfocusedTree, this.activeKey)
+      : this.unfocusedTree
   }
 
   private showStatus(message: string) {
@@ -314,10 +338,12 @@ export class OutlineView extends WorkspaceView {
   private updateActiveHeading() {
     const settings = this.currentSettings()
     const editor = document.querySelector<HTMLElement>('#write')
+    const previousActiveKey = this.activeKey
 
     if (!settings.followActiveHeading || !editor || this.headings.length === 0) {
       this.activeKey = undefined
-      this.syncActiveItem(false)
+      if (settings.focusCurrentBranch && previousActiveKey) this.renderTree()
+      else this.syncActiveItem(false)
       return
     }
 
@@ -329,30 +355,39 @@ export class OutlineView extends WorkspaceView {
     })
     this.activeKey = active?.key
 
+    let needsRender = settings.focusCurrentBranch && previousActiveKey !== this.activeKey
     if (this.activeKey) {
       const revealed = revealAncestors(
-        this.tree,
+        this.unfocusedTree,
         this.collapsedKeys,
         this.activeKey,
       )
       if (!sameSet(revealed, this.collapsedKeys)) {
         this.collapsedKeys = revealed
         this.rememberCollapseState()
-        this.renderTree()
+        needsRender = true
       }
     }
 
+    if (needsRender) this.renderTree()
     this.syncActiveItem(settings.autoScrollOutline)
   }
 
   private syncActiveItem(autoScroll: boolean) {
     let activeItem: HTMLElement | undefined
+    const settings = this.currentSettings()
+    const path = this.activeKey ? pathToOutlineNode(this.unfocusedTree, this.activeKey) : []
+    const activePathKeys = new Set(path.slice(0, -1).map(node => node.key))
 
     for (const item of Array.from(
       this.contentEl.querySelectorAll<HTMLElement>('.outline-view__item'),
     )) {
       const isActive = item.dataset.headingKey === this.activeKey
       item.classList.toggle('is-active', isActive)
+      item.parentElement?.classList.toggle(
+        'is-active-path',
+        settings.emphasizeActivePath && activePathKeys.has(item.dataset.headingKey ?? ''),
+      )
       if (isActive) {
         item.setAttribute('aria-current', 'location')
         activeItem = item
@@ -360,6 +395,8 @@ export class OutlineView extends WorkspaceView {
         item.removeAttribute('aria-current')
       }
     }
+
+    renderCurrentPath(this.currentPathEl, path, navigateToHeading, settings.showCurrentPathBar)
 
     if (autoScroll && activeItem) {
       // scrollIntoView also scrolls host ancestors and can shift the whole dock

@@ -58,6 +58,15 @@ describe('outline layout safeguards', () => {
     expect(rule(source, ".outline-view-settings__heading-style button[aria-pressed='true']")).toContain('color: var(--settings-on-text)')
     expect(rule(source, ".outline-view-settings__heading-style button[aria-pressed='true']")).toContain('background: var(--settings-on-bg)')
   })
+
+  it('styles native appearance color controls without an external picker component', async () => {
+    const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
+    expect(rule(source, ".outline-view-settings__color-details input[type='color']")).toContain('cursor: pointer')
+    expect(rule(source, '.outline-view-settings__color-details')).toContain('display: grid')
+    expect(rule(source, '.outline-view-settings__color-details[hidden]')).toContain('display: none !important')
+    expect(rule(source, ".outline-view-settings__opacity input[type='range']")).toContain('accent-color:')
+    expect(source).toContain("[data-action='reset-outline-appearance']")
+  })
   it('keeps the outline viewport vertical-only and constrains nested lists', async () => {
     const source = (await stylesheet()).replace(/\r?\n/g, '\r\n')
     const content = rule(source, '.outline-view__content')
@@ -89,6 +98,30 @@ describe('outline layout safeguards', () => {
     expect(active.trim().split(';').filter(value => value.trim())).toHaveLength(2)
     expect(source).not.toContain('.outline-view__item.is-active::before')
     expect(rule(source, '.outline-view__item:focus-visible')).toContain('box-shadow: inset 0 0 0 1px var(--active-file-border-color)')
+  })
+
+  it('draws bottom-complete guides and keeps zebra, hover, and active precedence explicit', async () => {
+    const source = await stylesheet()
+    const guides = rule(source, '.outline-view--guides .outline-view__group::before')
+    expect(guides).toContain('bottom: 0')
+    expect(guides).toContain('background: var(--outline-guide-color)')
+    // :where keeps stripes at (0,2,0), tied with hover and below active (0,3,0).
+    // Source order alone cannot make hover override the former (0,3,0) stripes.
+    expect(rule(source, '.outline-view--zebra .outline-view__row:where(.is-zebra-a)')).toContain('background: var(--outline-zebra-a)')
+    expect(rule(source, '.outline-view--zebra .outline-view__row:where(.is-zebra-b)')).toContain('background: var(--outline-zebra-b)')
+    expect(source.indexOf('.outline-view--zebra .outline-view__row:where(.is-zebra-b)')).toBeLessThan(source.indexOf('.outline-view__row:hover'))
+    expect(source.indexOf('.outline-view__row:hover')).toBeLessThan(source.indexOf('.outline-view__row:has(> .outline-view__item.is-active)'))
+  })
+
+  it('styles section landmarks, active ancestry, current path, and compact disclosure symbols', async () => {
+    const source = await stylesheet()
+    expect(rule(source, '.outline-view--sections-space .outline-view__tree > .outline-view__node + .outline-view__node')).toContain('margin-block-start: 10px')
+    expect(rule(source, '.outline-view--sections-divider .outline-view__tree > .outline-view__node + .outline-view__node')).toContain('border-top: 1px solid')
+    expect(rule(source, '.outline-view--active-path .outline-view__row.is-active-path > .outline-view__item')).toContain('font-weight: 600')
+    expect(rule(source, '.outline-view__current-path')).toContain('overflow-x: auto')
+    expect(rule(source, '.outline-view__current-path')).toContain('flex: 0 0 auto')
+    expect(rule(source, '.outline-view__bullet')).toContain('width: 4px')
+    expect(source).toMatch(/\.outline-view__item\s*\{[^}]*padding-inline-start: 2px/)
   })
 
   it('keeps the heading-level selector fixed, contained, and theme-aware', async () => {

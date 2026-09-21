@@ -3,18 +3,32 @@ import type { HeadingLevel } from '../outline/model'
 import { createDebouncedTask } from '../outline/scheduler'
 import {
   HEADING_LEVEL_OPTIONS, normalizeOutlineSettings, readOutlineSettings,
-  defaultHeadingAppearance, type HeadingAppearance, type OutlineSettings,
+  defaultHeadingAppearance, type AppearanceColor, type HeadingAppearance, type OutlineSettings,
 } from './model'
 import { OutlinePreview } from './preview'
+import { observeThemeChanges } from '../outline/appearance'
 
 type SettingKey = keyof OutlineSettings
+type AppearanceColorKey = 'verticalGuideColor' | 'zebraRowAColor' | 'zebraRowBColor'
 type Options = Array<readonly [string, string]>
+type ColorControls = {
+  source: HTMLSelectElement
+  details: HTMLElement
+  light: HTMLInputElement
+  dark: HTMLInputElement
+  darkLabel: HTMLLabelElement
+  same: HTMLInputElement
+  opacity: HTMLInputElement
+  opacityNumber: HTMLInputElement
+  enabledBy?: 'showVerticalGuides' | 'zebraRows'
+}
 
 export class OutlineSettingsTab extends SettingTab {
   private preview?: OutlinePreview
   private disposables: Array<() => void> = []
   private dependent: Array<HTMLInputElement | HTMLSelectElement> = []
   private appearanceRows = new Map<HeadingLevel, HTMLElement>()
+  private colorControls = new Map<AppearanceColorKey, ColorControls>()
   private previewVisible = true
 
   constructor(private readonly outlinePlugin: Plugin<OutlineSettings>, private readonly app?: App) {
@@ -29,6 +43,7 @@ export class OutlineSettingsTab extends SettingTab {
     this.containerEl.replaceChildren()
     this.dependent = []
     this.appearanceRows.clear()
+    this.colorControls.clear()
     const s = readOutlineSettings(this.outlinePlugin.settings)
     this.addSettingTitle('General')
     this.addCheckbox('Open automatically', 'Open Outline View when the plugin loads.', 'autoOpen', s.autoOpen)
@@ -45,11 +60,49 @@ export class OutlineSettingsTab extends SettingTab {
     this.addCheckbox('Wrap long heading labels', 'Show long headings on multiple lines instead of truncating them.', 'wrapHeadingLabels', s.wrapHeadingLabels)
     this.addSelect('Density', 'Choose the vertical spacing between outline rows.', 'density', s.density, [['compact', 'Compact'], ['comfortable', 'Comfortable']])
     this.addSelect('Indentation', 'Choose the horizontal spacing between nested levels.', 'indentation', s.indentation, [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']])
+    this.addSelect('Collapse icon', 'Choose the marker shown on headings with children.', 'collapseIcon', s.collapseIcon, [['triangle', 'Current triangle'], ['bullet', 'Small bullet'], ['arrow', 'Line arrow'], ['folder', 'Open / closed folder'], ['none', 'No icon']])
+    this.addCheckbox('Vertical guides', 'Show a line for each visible ancestor branch.', 'showVerticalGuides', s.showVerticalGuides)
+    this.addDependentGroup('Vertical guide settings', 'showVerticalGuides', () => {
+      this.addSelect('Guide strength', 'Choose quiet or clearer hierarchy lines.', 'verticalGuideStrength', s.verticalGuideStrength, [['quiet', 'Quiet'], ['clear', 'Clear']], false, false, 'showVerticalGuides')
+      this.addAppearanceColor('Guide color', 'Use the Typora theme, the plugin palette, or custom colors.', 'verticalGuideColor', 'showVerticalGuides')
+    })
+    this.addCheckbox('Alternating row colors', 'Alternate row A and row B across the visible outline.', 'zebraRows', s.zebraRows)
+    this.addDependentGroup('Alternating row color settings', 'zebraRows', () => {
+      this.addAppearanceColor('Row A color', 'Apply to the first visible row and every other row after it.', 'zebraRowAColor', 'zebraRows')
+      this.addAppearanceColor('Row B color', 'Apply to the second visible row and every other row after it.', 'zebraRowBColor', 'zebraRows')
+    })
+    this.addSelect('Section separation', 'Separate top-level sections with nothing, extra space, or a faint divider.', 'sectionSeparation', s.sectionSeparation, [['none', 'None'], ['space', 'Extra space'], ['divider', 'Faint divider']])
+    this.addCheckbox('Emphasize active path', 'Accent ancestor labels and guide segments leading to the current heading.', 'emphasizeActivePath', s.emphasizeActivePath)
+    this.addCheckbox('Show current path bar', 'Show a clickable root-to-current-heading path above the outline.', 'showCurrentPathBar', s.showCurrentPathBar)
+    this.addCheckbox('Focus current branch', 'Show the current heading, its ancestors, and its complete subtree.', 'focusCurrentBranch', s.focusCurrentBranch)
+    const resetAppearance = document.createElement('button')
+    resetAppearance.type = 'button'
+    resetAppearance.textContent = 'Reset outline appearance'
+    resetAppearance.dataset.action = 'reset-outline-appearance'
+    resetAppearance.addEventListener('click', () => {
+      const defaults = normalizeOutlineSettings()
+      this.persist({
+        collapseIcon: defaults.collapseIcon,
+        showVerticalGuides: defaults.showVerticalGuides,
+        verticalGuideStrength: defaults.verticalGuideStrength,
+        verticalGuideColor: defaults.verticalGuideColor,
+        zebraRows: defaults.zebraRows,
+        zebraRowAColor: defaults.zebraRowAColor,
+        zebraRowBColor: defaults.zebraRowBColor,
+        sectionSeparation: defaults.sectionSeparation,
+        emphasizeActivePath: defaults.emphasizeActivePath,
+        showCurrentPathBar: defaults.showCurrentPathBar,
+        focusCurrentBranch: defaults.focusCurrentBranch,
+      })
+    })
+    this.containerEl.append(resetAppearance)
     this.addSettingTitle('Heading-level selector')
     this.addCheckbox('Show heading-level selector', 'Show the quick range control beneath the outline toolbar.', 'showLevelSelector', s.showLevelSelector)
-    this.addSelect('Selector style', 'Choose the range control appearance.', 'selectorStyle', s.selectorStyle, [['rail', 'Rail'], ['enclosure', 'Enclosure'], ['bracket', 'Bracket']], false, true)
-    this.addCheckbox('Show heading-level labels', 'Show H1–H6 labels. Turn off for dots only.', 'selectorLabels', s.selectorLabels, true)
-    this.addSelect('Color theme', 'Use the current theme accent or neutral text and border colors.', 'selectorColor', s.selectorColor, [['theme', 'Theme'], ['grayscale', 'Grayscale']], false, true)
+    this.addDependentGroup('Heading-level selector settings', 'showLevelSelector', () => {
+      this.addSelect('Selector style', 'Choose the range control appearance.', 'selectorStyle', s.selectorStyle, [['rail', 'Rail'], ['enclosure', 'Enclosure'], ['bracket', 'Bracket']], false, true)
+      this.addCheckbox('Show heading-level labels', 'Show H1–H6 labels. Turn off for dots only.', 'selectorLabels', s.selectorLabels, true)
+      this.addSelect('Color theme', 'Use the current theme accent or neutral text and border colors.', 'selectorColor', s.selectorColor, [['theme', 'Theme'], ['grayscale', 'Grayscale']], false, true)
+    })
     this.addSettingTitle('Heading styles')
     const help = document.createElement('p')
     help.className = 'outline-view-settings__help'
@@ -106,6 +159,9 @@ export class OutlineSettingsTab extends SettingTab {
       if (sizeFrame) window.cancelAnimationFrame(sizeFrame)
     })
     this.disposables.push(this.outlinePlugin.settings.onChange('*', () => this.sync()))
+    this.disposables.push(observeThemeChanges(() => {
+      if (this.previewVisible) this.preview?.update(readOutlineSettings(this.outlinePlugin.settings))
+    }))
     if (this.app) {
       const refresh = createDebouncedTask(() => {
         if (this.containerEl.getClientRects().length) this.preview?.refresh()
@@ -225,13 +281,25 @@ export class OutlineSettingsTab extends SettingTab {
 
   private sync() {
     const settings = readOutlineSettings(this.outlinePlugin.settings)
-    const wrap = this.containerEl.querySelector<HTMLInputElement>('[data-setting="wrapHeadingLabels"]')
-    if (wrap) wrap.checked = settings.wrapHeadingLabels
+    this.containerEl.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-setting]:not([data-color-source])').forEach(input => {
+      const key = input.dataset.setting as SettingKey
+      const value = settings[key]
+      if (typeof value === 'object') return
+      if (input instanceof HTMLInputElement && input.type === 'checkbox') input.checked = Boolean(value)
+      else input.value = String(value)
+    })
     this.dependent.forEach(input => { input.disabled = !settings.showLevelSelector })
+    this.containerEl.querySelectorAll<HTMLElement>('[data-settings-group]').forEach(group => {
+      group.hidden = !Boolean(settings[group.dataset.settingsGroup as SettingKey])
+    })
+    this.containerEl.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-enabled-by]').forEach(input => {
+      input.disabled = !Boolean(settings[input.dataset.enabledBy as keyof OutlineSettings])
+    })
     for (const key of ['minHeadingLevel', 'maxHeadingLevel'] as const) {
       const input = this.containerEl.querySelector<HTMLSelectElement>('[data-setting="' + key + '"]')
       if (input) input.value = String(settings[key])
     }
+    this.syncAppearanceColorControls(settings)
     if (this.previewVisible) this.preview?.update(settings)
   }
 
@@ -242,6 +310,20 @@ export class OutlineSettingsTab extends SettingTab {
       if (JSON.stringify(next[key]) !== JSON.stringify(current[key])) this.outlinePlugin.settings.set(key, next[key])
     }
     this.sync()
+  }
+
+  private addDependentGroup(name: string, key: SettingKey, addChildren: () => void) {
+    const start = this.containerEl.children.length
+    addChildren()
+    const group = document.createElement('div')
+    group.className = 'outline-view-settings__subsettings'
+    group.dataset.settingsGroup = key
+    group.id = 'outline-settings-group-' + key
+    group.setAttribute('role', 'group')
+    group.setAttribute('aria-label', name)
+    group.append(...Array.from(this.containerEl.children).slice(start))
+    this.containerEl.querySelector('[data-setting="' + key + '"]')?.setAttribute('aria-controls', group.id)
+    this.containerEl.append(group)
   }
 
   private addCheckbox(name: string, description: string, key: SettingKey, checked: boolean, dependent = false) {
@@ -258,7 +340,7 @@ export class OutlineSettingsTab extends SettingTab {
     })
   }
 
-  private addSelect(name: string, description: string, key: SettingKey, selected: string | number, options: Options, numeric = false, dependent = false) {
+  private addSelect(name: string, description: string, key: SettingKey, selected: string | number, options: Options, numeric = false, dependent = false, enabledBy?: SettingKey) {
     this.addSetting((setting: SettingItem) => {
       setting.addName(name)
       setting.addDescription(description)
@@ -268,9 +350,114 @@ export class OutlineSettingsTab extends SettingTab {
         input.dataset.setting = key
         input.setAttribute('aria-label', name)
         if (dependent) this.dependent.push(input)
+        if (enabledBy) input.dataset.enabledBy = enabledBy
         input.addEventListener('change', () => this.persist({ [key]: numeric ? Number(input.value) : input.value }))
       })
     })
+  }
+
+  private changeAppearanceColor(key: AppearanceColorKey, patch: Partial<AppearanceColor>) {
+    const current = readOutlineSettings(this.outlinePlugin.settings)[key]
+    this.persist({ [key]: { ...current, ...patch } } as Partial<OutlineSettings>)
+  }
+
+  private addAppearanceColor(
+    name: string,
+    description: string,
+    key: AppearanceColorKey,
+    enabledBy?: 'showVerticalGuides' | 'zebraRows',
+  ) {
+    this.addSetting((setting: SettingItem) => {
+      setting.addName(name)
+      setting.addDescription(description)
+      let source!: HTMLSelectElement
+      setting.containerEl.classList.add('outline-view-settings__color-setting')
+      setting.addSelect(input => {
+        source = input
+        source.dataset.setting = key
+        source.dataset.colorSource = 'true'
+        if (enabledBy) source.dataset.enabledBy = enabledBy
+        source.setAttribute('aria-label', name + ' source')
+        this.addOptions(source, [['theme', 'Theme'], ['default', 'Plugin default'], ['custom', 'Custom']])
+        source.addEventListener('change', () => this.changeAppearanceColor(key, { source: source.value as AppearanceColor['source'] }))
+      })
+
+      const details = document.createElement('div')
+      details.className = 'outline-view-settings__color-details'
+      details.dataset.colorDetails = key
+      details.setAttribute('role', 'group')
+      details.setAttribute('aria-label', name + ' custom colors')
+      const swatch = (field: 'light' | 'dark', labelText: string) => {
+        const label = document.createElement('label')
+        label.append(labelText)
+        const input = document.createElement('input')
+        input.type = 'color'
+        input.dataset.colorField = field
+        input.setAttribute('aria-label', name + ' ' + labelText.toLowerCase() + ' theme color')
+        const persist = () => this.changeAppearanceColor(key, { [field]: input.value })
+        input.addEventListener('input', persist)
+        input.addEventListener('change', persist)
+        label.append(input)
+        return { label, input }
+      }
+      const light = swatch('light', 'Light')
+      const dark = swatch('dark', 'Dark')
+      const sameLabel = document.createElement('label')
+      sameLabel.className = 'outline-view-settings__same-color'
+      const same = document.createElement('input')
+      same.type = 'checkbox'
+      same.dataset.colorField = 'same'
+      same.setAttribute('aria-label', name + ' use the light color in both themes')
+      same.addEventListener('change', () => this.changeAppearanceColor(key, { sameInBothThemes: same.checked }))
+      sameLabel.append(same, ' Use light color in both themes')
+      const opacityLabel = document.createElement('div')
+      opacityLabel.className = 'outline-view-settings__opacity'
+      opacityLabel.setAttribute('role', 'group')
+      opacityLabel.setAttribute('aria-label', name + ' opacity')
+      opacityLabel.append('Opacity')
+      const opacity = document.createElement('input')
+      opacity.type = 'range'; opacity.min = '0'; opacity.max = '100'; opacity.step = '1'
+      opacity.dataset.colorField = 'opacity'
+      opacity.setAttribute('aria-label', name + ' opacity')
+      const opacityNumber = document.createElement('input')
+      opacityNumber.type = 'number'; opacityNumber.min = '0'; opacityNumber.max = '100'; opacityNumber.step = '1'
+      opacityNumber.dataset.colorField = 'opacity-number'
+      opacityNumber.setAttribute('aria-label', name + ' opacity percent')
+      opacity.addEventListener('input', () => {
+        opacityNumber.value = opacity.value
+        this.changeAppearanceColor(key, { opacity: opacity.valueAsNumber })
+      })
+      opacityNumber.addEventListener('change', () => {
+        this.changeAppearanceColor(key, { opacity: opacityNumber.valueAsNumber })
+        this.syncAppearanceColorControls(readOutlineSettings(this.outlinePlugin.settings))
+      })
+      opacityLabel.append(opacity, opacityNumber, ' %')
+      details.append(light.label, dark.label, sameLabel, opacityLabel)
+      setting.containerEl.append(details)
+      this.colorControls.set(key, {
+        source, details, light: light.input, dark: dark.input, darkLabel: dark.label,
+        same, opacity, opacityNumber, enabledBy,
+      })
+    })
+  }
+
+  private syncAppearanceColorControls(settings: OutlineSettings) {
+    for (const [key, controls] of this.colorControls) {
+      const value = settings[key]
+      const enabled = controls.enabledBy ? settings[controls.enabledBy] : true
+      controls.source.value = value.source
+      controls.source.disabled = !enabled
+      controls.details.hidden = !enabled || value.source !== 'custom'
+      controls.light.value = value.light
+      controls.dark.value = value.dark
+      controls.same.checked = value.sameInBothThemes
+      controls.darkLabel.hidden = value.sameInBothThemes
+      controls.opacity.value = String(value.opacity)
+      controls.opacityNumber.value = String(value.opacity)
+      controls.details.querySelectorAll<HTMLInputElement>('input').forEach(input => {
+        input.disabled = !enabled || value.source !== 'custom' || (input === controls.dark && value.sameInBothThemes)
+      })
+    }
   }
 
   private addOptions(input: HTMLSelectElement, options: Options) {
