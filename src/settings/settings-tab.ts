@@ -7,6 +7,7 @@ import {
 } from './model'
 import { OutlinePreview } from './preview'
 import { observeThemeChanges } from '../outline/appearance'
+import { outlineIcon } from '../integration/icons'
 
 type SettingKey = keyof OutlineSettings
 type AppearanceColorKey = 'verticalGuideColor' | 'zebraRowAColor' | 'zebraRowBColor'
@@ -30,6 +31,7 @@ export class OutlineSettingsTab extends SettingTab {
   private appearanceRows = new Map<HeadingLevel, HTMLElement>()
   private colorControls = new Map<AppearanceColorKey, ColorControls>()
   private previewVisible = true
+  private headerGeneration = 0
 
   constructor(private readonly outlinePlugin: Plugin<OutlineSettings>, private readonly app?: App) {
     super()
@@ -127,7 +129,8 @@ export class OutlineSettingsTab extends SettingTab {
     const layout = document.createElement('div')
     layout.className = 'outline-view-settings__layout'
     layout.append(controls, this.preview.element)
-    this.containerEl.append(navigation, layout)
+    const masthead = this.addMasthead()
+    this.containerEl.append(masthead, navigation, layout)
     const scroll = this.scrollParent()
     const sizePreview = () => {
       if (!scroll?.clientHeight || !this.preview) return
@@ -194,9 +197,123 @@ export class OutlineSettingsTab extends SettingTab {
   }
 
   onhide() {
+    this.headerGeneration++
     this.disposables.splice(0).forEach(dispose => dispose())
     this.preview?.destroy()
     this.preview = undefined
+  }
+
+  private addMasthead() {
+    const manifest = this.outlinePlugin.manifest
+    const masthead = document.createElement('header')
+    masthead.className = 'outline-view-settings__masthead'
+    const top = document.createElement('div')
+    top.className = 'outline-view-settings__masthead-top'
+    const heading = document.createElement('h2')
+    heading.textContent = 'Outline View'
+    const status = document.createElement('span')
+    status.className = 'outline-view-settings__release-status'
+    status.dataset.releaseStatus = ''
+    status.dataset.state = 'unknown'
+    status.textContent = this.app?.github?.getReleaseInfo && manifest.repo ? 'Checking…' : 'Unable to check'
+    status.setAttribute('role', 'status')
+    status.title = 'Compared with the latest published GitHub release'
+    top.append(heading, status)
+
+    const meta = document.createElement('div')
+    meta.className = 'outline-view-settings__meta'
+    const folder = document.createElement('button')
+    folder.type = 'button'
+    folder.className = 'outline-view-settings__folder'
+    folder.dataset.action = 'open-plugin-folder'
+    folder.append(outlineIcon('folder'), 'Local folder')
+    folder.title = 'Open installed plugin folder'
+    const folderPath = manifest.dir
+    folder.disabled = !folderPath || !this.app?.openFileWithDefaultApp
+    if (!folder.disabled && folderPath) {
+      folder.addEventListener('click', () => {
+        void this.app?.openFileWithDefaultApp(folderPath).catch(() => {
+          folder.title = 'Could not open the installed plugin folder'
+        })
+      })
+    } else folder.title = 'Local plugin folder is unavailable here'
+    meta.append(folder)
+
+    const author = document.createElement('span')
+    author.append('By ')
+    if (manifest.authorUrl) {
+      const link = document.createElement('a')
+      link.href = manifest.authorUrl
+      link.dataset.link = 'author'
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      link.textContent = manifest.author || 'Author'
+      author.append(link)
+    } else author.append(manifest.author || 'Unknown')
+    meta.append(author)
+
+    const item = (label: string, value: string, dataName?: string) => {
+      const span = document.createElement('span')
+      span.className = 'outline-view-settings__meta-separated'
+      span.append(`${label} `)
+      const strong = document.createElement('strong')
+      strong.textContent = value
+      if (dataName) strong.setAttribute(dataName, '')
+      span.append(strong)
+      meta.append(span)
+      return strong
+    }
+    item('Installed', manifest.version || 'Unavailable')
+    const current = item('Current', 'Unavailable', 'data-current-version')
+    const updated = item('Last updated', 'Unavailable', 'data-last-updated')
+    updated.title = 'Date the latest GitHub release was published'
+    if (manifest.repo && /^[\w.-]+\/[\w.-]+$/.test(manifest.repo)) {
+      const github = document.createElement('span')
+      github.className = 'outline-view-settings__meta-separated'
+      const link = document.createElement('a')
+      link.href = `https://github.com/${manifest.repo}`
+      link.dataset.link = 'github'
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      link.textContent = 'GitHub'
+      github.append(link)
+      meta.append(github)
+    }
+    masthead.append(top, meta)
+
+    const generation = this.headerGeneration
+    if (this.app?.github?.getReleaseInfo && manifest.repo) {
+      void this.app.github.getReleaseInfo(manifest.repo).then((release: unknown) => {
+        if (generation !== this.headerGeneration) return
+        if (!release || typeof release !== 'object') throw new Error('Missing release information')
+        const info = release as { tag_name?: unknown; published_at?: unknown }
+        const version = typeof info.tag_name === 'string' ? info.tag_name.replace(/^v/, '') : ''
+        if (!/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(version)) throw new Error('Invalid release version')
+        current.textContent = version
+        if (typeof info.published_at === 'string') {
+          const date = new Date(info.published_at)
+          if (!Number.isNaN(date.valueOf())) {
+            updated.textContent = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+          }
+        }
+        const installed = manifest.version || ''
+        const versionParts = (value: string) => value.split(/[.+-]/, 3).map(part => Number(part))
+        const [latestMajor, latestMinor, latestPatch] = versionParts(version)
+        const [localMajor, localMinor, localPatch] = versionParts(installed)
+        const latest = [latestMajor, latestMinor, latestPatch]
+        const local = [localMajor, localMinor, localPatch]
+        const comparable = local.every(Number.isFinite) && latest.every(Number.isFinite)
+        const direction = comparable ? latest.findIndex((part, index) => part !== local[index]) : -1
+        const comparison = direction >= 0 ? Math.sign(latest[direction] - local[direction]) : 0
+        status.textContent = !comparable ? 'Version unknown' : comparison > 0 ? 'Update available' : comparison < 0 ? 'Ahead of release' : 'Up to date'
+        status.dataset.state = comparison > 0 ? 'update' : 'current'
+      }).catch(() => {
+        if (generation !== this.headerGeneration) return
+        status.textContent = 'Unable to check'
+        status.dataset.state = 'unknown'
+      })
+    }
+    return masthead
   }
 
   private scrollParent() {

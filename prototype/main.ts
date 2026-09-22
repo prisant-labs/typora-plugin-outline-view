@@ -7,9 +7,12 @@ import { SAMPLE_HEADINGS } from '../src/settings/sample-headings'
 const app = {
   workspace: { on: () => () => {} },
   features: { markdownEditor: { on: () => () => {} } },
+  openFileWithDefaultApp: async () => { window.alert('This offline prototype has no installed plugin folder to open.') },
+  github: { getReleaseInfo: async () => ({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' }) },
 }
-const plugin = new Plugin<OutlineSettings>(app, manifest)
-const settings = new PluginSettings<OutlineSettings>(app, manifest, { version: 1 })
+const prototypeManifest = { ...manifest, dir: '(prototype only)' }
+const plugin = new Plugin<OutlineSettings>(app, prototypeManifest)
+const settings = new PluginSettings<OutlineSettings>(app, prototypeManifest, { version: 1 })
 settings.setDefault(normalizeOutlineSettings())
 plugin.registerSettings(settings)
 const tab = new OutlineSettingsTab(plugin as never, app as never)

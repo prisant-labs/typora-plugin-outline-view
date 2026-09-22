@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add a compact Outline View settings masthead with author, installed version,
+  latest published version and date, GitHub, and a Local folder shortcut.
+- Show a clear update or unavailable state when the GitHub release lookup succeeds
+  or fails, without delaying settings controls.
+
 ## 0.3.0 - 2026-09-21
 
 - Choose triangle, small bullet, line arrow, open/closed folder, or no collapse icon, with closer label spacing and the same accessible collapse target.

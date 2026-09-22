@@ -11,11 +11,16 @@ import {
 import { OutlineSettingsTab } from './settings-tab'
 import { readFileSync } from 'node:fs'
 
-function createTab(parent?: HTMLElement) {
+function createTab(parent?: HTMLElement, hostApp?: Record<string, unknown>) {
   const app = {}
   const plugin = new (class extends Plugin<OutlineSettings> {})(
     app as never,
-    { id: 'prisant-labs.outline-view', name: 'Outline View' } as never,
+    {
+      id: 'prisant-labs.outline-view', name: 'Outline View',
+      author: 'Prisant Labs', authorUrl: 'https://github.com/prisant-labs',
+      repo: 'prisant-labs/typora-plugin-outline-view', version: '0.3.0',
+      dir: 'C:\\plugins\\outline-view',
+    } as never,
   )
   const settings = new PluginSettings<OutlineSettings>(
     app as never,
@@ -25,7 +30,7 @@ function createTab(parent?: HTMLElement) {
   settings.setDefault(DEFAULT_OUTLINE_SETTINGS)
   plugin.registerSettings(settings)
 
-  const tab = new OutlineSettingsTab(plugin)
+  const tab = new OutlineSettingsTab(plugin, hostApp as never)
   parent?.append(tab.containerEl)
   tab.onshow()
   return { plugin, settings, tab }
@@ -38,6 +43,90 @@ function settingRow(tab: OutlineSettingsTab, name: string) {
 }
 
 describe('OutlineSettingsTab', () => {
+  it('shows the approved compact header with metadata and links in order', () => {
+    const { tab } = createTab()
+    const header = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__masthead')!
+    expect(tab.containerEl.firstElementChild).toBe(header)
+    expect(header.querySelector('h2')?.textContent).toBe('Outline View')
+    expect(Array.from(header.querySelectorAll('.outline-view-settings__meta > *')).map(el => el.textContent?.trim())).toEqual([
+      'Local folder', 'By Prisant Labs', 'Installed 0.3.0', 'Current Unavailable', 'Last updated Unavailable', 'GitHub',
+    ])
+    expect(header.querySelector<HTMLButtonElement>('[data-action="open-plugin-folder"] svg[aria-hidden="true"]')).not.toBeNull()
+    expect(header.querySelector<HTMLAnchorElement>('[data-link="author"]')?.href).toBe('https://github.com/prisant-labs')
+    expect(header.querySelector<HTMLAnchorElement>('[data-link="github"]')?.href).toBe('https://github.com/prisant-labs/typora-plugin-outline-view')
+    expect(header.textContent).not.toMatch(/Release notes|Report an issue|A synchronized outline beside your document/)
+    expect(header.nextElementSibling?.tagName).toBe('NAV')
+    tab.onhide()
+  })
+
+  it('opens the installed plugin folder through the public app API', () => {
+    const openFileWithDefaultApp = vi.fn().mockResolvedValue(undefined)
+    const host = {
+      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
+      openFileWithDefaultApp,
+    }
+    const { tab } = createTab(undefined, host)
+    tab.containerEl.querySelector<HTMLButtonElement>('[data-action="open-plugin-folder"]')!.click()
+    expect(openFileWithDefaultApp).toHaveBeenCalledOnce()
+    expect(openFileWithDefaultApp).toHaveBeenCalledWith('C:\\plugins\\outline-view')
+    tab.onhide()
+  })
+
+  it('reads current version and last update from the latest published release', async () => {
+    const host = {
+      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
+      openFileWithDefaultApp: vi.fn(),
+      github: { getReleaseInfo: vi.fn().mockResolvedValue({ tag_name: 'v0.3.1', published_at: '2026-09-23T16:00:00Z' }) },
+    }
+    const { tab } = createTab(undefined, host)
+    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Update available'))
+    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.1')
+    expect(tab.containerEl.querySelector('[data-last-updated]')?.textContent).toBe('Sep 23, 2026')
+    expect(host.github.getReleaseInfo).toHaveBeenCalledWith('prisant-labs/typora-plugin-outline-view')
+    tab.onhide()
+  })
+
+  it('shows an unavailable state when the release cannot be checked', async () => {
+    const host = {
+      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
+      openFileWithDefaultApp: vi.fn(),
+      github: { getReleaseInfo: vi.fn().mockRejectedValue(new Error('offline')) },
+    }
+    const { tab } = createTab(undefined, host)
+    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Unable to check'))
+    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('Unavailable')
+    expect(tab.containerEl.querySelector('[data-last-updated]')?.textContent).toBe('Unavailable')
+    tab.onhide()
+  })
+
+  it('marks the installed published version as up to date', async () => {
+    const host = {
+      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
+      github: { getReleaseInfo: vi.fn().mockResolvedValue({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' }) },
+    }
+    const { tab } = createTab(undefined, host)
+    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Up to date'))
+    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.0')
+    tab.onhide()
+  })
+
+  it('does not update a reopened header from a previous release request', async () => {
+    let resolveFirst!: (value: unknown) => void
+    const first = new Promise(resolve => { resolveFirst = resolve })
+    const getReleaseInfo = vi.fn().mockReturnValueOnce(first).mockResolvedValueOnce({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' })
+    const host = {
+      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
+      github: { getReleaseInfo },
+    }
+    const { tab } = createTab(undefined, host)
+    tab.onshow()
+    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Up to date'))
+    resolveFirst({ tag_name: '0.4.0', published_at: '2026-09-23T16:00:00Z' })
+    await Promise.resolve()
+    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.0')
+    tab.onhide()
+  })
+
   it('uses the complete prefixed manual-test hierarchy for samples without touching the document', () => {
     document.body.innerHTML = '<div id="write"><h1>Current document</h1></div>'
     const original = document.querySelector('#write')!.innerHTML
