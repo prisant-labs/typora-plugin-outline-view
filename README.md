@@ -11,6 +11,10 @@ The maintainer reported successful Windows/macOS testing of the development
 candidate; see the [validation record](docs/release/NATIVE-CHECKLIST.md) for its
 scope and the subsequent automated regression fixes.
 
+The repository is preparing an unreleased 0.3.1 candidate for the compact
+settings masthead. See the [draft notes](docs/release/0.3.1.md); use the 0.3.0
+release asset for an installed stable version.
+
 See the [0.3.0 release notes](docs/release/0.3.0.md) for the new appearance and
 browsing options.
 

@@ -3,6 +3,8 @@
 Repository: `prisant-labs/typora-plugin-outline-view`.
 Plugin identity: `prisant-labs.outline-view` / **Outline View**.
 Current release: **0.3.0**. Existing release tags and assets are immutable.
+Next candidate: **0.3.1** ([draft notes](release/0.3.1.md)); it is not tagged or
+published. Native validation and explicit publication approval are still required.
 
 ## Publication authorization and validation
 
@@ -35,7 +37,7 @@ pnpm prototype:check
 pnpm test:run
 pnpm typecheck
 pnpm run pack
-pnpm release:check --tag 0.3.0
+pnpm release:check --tag 0.3.1
 ```
 
 The last command validates the proposed version; it does not create a Git tag.
@@ -46,7 +48,7 @@ only `main.js`, `manifest.json`, `style.css`, `LICENSE.md`, and
 
 ## Tag and publish
 
-1. Create an annotated version tag, such as `0.3.0`, on the exact reviewed merge
+1. Create an annotated version tag, such as `0.3.1`, on the exact reviewed merge
    commit. Confirm the tag resolves to that commit, then push only that tag.
    Do not move existing tags or push all local tags.
 2. Create a draft GitHub Release for that tag, titled with the version, using

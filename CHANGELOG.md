@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Unreleased (0.3.1 candidate)
 
 - Add a compact Outline View settings masthead with author, installed version,
   latest published version and date, GitHub, and a Local folder shortcut.
