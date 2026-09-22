@@ -11,6 +11,11 @@ Reset settings restores the production defaults. No personal files or installed
 Typora settings are read or written. The version and source fingerprint identify
 the checked-in build, not necessarily the latest published release.
 
+The compact masthead uses a simulated 0.3.0 GitHub release and publication date
+so it works offline. Its Local folder button explains that a browser prototype
+has no installed plugin folder; in Typora, the button opens the plugin's local
+directory. Neither simulated value is a live release or filesystem check.
+
 ## How it stays current
 
 The generator imports the production settings tab, model, range selector, outline

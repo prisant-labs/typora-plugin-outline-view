@@ -270,3 +270,18 @@ preserves the dark swatch when that choice is temporarily hidden.
 **Why:** The aids improve scanning and location awareness at narrow dock widths
 without changing Markdown or forcing a noisier default. Shared production
 components keep design review aligned with shipped behavior.
+
+## D024 (settings masthead): Keep plugin identity and release metadata compact
+
+**Decision:** Place a compact Outline View masthead above the sticky settings
+navigation. Order the metadata as Local folder, author, installed manifest
+version, latest published GitHub release version, release publication date,
+and GitHub link. Use the public app file-opening API for
+the installed plugin directory. Release lookup is asynchronous, may fail
+without blocking settings, and must not update a hidden or reopened tab from
+an old request. The offline prototype simulates release and folder services.
+
+**Why:** Plugin provenance and update context belong near the top of settings,
+without a description or secondary links taking space from controls. The
+manifest and latest published release have distinct meanings; an offline state
+must not imply an update is available.

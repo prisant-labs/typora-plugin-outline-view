@@ -1,7 +1,7 @@
 import type { CollapseIcon } from '../settings/model'
 
 /** Small DOM-native icons remain visible without the host's icon font. */
-export function outlineIcon(kind: 'settings' | 'dock' | 'wrap' | 'nowrap') {
+export function outlineIcon(kind: 'settings' | 'dock' | 'wrap' | 'nowrap' | 'folder') {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute('viewBox', '0 0 24 24')
   svg.setAttribute('width', '16')
@@ -19,6 +19,7 @@ export function outlineIcon(kind: 'settings' | 'dock' | 'wrap' | 'nowrap') {
     settings: 'M10 2h4l.6 3 1.4.8 2.9-1 2 3.4-2.3 2v3.6l2.3 2-2 3.4-2.9-1-1.4.8-.6 3h-4l-.6-3-1.4-.8-2.9 1-2-3.4 2.3-2v-3.6l-2.3-2 2-3.4 2.9 1L9.4 5z',
     wrap: 'M3 5h18 M3 10h14a4 4 0 0 1 0 8h-4 m3-3-3 3 3 3 M3 16h5',
     nowrap: 'M3 5h18 M3 10h18 M3 16h14 m-3-3 3 3-3 3',
+    folder: 'M3 6h6l2 2h10v11H3z',
   }
   path.setAttribute('d', paths[kind])
   svg.append(path)
