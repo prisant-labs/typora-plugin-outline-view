@@ -2,34 +2,31 @@
 
 Repository: `prisant-labs/typora-plugin-outline-view`.
 Plugin identity: `prisant-labs.outline-view` / **Outline View**.
-Release version: **0.2.1**. Existing `0.2.0` is an immutable historical tag.
+Current release: **0.3.0**. Existing release tags and assets are immutable.
 
-## 0.2.1 publication decision
+## Publication authorization and validation
 
-The maintainer approved public GitHub publication on 2026-09-18 with native
-checks initially pending, then confirmed Windows/macOS validation complete for
-the released archive on the same date. The
-[validation record](release/NATIVE-CHECKLIST.md) identifies the exact release
-commit and ZIP checksum and distinguishes maintainer signoff from automated tests.
-This clears the native gate for marketplace submission; upstream acceptance
-still controls listing. The release tag and assets remain unchanged.
+The maintainer authorized tagging and publishing 0.3.0 on 2026-09-21 after
+merging the appearance features and reporting macOS/Windows candidate testing.
+See [release notes](release/0.3.0.md) and the
+[native validation record](release/NATIVE-CHECKLIST.md) for the tested candidate
+checksum and the distinction between native reports and subsequent automated fixes.
 
-## Validate before publishing
+For each release:
 
-1. Review the exact commit through a PR. Require **CI required**, which aggregates
-   Linux and Windows verification; do not bypass a failed job.
-2. Complete [native platform checks](release/NATIVE-CHECKLIST.md) on the packaged
-   candidate. Automation and native validation are separate gates.
-3. Audit all branches/tags and reachable history that will become public, not
-   just the working tree. Check screenshots, artifacts, issue/PR content, and
-   contributor metadata; never push private intermediate work branches.
-4. Confirm README, release notes, minimum versions and platform claims match the
-   validated candidate. Only advertise platforms that passed native checks.
-5. Obtain explicit publication and visibility approval. A merge is not a release.
+1. Review the exact commit through a PR and require **CI required**, which
+   aggregates Linux and Windows build verification. Do not bypass failed jobs.
+2. Record native platform testing separately from automated checks. Keep detailed
+   local evidence under ignored `_local/`; publish sanitized results only.
+3. Check source, history, documentation, and artifacts being published for private
+   data. Keep local plans, installed plugins, settings, and build staging ignored.
+4. Confirm versions, platform claims, changelog, and release notes match the release.
+5. Obtain explicit publication approval. A merged PR alone is not authorization.
 
 ## Build the reviewed commit
 
-Use Node.js 22 and pnpm 10.33.4, from a clean checkout of the reviewed commit:
+Use Node.js 22 and the pnpm version pinned in `package.json`, from a clean checkout
+of the reviewed commit:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -38,65 +35,55 @@ pnpm prototype:check
 pnpm test:run
 pnpm typecheck
 pnpm run pack
-pnpm release:check --tag 0.2.1
+pnpm release:check --tag 0.3.0
 ```
 
-`release:check` checks the proposed version string; it does **not** create or
-verify a Git tag. It verifies matching package/source/built manifests, the
-pinned core baseline, both byte-identical ZIPs, exact nonempty archive contents,
-and license copies. Record the printed SHA-256 with native test evidence.
+The last command validates the proposed version; it does not create a Git tag.
+It checks source/package/built manifests, both identical ZIPs, exact nonempty
+archive contents, and licenses. Record the printed SHA-256. The archive contains
+only `main.js`, `manifest.json`, `style.css`, `LICENSE.md`, and
+`THIRD-PARTY-NOTICES.md`. Use `pnpm run pack`, not the package manager's `pnpm pack`.
 
-The archive contains only `main.js`, `manifest.json`, `style.css`, `LICENSE.md`,
-and `THIRD-PARTY-NOTICES.md` at its root. Source, prototype, private notes, and
-development dependencies are excluded. Run `pnpm run pack`; plain `pnpm pack`
-is a different package-manager operation.
+## Tag and publish
 
-## Publish after approval and all gates
+1. Create an annotated version tag, such as `0.3.0`, on the exact reviewed merge
+   commit. Confirm the tag resolves to that commit, then push only that tag.
+   Do not move existing tags or push all local tags.
+2. Create a draft GitHub Release for that tag, titled with the version, using
+   the approved release notes with absolute links suitable for GitHub Releases.
+3. Upload the exact **`plugin.zip`** and `plugin.zip.sha256`. A branded ZIP is
+   optional and does not replace the required `plugin.zip` asset.
+4. Verify the draft's tag, notes, files, and digest; publish it as the latest
+   stable release under the maintainer's authorization.
+5. Download the published archive and verify its checksum against the local
+   validated build. Preserve the release receipt under ignored `_local/`.
 
-1. Make the repository public after the privacy review. Verify repository
-   description, private security reporting, dependency alerts, and protected
-   `main` with required CI. If account-plan restrictions prevented configuring
-   them while private, configure them now before further merges.
-2. Create an annotated **`0.2.1`** tag on the exact reviewed merge commit. Verify
-   its commit with `git rev-parse 0.2.1^{commit}` and push only that tag. Never
-   move `0.2.0` or use a blanket `git push --tags`.
-3. Build from the tagged commit, rerun the gates, and check native validation
-   still applies to these bytes. Create a draft GitHub Release titled `0.2.1`
-   for that tag, with [the release notes](release/0.2.1.md).
-4. Attach the exact **`plugin.zip`** plus its recorded SHA-256. The branded ZIP
-   is optional and never a substitute. Review and publish the draft explicitly.
-5. Submit a PR to
-   [typora-plugin-releases](https://github.com/typora-community-plugin/typora-plugin-releases)
-   adding an entry to `community-plugins.json`. Copy identity, description, and
-   validated platforms from `src/manifest.json`; do not edit generated
-   translations/statistics. Upstream acceptance controls marketplace listing.
-6. Verify installation/update from the marketplace once accepted. Update the
-   README's marketplace enrollment status; retain the original GitHub release date.
+## How marketplace updates arrive
 
-No PR to the core repository README is needed for registry enrollment. Manual
-releases are supported; no automatic publish workflow is required. This repo
-intentionally keeps publication behind a human gate.
+Outline View is already registered in upstream `community-plugins.json` with
+Windows and macOS support. Its entry points to this repository and does not carry
+a version number. **An ordinary version update does not need another registry PR.**
+A new plugin or changed registry identity/platform metadata does require one.
 
-## Marketplace entry
+Publish the new version as a stable GitHub Release with the exact `plugin.zip`
+asset name. The upstream statistics workflow reads releases for registered
+repositories and refreshes version metadata daily at 00:00 UTC, subject to
+GitHub Actions scheduling delays. Core 2.10.21 prefers those cached version
+statistics, falling back to GitHub's latest release when no version is known.
+It downloads `plugin.zip` from the selected release when installing/updating.
 
-Windows and macOS have maintainer-confirmed native validation for 0.2.1. Do not
-infer Linux support from Linux CI or add it without native validation.
-
-```json
-{
-  "id": "prisant-labs.outline-view",
-  "name": "Outline View",
-  "author": "Prisant Labs",
-  "description": "A synchronized document outline for Typora's right workspace dock.",
-  "repo": "prisant-labs/typora-plugin-outline-view",
-  "platforms": ["win32", "darwin"]
-}
-```
+Consequently, GitHub publication can precede the marketplace's update display.
+After upstream metadata refreshes, reopen Community Plugin settings and update
+Outline View under Installed Plugins. Use the release ZIP for immediate manual
+installation. Native marketplace install/update remains a separate check from
+confirming registration and public release assets.
 
 ## References
 
-- [Official marketplace publishing instructions](https://github.com/typora-community-plugin/typora-plugin-releases#publish-a-plugin)
+- [Official publishing instructions](https://github.com/typora-community-plugin/typora-plugin-releases#publish-a-plugin)
+- [Registry](https://github.com/typora-community-plugin/typora-plugin-releases/blob/main/community-plugins.json)
+- [Version statistics workflow](https://github.com/typora-community-plugin/typora-plugin-releases/blob/main/.github/workflows/plugin-stat.yml)
 - [Core release guide](https://github.com/typora-community-plugin/typora-community-plugin/blob/main/docs/en-us/dev-guide/9-releasing.md)
-- [MIT license](../LICENSE.md)
 
-Recheck upstream instructions at publication time if this runbook has aged.
+Recheck upstream behavior and schedules when publishing; these details were
+verified on 2026-09-21 against upstream and the pinned core package.

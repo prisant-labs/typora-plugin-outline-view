@@ -5,13 +5,14 @@ is an independent, synchronized heading navigator for
 [Typora Community Plugin](https://github.com/typora-community-plugin/typora-community-plugin).
 It does not replace or move Typora's native outline.
 
-**Release:** [0.2.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.2.1)
+**Release:** [0.3.0](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.3.0)
 is available for installation. Outline View is listed in the Community Plugin marketplace.
-The maintainer confirmed Windows/macOS validation complete for the released
-archive; see the [validation record](docs/release/NATIVE-CHECKLIST.md).
+The maintainer reported successful Windows/macOS testing of the development
+candidate; see the [validation record](docs/release/NATIVE-CHECKLIST.md) for its
+scope and the subsequent automated regression fixes.
 
-**Development:** [0.3.0 release notes](docs/release/0.3.0.md) describe the new
-appearance and browsing options on this branch. Version 0.3.0 is not yet published.
+See the [0.3.0 release notes](docs/release/0.3.0.md) for the new appearance and
+browsing options.
 
 ## Features
 
@@ -57,7 +58,7 @@ install it, then enable it under **Installed Plugins**.
 
 ### Manual installation or candidate testing
 
-Download [plugin.zip from release 0.2.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.2.1/plugin.zip).
+Download [plugin.zip from release 0.3.0](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.3.0/plugin.zip).
 GitHub's automatic source-code ZIPs are not plugin packages. The release includes
 a SHA-256 checksum for verifying the downloaded archive.
 

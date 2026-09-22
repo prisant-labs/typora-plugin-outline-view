@@ -20,6 +20,11 @@ per-case results or authorization to publish a release.
   native report to a later package as if they were the same artifact.
 - See [0.3.0 release notes](0.3.0.md) for scope and publication status.
 
+The maintainer separately authorized tagging and publishing 0.3.0 on 2026-09-21.
+Release preparation and the automated hover/auto-scroll fixes do not change the
+identity of the earlier native-tested ZIP; the published asset carries its own
+checksum. No new native test observations are inferred from publication approval.
+
 ## 0.2.1 maintainer signoff - 2026-09-18
 
 After the initial public GitHub release, the maintainer confirmed validation
