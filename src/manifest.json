@@ -5,7 +5,7 @@
   "author": "Prisant Labs",
   "authorUrl": "https://github.com/prisant-labs",
   "repo": "prisant-labs/typora-plugin-outline-view",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "minAppVersion": "1.4.0",
   "minCoreVersion": "2.10.21",
   "platforms": ["win32", "darwin"]
