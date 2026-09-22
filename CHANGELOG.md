@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 - Unreleased
+## 0.3.0 - 2026-09-21
 
 - Choose triangle, small bullet, line arrow, open/closed folder, or no collapse icon, with closer label spacing and the same accessible collapse target.
 - Add optional vertical hierarchy guides with quiet/clear strength and lines extending to each branch container's bottom.
