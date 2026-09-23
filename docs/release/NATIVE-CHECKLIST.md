@@ -4,6 +4,23 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+## 0.3.1 maintainer signoff - 2026-09-23
+
+The maintainer confirmed native testing on macOS and Windows and explicitly
+authorized publication after the final candidate and its checksum were presented.
+This records the maintainer's overall signoff, not an agent-executed native run
+or independently observed per-case results. Exact OS/Typora/core versions, themes,
+and checksums of the installed copies were not separately supplied.
+
+- Platforms covered by the signoff: Windows and macOS.
+- Preserved candidate source: `eff3860835a9cc16e33a3ee475e503362e13643d`.
+- Publication uses the same candidate ZIP, with release-documentation changes only.
+- `plugin.zip`: 27,317 bytes; SHA-256
+  `07bae5905548194d08a9a1440cdd64ea9ddf54c7aeedef105846920c2bf2f457`.
+- The two earlier candidate reports below are historical; this signoff clears the
+  native publication gate for 0.3.1 without inventing individual checklist results.
+- See [0.3.1 release notes](0.3.1.md) for scope and compatibility.
+
 ## 0.3.1 Windows candidate issue - 2026-09-23
 
 The maintainer's native Typora screenshot showed the new settings masthead at
@@ -14,7 +31,7 @@ globally fixes `header` elements to the app-window top. The masthead used that
 element, which explains the screenshot and was missed by the offline prototype.
 A candidate fix changes only the masthead container to a `div` and has an
 automated regression test using the host rule. Native retest on Windows and
-macOS remains required before publication.
+macOS was required at this stage; the final signoff is recorded above.
 The corrective `0.3.1` candidate archive produced for retest has SHA-256
 `76988a6abeaa21557f2b1215ef1e3041ed9bb1ac0deb3008779200d4d842911b`;
 this identifies the automated-check candidate, not a native validation result.
@@ -27,7 +44,7 @@ not identify the exact installed ZIP checksum. The section links scroll the
 host settings pane while only the navigation bar was sticky, so the masthead
 could leave the visible scrollport. A browser layout regression now exercises
 those links at wide and narrow widths in CI. Native Windows and macOS retesting
-of the next packed candidate remains required before publication.
+was required at this stage; the final signoff is recorded above.
 
 ## 0.3.0 development candidate signoff - 2026-09-21
 
