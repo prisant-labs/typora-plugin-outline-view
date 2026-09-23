@@ -1,11 +1,13 @@
 # Changelog
 
-## Unreleased (0.3.1 candidate)
+## 0.3.1 - 2026-09-23
 
 - Add a compact Outline View settings masthead with author, installed version,
   latest published version and date, GitHub, and a Local folder shortcut.
 - Show a clear update or unavailable state when the GitHub release lookup succeeds
   or fails, without delaying settings controls.
+- Keep the masthead inside the native settings modal and visible while navigating
+  settings sections, including narrow layouts.
 
 ## 0.3.0 - 2026-09-21
 

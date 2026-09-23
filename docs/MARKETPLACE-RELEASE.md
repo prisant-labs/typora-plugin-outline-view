@@ -2,17 +2,15 @@
 
 Repository: `prisant-labs/typora-plugin-outline-view`.
 Plugin identity: `prisant-labs.outline-view` / **Outline View**.
-Current release: **0.3.0**. Existing release tags and assets are immutable.
-Next candidate: **0.3.1** ([draft notes](release/0.3.1.md)); it is not tagged or
-published. Native validation and explicit publication approval are still required.
+Current release: **0.3.1** ([release notes](release/0.3.1.md)).
+Existing release tags and assets are immutable.
 
 ## Publication authorization and validation
 
-The maintainer authorized tagging and publishing 0.3.0 on 2026-09-21 after
-merging the appearance features and reporting macOS/Windows candidate testing.
-See [release notes](release/0.3.0.md) and the
-[native validation record](release/NATIVE-CHECKLIST.md) for the tested candidate
-checksum and the distinction between native reports and subsequent automated fixes.
+The maintainer confirmed macOS and Windows testing and explicitly authorized
+publication of 0.3.1 on 2026-09-23. See the [release notes](release/0.3.1.md) and
+[native validation record](release/NATIVE-CHECKLIST.md) for the preserved candidate
+checksum and the distinction between maintainer reports and automated checks.
 
 For each release:
 
@@ -35,6 +33,7 @@ pnpm install --frozen-lockfile
 pnpm audit --audit-level=moderate
 pnpm prototype:check
 pnpm test:run
+pnpm test:browser
 pnpm typecheck
 pnpm run pack
 pnpm release:check --tag 0.3.1
@@ -45,6 +44,11 @@ It checks source/package/built manifests, both identical ZIPs, exact nonempty
 archive contents, and licenses. Record the printed SHA-256. The archive contains
 only `main.js`, `manifest.json`, `style.css`, `LICENSE.md`, and
 `THIRD-PARTY-NOTICES.md`. Use `pnpm run pack`, not the package manager's `pnpm pack`.
+
+If native validation already covers a preserved candidate, keep its ZIP bytes
+unchanged instead of repacking. Confirm any later commit changes only release
+documentation, rerun the checks above except packing, and validate the existing
+ZIP against its recorded checksum. CI can independently rebuild the same source.
 
 ## Tag and publish
 
@@ -88,4 +92,5 @@ confirming registration and public release assets.
 - [Core release guide](https://github.com/typora-community-plugin/typora-community-plugin/blob/main/docs/en-us/dev-guide/9-releasing.md)
 
 Recheck upstream behavior and schedules when publishing; these details were
-verified on 2026-09-21 against upstream and the pinned core package.
+verified on 2026-09-21 against upstream and the pinned core package. Registry
+identity and the statistics workflow schedule were rechecked on 2026-09-23.
