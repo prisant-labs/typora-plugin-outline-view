@@ -7,16 +7,21 @@ test('section navigation keeps the masthead visible inside the settings scrollpo
   await page.goto(pathToFileURL(resolve('docs/prototype/settings.html')).href)
   await expect(page.locator('html')).toHaveAttribute('data-prototype-ready', 'true')
 
-  for (const section of ['Behavior', 'Structure', 'Appearance', 'Selector', 'Heading styles']) {
-    await page.locator('.outline-view-settings__nav').getByRole('link', { name: section }).click()
+  const sections = [
+    ['Behavior', 'behavior'], ['Structure', 'structure'], ['Appearance', 'appearance'],
+    ['Selector', 'selector'], ['Heading styles', 'heading-styles'],
+  ] as const
+  for (const [label, slug] of sections) {
+    const link = page.locator('.outline-view-settings__nav').getByRole('link', { name: label })
+    await link.click()
+    await expect(link).toHaveAttribute('aria-current', 'location')
 
-    const geometry = await page.evaluate(() => {
+    const geometry = await page.evaluate((targetId) => {
       const scroll = document.querySelector<HTMLElement>('#settings-mount')!
       const masthead = document.querySelector<HTMLElement>('.outline-view-settings__masthead')!
       const nav = document.querySelector<HTMLElement>('.outline-view-settings__nav')!
       const viewport = scroll.getBoundingClientRect()
-      const active = document.querySelector<HTMLElement>('.outline-view-settings__nav [aria-current]')!
-      const title = document.querySelector<HTMLElement>(active.getAttribute('href')! + ' .typ-setting-title')!.getBoundingClientRect()
+      const title = document.querySelector<HTMLElement>(`#outline-settings-${targetId} .typ-setting-title`)!.getBoundingClientRect()
       return {
         scrollTop: scroll.scrollTop,
         viewportTop: viewport.top,
@@ -26,12 +31,12 @@ test('section navigation keeps the masthead visible inside the settings scrollpo
         navBottom: nav.getBoundingClientRect().bottom,
         titleTop: title.top,
       }
-    })
+    }, slug)
 
-    expect(geometry.scrollTop, section).toBeGreaterThan(0)
-    expect(geometry.mastheadTop, section).toBeGreaterThanOrEqual(geometry.viewportTop - 1)
-    expect(geometry.mastheadBottom, section).toBeLessThanOrEqual(geometry.navTop + 1)
-    expect(geometry.navBottom, section).toBeLessThan(geometry.titleTop)
+    expect(geometry.scrollTop, label).toBeGreaterThan(0)
+    expect(geometry.mastheadTop, label).toBeGreaterThanOrEqual(geometry.viewportTop - 1)
+    expect(geometry.mastheadBottom, label).toBeLessThanOrEqual(geometry.navTop + 1)
+    expect(geometry.navBottom, label).toBeLessThan(geometry.titleTop)
   }
 })
 
