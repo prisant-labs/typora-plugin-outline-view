@@ -130,9 +130,17 @@ export class OutlineSettingsTab extends SettingTab {
     layout.className = 'outline-view-settings__layout'
     layout.append(controls, this.preview.element)
     const masthead = this.addMasthead()
-    this.containerEl.append(masthead, navigation, layout)
+    const chrome = document.createElement('div')
+    chrome.className = 'outline-view-settings__chrome'
+    chrome.append(masthead, navigation)
+    this.containerEl.append(chrome, layout)
     const scroll = this.scrollParent()
     const sizePreview = () => {
+      const chromeHeight = chrome.getBoundingClientRect().height
+      const measuredHeight = `${chromeHeight}px`
+      if (chromeHeight && this.containerEl.style.getPropertyValue('--outline-settings-chrome-height') !== measuredHeight) {
+        this.containerEl.style.setProperty('--outline-settings-chrome-height', measuredHeight)
+      }
       if (!scroll?.clientHeight || !this.preview) return
       const padding = getComputedStyle(scroll)
       const scrollTop = scroll.getBoundingClientRect().top + scroll.clientTop
@@ -190,6 +198,7 @@ export class OutlineSettingsTab extends SettingTab {
       })
       visibility.observe(this.containerEl)
       if (scroll) visibility.observe(scroll)
+      visibility.observe(chrome)
       this.disposables.push(() => visibility.disconnect())
     }
     this.syncAppearanceRows()
@@ -360,7 +369,15 @@ export class OutlineSettingsTab extends SettingTab {
           event.preventDefault()
           const scroll = this.scrollParent()
           if (scroll) {
-            const offset = Number.parseFloat(getComputedStyle(target).scrollMarginTop) || 72
+            const chrome = nav.parentElement
+            const preview = this.preview?.element
+            const previewStyle = preview && getComputedStyle(preview)
+            const previewOffset = preview && previewStyle?.order === '-1'
+              ? (Number.parseFloat(previewStyle.top) || 0) + preview.getBoundingClientRect().height + 12
+              : 0
+            const sectionOffset = Number.parseFloat(getComputedStyle(target).scrollMarginTop) || 72
+            const chromeOffset = (chrome?.getBoundingClientRect().height || 0) + 12
+            const offset = Math.max(sectionOffset, chromeOffset, previewOffset)
             scroll.scrollTo({ top: scroll.scrollTop + target.getBoundingClientRect().top - scroll.getBoundingClientRect().top - offset, behavior: 'instant' })
           } else target.scrollIntoView({ block: 'start', behavior: 'instant' })
           target.focus({ preventScroll: true })

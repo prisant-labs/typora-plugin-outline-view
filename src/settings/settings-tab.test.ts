@@ -46,7 +46,7 @@ describe('OutlineSettingsTab', () => {
   it('shows the approved compact header with metadata and links in order', () => {
     const { tab } = createTab()
     const header = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__masthead')!
-    expect(tab.containerEl.firstElementChild).toBe(header)
+    expect(tab.containerEl.firstElementChild).toBe(header.parentElement)
     expect(header.querySelector('h2')?.textContent).toBe('Outline View')
     expect(Array.from(header.querySelectorAll('.outline-view-settings__meta > *')).map(el => el.textContent?.trim())).toEqual([
       'By Prisant Labs', 'Installed 0.3.0', 'Current Unavailable', 'Last updated Unavailable', 'GitHub', 'Local folder',
@@ -68,7 +68,7 @@ describe('OutlineSettingsTab', () => {
     try {
       const { tab } = createTab(document.body)
       const masthead = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__masthead')!
-      expect(masthead.parentElement).toBe(tab.containerEl)
+      expect(masthead.parentElement?.parentElement).toBe(tab.containerEl)
       expect(getComputedStyle(masthead).position).not.toBe('fixed')
       expect(masthead.querySelector('h2')?.textContent).toBe('Outline View')
       tab.onhide()

@@ -19,6 +19,16 @@ The corrective `0.3.1` candidate archive produced for retest has SHA-256
 `76988a6abeaa21557f2b1215ef1e3041ed9bb1ac0deb3008779200d4d842911b`;
 this identifies the automated-check candidate, not a native validation result.
 
+## 0.3.1 Windows section-navigation issue - 2026-09-23
+
+The maintainer reported that the corrected masthead appears in the Settings
+modal but disappears after clicking a section tab. The supplied screenshots do
+not identify the exact installed ZIP checksum. The section links scroll the
+host settings pane while only the navigation bar was sticky, so the masthead
+could leave the visible scrollport. A browser layout regression now exercises
+those links at wide and narrow widths in CI. Native Windows and macOS retesting
+of the next packed candidate remains required before publication.
+
 ## 0.3.0 development candidate signoff - 2026-09-21
 
 The maintainer reported that the appearance options and heading-label fix looked

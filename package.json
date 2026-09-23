@@ -11,6 +11,7 @@
     "pack": "pnpm run build && node pack.js",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:browser": "playwright test",
     "typecheck": "tsc --noEmit",
     "prototype:build": "node scripts/prototype.mjs",
     "prototype:check": "node scripts/prototype.mjs --check",
@@ -24,6 +25,7 @@
   "author": "Prisant Labs",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@babel/core": "^7.23.2",
     "@babel/preset-env": "^7.23.2",
     "@rollup/plugin-babel": "^6.0.4",

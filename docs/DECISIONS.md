@@ -293,3 +293,9 @@ must not imply an update is available.
 the top of the app window; inside Settings that pulls the masthead out of the
 modal. Keep the `h2` heading for structure, and regression-test with the host
 rule applied.
+
+**Scroll boundary revision:** The masthead and section navigation share one
+sticky group inside the host settings scrollport. Section jumps reserve the
+group's measured height; the narrow live preview also reserves space beneath
+it. A Chromium layout test runs against the production-generated settings
+prototype in CI, while native Typora remains the final integration check.

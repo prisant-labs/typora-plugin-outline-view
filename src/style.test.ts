@@ -64,7 +64,7 @@ describe('outline layout safeguards', () => {
     expect(source).toContain('--typ-border-color')
     expect(source).not.toContain('--base-border')
     expect(rule(source, '.outline-view-settings__preview')).toContain('border: 1px solid var(--settings-border)')
-    expect(rule(source, '.outline-view-settings__nav')).toContain('position: sticky')
+    expect(rule(source, '.outline-view-settings__chrome')).toContain('position: sticky')
     expect(source).not.toContain('border-style: dashed')
     expect(rule(source, ".outline-view-settings__heading-style button[aria-pressed='true']")).toContain('color: var(--settings-on-text)')
     expect(rule(source, ".outline-view-settings__heading-style button[aria-pressed='true']")).toContain('background: var(--settings-on-bg)')
