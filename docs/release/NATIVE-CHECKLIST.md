@@ -4,6 +4,21 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+## 0.3.1 Windows candidate issue - 2026-09-23
+
+The maintainer's native Typora screenshot showed the new settings masthead at
+the app-window top behind the Settings modal, while the rest of the tab stayed
+inside the modal. The tested ZIP checksum and Typora version were not supplied;
+this is a failure report, not release signoff. Typora's installed `window.css`
+globally fixes `header` elements to the app-window top. The masthead used that
+element, which explains the screenshot and was missed by the offline prototype.
+A candidate fix changes only the masthead container to a `div` and has an
+automated regression test using the host rule. Native retest on Windows and
+macOS remains required before publication.
+The corrective `0.3.1` candidate archive produced for retest has SHA-256
+`76988a6abeaa21557f2b1215ef1e3041ed9bb1ac0deb3008779200d4d842911b`;
+this identifies the automated-check candidate, not a native validation result.
+
 ## 0.3.0 development candidate signoff - 2026-09-21
 
 The maintainer reported that the appearance options and heading-label fix looked

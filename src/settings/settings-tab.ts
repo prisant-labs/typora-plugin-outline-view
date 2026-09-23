@@ -205,7 +205,8 @@ export class OutlineSettingsTab extends SettingTab {
 
   private addMasthead() {
     const manifest = this.outlinePlugin.manifest
-    const masthead = document.createElement('header')
+    // Typora's window.css fixes every <header> to the top of the app window.
+    const masthead = document.createElement('div')
     masthead.className = 'outline-view-settings__masthead'
     const top = document.createElement('div')
     top.className = 'outline-view-settings__masthead-top'

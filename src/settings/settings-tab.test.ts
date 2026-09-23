@@ -61,6 +61,22 @@ describe('OutlineSettingsTab', () => {
     tab.onhide()
   })
 
+  it('keeps the masthead inside settings despite Typora window header styles', () => {
+    const hostStyle = document.createElement('style')
+    hostStyle.textContent = 'header { height: 28px; position: fixed; top: 0; left: 0; right: 0; z-index: 900; display: flex; }'
+    document.head.append(hostStyle)
+    try {
+      const { tab } = createTab(document.body)
+      const masthead = tab.containerEl.querySelector<HTMLElement>('.outline-view-settings__masthead')!
+      expect(masthead.parentElement).toBe(tab.containerEl)
+      expect(getComputedStyle(masthead).position).not.toBe('fixed')
+      expect(masthead.querySelector('h2')?.textContent).toBe('Outline View')
+      tab.onhide()
+    } finally {
+      hostStyle.remove()
+    }
+  })
+
   it('opens the installed plugin folder through the public app API', () => {
     const openFileWithDefaultApp = vi.fn().mockResolvedValue(undefined)
     const host = {
