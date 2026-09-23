@@ -26,6 +26,8 @@
   "include": [
     "src/**/*.ts",
     "prototype/**/*.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "test/browser/**/*.ts"
   ]
 }

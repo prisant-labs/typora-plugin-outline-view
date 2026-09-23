@@ -9,6 +9,7 @@
   color: var(--settings-text);
 }
 .outline-view-settings__masthead { padding: 0 8px 9px; }
+.outline-view-settings__chrome { position: sticky; top: 0; z-index: 2; background: var(--settings-bg); }
 .outline-view-settings__masthead-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 7px 14px; }
 .outline-view-settings__masthead h2 { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.2; }
 .outline-view-settings__release-status {
@@ -47,9 +48,6 @@
 .outline-view-settings__folder svg { flex: none; width: 12px; height: 12px; stroke-width: 1.6; }
 .outline-view-settings__folder:not(:disabled):hover { background: color-mix(in srgb, var(--settings-text) 6%, var(--settings-bg)); }
 .outline-view-settings__nav {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: flex;
   gap: 4px;
   overflow-x: auto;
@@ -69,7 +67,7 @@
 .outline-view-settings__section .typ-setting-title { margin-top: 0; }
 .outline-view-settings__preview {
   position: sticky;
-  top: 68px;
+  top: calc(var(--outline-settings-chrome-height, 68px) + 12px);
   flex: 0 0 390px;
   display: flex;
   flex-direction: column;
@@ -194,7 +192,7 @@
 @container (max-width: 850px) {
   .outline-view-settings__layout { flex-direction: column; }
   .outline-view-settings__controls { flex: auto; width: 100%; }
-  .outline-view-settings__preview { order: -1; top: 56px; z-index: 1; flex: auto; max-width: none; width: 100%; height: auto; padding: 10px; }
+  .outline-view-settings__preview { order: -1; top: calc(var(--outline-settings-chrome-height, 56px) + 8px); z-index: 1; flex: auto; max-width: none; width: 100%; height: auto; padding: 10px; }
   .outline-view-settings__preview h3 { font-size: 13px; margin-bottom: 2px; }
   .outline-view-settings__preview-meta { margin-bottom: 6px; }
   .outline-view.outline-view--preview { flex: none; height: clamp(90px, 18vh, 150px); }

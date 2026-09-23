@@ -362,10 +362,16 @@ archive in native Typora. Record platform checks separately as described in
 
 ## Settings masthead candidate
 
+- Run `pnpm test:browser` against the generated settings prototype. In Chromium,
+  click each section link at wide width and Heading styles at narrow width;
+  confirm the masthead stays inside the settings scrollport, above navigation,
+  without covering the selected section or narrow live preview. Linux CI runs
+  this real-layout check in addition to the DOM tests on Linux and Windows.
 - In native Typora on Windows and macOS, open Community Plugins > Outline View
   settings. Confirm the compact masthead remains above sticky section navigation
   inside the modal, not at the app-window top behind the modal, at wide and
-  narrow modal widths in light/dark themes.
+  narrow modal widths in light/dark themes. Click Behavior, Structure,
+  Appearance, Selector, and Heading styles; the masthead should stay visible.
 - Confirm the small Local folder button follows GitHub with a middle-dot
   separator that stays with the button on wrapping, and opens the installed
   plugin directory; author and GitHub open the intended pages. No description,

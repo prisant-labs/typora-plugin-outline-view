@@ -10,6 +10,7 @@ export default defineConfig({
     },
   },
   test: {
+    include: ['**/*.test.ts'],
     // Bound concurrent jsdom startup on developer laptops and hosted runners.
     maxWorkers: 2,
     environment: 'jsdom',
