@@ -49,8 +49,10 @@ describe('OutlineSettingsTab', () => {
     expect(tab.containerEl.firstElementChild).toBe(header)
     expect(header.querySelector('h2')?.textContent).toBe('Outline View')
     expect(Array.from(header.querySelectorAll('.outline-view-settings__meta > *')).map(el => el.textContent?.trim())).toEqual([
-      'Local folder', 'By Prisant Labs', 'Installed 0.3.0', 'Current Unavailable', 'Last updated Unavailable', 'GitHub',
+      'By Prisant Labs', 'Installed 0.3.0', 'Current Unavailable', 'Last updated Unavailable', 'GitHub', 'Local folder',
     ])
+    expect(header.querySelector('.outline-view-settings__meta > :last-child')?.classList.contains('outline-view-settings__meta-separated')).toBe(true)
+    expect(header.querySelector('.outline-view-settings__meta > :last-child > [data-action="open-plugin-folder"]')).not.toBeNull()
     expect(header.querySelector<HTMLButtonElement>('[data-action="open-plugin-folder"] svg[aria-hidden="true"]')).not.toBeNull()
     expect(header.querySelector<HTMLAnchorElement>('[data-link="author"]')?.href).toBe('https://github.com/prisant-labs')
     expect(header.querySelector<HTMLAnchorElement>('[data-link="github"]')?.href).toBe('https://github.com/prisant-labs/typora-plugin-outline-view')

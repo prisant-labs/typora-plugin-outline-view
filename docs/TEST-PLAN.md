@@ -365,9 +365,10 @@ archive in native Typora. Record platform checks separately as described in
 - In native Typora on Windows and macOS, open Community Plugins > Outline View
   settings. Confirm the compact masthead remains above sticky section navigation
   at wide and narrow modal widths, in light/dark themes.
-- Confirm Local folder opens the installed plugin directory, author and GitHub
-  open the intended pages, and no description, release-notes, or issue link is
-  present in the masthead.
+- Confirm the small Local folder button follows GitHub with a middle-dot
+  separator that stays with the button on wrapping, and opens the installed
+  plugin directory; author and GitHub open the intended pages. No description,
+  release-notes, or issue link should appear in the masthead.
 - With network access, compare Installed to the manifest and Current/Last updated
   to the latest published GitHub release. With the lookup unavailable, verify
   settings still work and the badge says Unable to check.

@@ -274,10 +274,12 @@ components keep design review aligned with shipped behavior.
 ## D024 (settings masthead): Keep plugin identity and release metadata compact
 
 **Decision:** Place a compact Outline View masthead above the sticky settings
-navigation. Order the metadata as Local folder, author, installed manifest
-version, latest published GitHub release version, release publication date,
-and GitHub link. Use the public app file-opening API for
-the installed plugin directory. Release lookup is asynchronous, may fail
+navigation. Order the metadata as author, installed manifest version, latest
+published GitHub release version, release publication date, GitHub link, and
+the smaller Local folder button. Put the same middle-dot separator between
+GitHub and Local folder, grouped with the button so it cannot wrap alone.
+Open the installed plugin directory through the public app file-opening API.
+Release lookup is asynchronous, may fail
 without blocking settings, and must not update a hidden or reopened tab from
 an old request. The offline prototype simulates release and folder services.
 

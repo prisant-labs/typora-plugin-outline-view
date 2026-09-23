@@ -14,6 +14,17 @@ function rule(source: string, selector: string) {
 }
 
 describe('outline layout safeguards', () => {
+  it('keeps the local-folder masthead action slightly smaller than the metadata row', async () => {
+    const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
+    const folder = rule(source, '.outline-view-settings__folder')
+    const icon = rule(source, '.outline-view-settings__folder svg')
+    expect(folder).toContain('min-height: 24px')
+    expect(folder).toContain('padding: 2px 6px')
+    expect(folder).toContain('font-size: 10px')
+    expect(icon).toContain('width: 12px')
+    expect(icon).toContain('height: 12px')
+  })
+
   it('keeps emphasis glyphs centered without an automatic-state corner badge', async () => {
     const source = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
     expect(source).not.toContain("content: 'A'")

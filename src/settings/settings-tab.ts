@@ -237,8 +237,6 @@ export class OutlineSettingsTab extends SettingTab {
         })
       })
     } else folder.title = 'Local plugin folder is unavailable here'
-    meta.append(folder)
-
     const author = document.createElement('span')
     author.append('By ')
     if (manifest.authorUrl) {
@@ -279,6 +277,10 @@ export class OutlineSettingsTab extends SettingTab {
       github.append(link)
       meta.append(github)
     }
+    const folderItem = document.createElement('span')
+    folderItem.className = 'outline-view-settings__meta-separated outline-view-settings__folder-item'
+    folderItem.append(folder)
+    meta.append(folderItem)
     masthead.append(top, meta)
 
     const generation = this.headerGeneration
