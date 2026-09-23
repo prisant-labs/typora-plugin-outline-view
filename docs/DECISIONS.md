@@ -287,3 +287,9 @@ an old request. The offline prototype simulates release and folder services.
 without a description or secondary links taking space from controls. The
 manifest and latest published release have distinct meanings; an offline state
 must not imply an update is available.
+
+**Native host boundary:** Use a `div` for the masthead container rather than a
+`header` element. Typora's window stylesheet globally positions `header` at
+the top of the app window; inside Settings that pulls the masthead out of the
+modal. Keep the `h2` heading for structure, and regression-test with the host
+rule applied.
