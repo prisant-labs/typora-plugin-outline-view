@@ -90,6 +90,37 @@ describe('parseHeadings', () => {
     expect(parseHeadings(root)[0].text).toBe('Untitled heading')
   })
 
+  it('keeps a focused heading that Typora displays as heading source', () => {
+    // Markup shape captured from Typora on macOS with "Display source for simple
+    // blocks (including headings, etc.) on focus" enabled; the text is synthetic.
+    const root = createEditor(
+      '<h1 cid="n2" mdtype="heading" class="md-end-block md-heading">Project overview</h1>' +
+      '<p cid="n5" mdtype="paragraph" contenteditable="true" mdlike="h2" class="md-end-block md-p md-focus"><span class="md-block-like"><span class="md-blockmeta">## </span><span class="md-header-span"><span md-inline="plain" class="md-plain md-expand">Start here</span></span></span></p>' +
+      '<p cid="n6" mdtype="paragraph">Body</p>',
+    )
+
+    expect(
+      parseHeadings(root).map(({ key, level, text, element }) => ({ key, level, text, tag: element.tagName })),
+    ).toEqual([
+      { key: 'cid:n2', level: 1, text: 'Project overview', tag: 'H1' },
+      { key: 'cid:n5', level: 2, text: 'Start here', tag: 'P' },
+    ])
+  })
+
+  it('omits setext underlines and inline markers from heading source', () => {
+    const root = createEditor(
+      '<p cid="s" mdlike="h2"><span class="md-block-like"><span class="md-blockmeta"></span><span class="md-header-span"><span class="md-pair-s md-expand"><span class="md-meta">**</span><strong>Bold</strong><span class="md-meta">**</span></span> title</span><span class="md-blockmeta">\n---</span></span></p>',
+    )
+
+    expect(parseHeadings(root)[0]).toMatchObject({ key: 'cid:s', level: 2, text: 'Bold title' })
+  })
+
+  it('ignores paragraphs without a heading-like depth', () => {
+    const root = createEditor('<p cid="a" mdlike="">Body</p><p cid="b" mdlike="h7">Body</p><p cid="c">Body</p>')
+
+    expect(parseHeadings(root)).toEqual([])
+  })
+
   it('treats a blank cid as missing', () => {
     const root = createEditor('<h1 cid="  ">One</h1>')
 

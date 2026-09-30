@@ -22,7 +22,7 @@ export function selectActiveHeading(
   return active
 }
 
-function editorScroller(editor: HTMLElement) {
+export function editorScroller(editor: HTMLElement) {
   const doc = editor.ownerDocument
   const root = doc.scrollingElement ?? doc.documentElement
   let candidate: HTMLElement | null = editor

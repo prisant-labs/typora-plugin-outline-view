@@ -243,6 +243,61 @@ from ordinary text or code. This is a DOM-class assumption, not a public API;
 recheck it after Typora updates. Tests cover synthetic DOM fixtures based on
 these classes; native verification against the affected document is still needed.
 
+## Heading source display and macOS navigation
+
+The maintainer reported two bugs in 0.3.1 on macOS. Clicking into a heading
+removed its row until the caret left the heading. Outline clicks stopped
+scrolling the document, although they worked right after a file loaded. The
+maintainer ran a read-only console diagnostic in Typora on macOS on 2026-09-30.
+Special characters were not involved: every failing heading was plain text.
+Version 0.3.2 contains the fixes described below.
+
+**Heading source display (observed, high confidence).** Typora's preference
+Markdown → Live Rendering → "Display source for simple blocks (including
+headings, etc.) on focus" is stored as `File.option.expandSimpleBlock` and is
+off by default. When it is on, entering a heading removes its `h1`-`h6` element
+and inserts a paragraph with the same `cid`:
+
+```html
+<p cid="n5" mdtype="paragraph" mdlike="h2" class="md-end-block md-p md-focus">
+  <span class="md-block-like"><span class="md-blockmeta">## </span>
+  <span class="md-header-span">Start here</span></span></p>
+```
+
+When the caret leaves, Typora inserts a new heading element. Typora's own table
+of contents counts a paragraph with a heading depth as a heading while the
+option is on (`frame.js`, Typora 1.14.10). Outline View does the same, keyed on
+`mdlike`, and strips `.md-blockmeta`, which holds the `#` markers and any setext
+underline. These are DOM assumptions, not public API.
+
+**Why the swap reaches the outline.** The Community Plugin core's
+`markdownEditor` `edit` event comes from a `MutationObserver` on `#write`
+(`childList`, `characterData`, `subtree`; no attributes), debounced 400 ms. It
+fires for any character change, for a single record that both adds and removes
+nodes, and in several other cases. The heading swap is one such record, so the
+view reparses while the heading is in its source form. Cores 2.10.21 and 2.10.23
+contain the same logic. Between a swap and the reparse, the previous element is
+detached, so navigation resolves a detached element by `cid` at click time.
+
+**Navigation scroll on macOS (observed symptom, inferred mechanism).** In the
+diagnostic, navigation found a connected target in a document with 14,563 px of
+scroll range. It called `scrollIntoView({ behavior: 'smooth', block: 'start' })`
+and then `#write.focus({ preventScroll: true })`. The editor's `scrollTop`
+stayed at 0 through 1.5 s, while the caret stayed in a block near the top.
+Typora on macOS runs on WebKit (`File.isSafari`); on Windows it runs on
+Chromium. Typora's own `focusAndRestorePos` saves `content.scrollTop`, focuses
+the editor, and restores the value, which implies that focusing the editor can
+scroll it. The most likely mechanism is that focus revealed the restored caret
+and cancelled the smooth scroll. This fits the report: after a file loads,
+there is no caret to restore. The mechanism is inferred and not proven.
+
+Navigation now focuses the editor only when focus is outside it, and does so
+first. It then sets the scroll container's `scrollTop` directly, which moves
+instantly, so nothing can interrupt it. The scroll container is the same one
+that active-heading tracking uses: `<content>` with `overflow-y: auto` on both
+macOS and Windows. jsdom tests cover the ordering and a focus call that scrolls
+back to the caret. Native macOS confirmation of the fix is pending.
+
 There is no architectural reason to run an entire second Typora plugin framework merely to get the desired outline experience.
 
 Community Plugin already provides the workspace infrastructure necessary for a native implementation.

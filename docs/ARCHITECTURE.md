@@ -138,9 +138,16 @@ If a tree representation is useful, separate:
 V1 should parse the active editor DOM.
 
 Extract readable heading text after excluding Typora's editor metadata
-(`.md-meta`, `.md-meta-none`, `.md-content`) from a detached clone. Preserve the
-original heading element for navigation and leave literal punctuation intact.
-See `RESEARCH-NOTES.md` for the DOM assumption and validation boundary.
+(`.md-meta`, `.md-meta-none`, `.md-content`, `.md-blockmeta`) from a detached
+clone. Preserve the original heading element for navigation and leave literal
+punctuation intact. See `RESEARCH-NOTES.md` for the DOM assumption and
+validation boundary.
+
+When Typora's "Display source for simple blocks (including headings, etc.) on
+focus" preference is on, the focused heading is not an `h1`-`h6` element. Typora
+replaces it with `<p mdlike="h1">`...`<p mdlike="h6">` carrying the same `cid`,
+and restores a new heading element when the caret leaves. The parser accepts
+both forms, so the heading keeps its row, key, collapse state, and active state.
 
 Initial selector:
 
