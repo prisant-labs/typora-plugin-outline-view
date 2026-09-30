@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.2 - 2026-09-30
+
+- Keep a heading's row while Typora shows that heading as source. This happens
+  when Typora's "Display source for simple blocks (including headings, etc.) on
+  focus" preference is on; previously the row disappeared until the caret left.
+- Scroll the editor directly when navigating from the outline, instead of using
+  a smooth scroll. On macOS, the smooth scroll was cancelled once the caret had
+  been placed in the document, so outline clicks stopped moving the document.
+- Navigation now jumps to the heading instantly on every platform, rather than
+  gliding to it.
+- Follow a heading that Typora has replaced, by its ID, when an outline row is
+  clicked.
+
 ## 0.3.1 - 2026-09-23
 
 - Add a compact Outline View settings masthead with author, installed version,

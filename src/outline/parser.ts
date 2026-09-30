@@ -1,9 +1,13 @@
 import type { HeadingLevel, OutlineHeading } from './model'
 
 const HEADING_TAG = /^H([1-6])$/
+// With "Display source for simple blocks on focus", Typora swaps the focused
+// heading for a paragraph carrying its level, e.g. <p mdlike="h2">.
+const HEADING_SOURCE = /^h([1-6])$/i
 // Typora keeps Markdown delimiters and source-only metadata in the editor DOM,
 // even when CSS hides them. Exclude them regardless of the current edit state.
-const HEADING_METADATA = '.md-meta, .md-meta-none, .md-content'
+// .md-blockmeta holds heading source markers such as "## " or a setext underline.
+const HEADING_METADATA = '.md-meta, .md-meta-none, .md-content, .md-blockmeta'
 const fallbackIdentityByEditor = new WeakMap<
   HTMLElement,
   { nextId: number; keys: WeakMap<HTMLElement, string> }
@@ -32,7 +36,9 @@ export function parseHeadings(editor: HTMLElement | null): OutlineHeading[] {
   for (const child of Array.from(editor.children)) {
     if (!(child instanceof HTMLElement)) continue
 
-    const match = child.tagName.match(HEADING_TAG)
+    const match =
+      child.tagName.match(HEADING_TAG) ??
+      child.getAttribute('mdlike')?.match(HEADING_SOURCE)
     if (!match) continue
 
     const cid = child.getAttribute('cid')?.trim() || undefined

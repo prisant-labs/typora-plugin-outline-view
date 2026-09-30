@@ -113,6 +113,18 @@ uses `scrollIntoView()` and then returns focus to `#write`.
 **Why:** This avoids slug generation and private document-model APIs. The view
 reparses after edits and file changes, so references are refreshed.
 
+**0.3.2 macOS revision:** Navigation no longer uses smooth
+`scrollIntoView()`. On macOS, the focus call that followed it cancelled the
+scroll, so outline clicks stopped moving the document. Navigation now resolves
+a detached element by `cid`. It focuses `#write` first, and only when focus is
+outside the editor. It then sets the editor scroll container's `scrollTop` so
+that the heading's top meets the viewport top. The scroll is instant, cannot be
+interrupted, and leaves host ancestors unscrolled. Navigation still does not
+move the caret. Placing the caret in the heading, as Typora's native outline
+does, would be a separate product decision. With heading source display on, it
+would also expand every heading the user navigates to. See
+[RESEARCH-NOTES.md](RESEARCH-NOTES.md#heading-source-display-and-macos-navigation).
+
 ---
 
 ## D014 (release boundary): Build toward, then tag, `0.1.0`

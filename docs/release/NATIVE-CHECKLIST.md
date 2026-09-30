@@ -4,6 +4,35 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+## 0.3.2 publication before native testing - 2026-09-30
+
+The maintainer explicitly authorized publication of 0.3.2 before native testing
+of this build. No native result for 0.3.2 is recorded here, and none is inferred.
+
+- `plugin.zip`: 27,408 bytes; SHA-256
+  `2f828492af862575cb522e70615dd0900f07cafaa90e8d9ccc1ea2a9840ce44c`.
+- Native confirmation on macOS and Windows is pending. The cases to run are in
+  the Navigation and Heading source display sections of the
+  [test plan](../TEST-PLAN.md).
+- See [0.3.2 release notes](0.3.2.md) for scope and compatibility.
+
+## 0.3.1 macOS failure diagnosis - 2026-09-30
+
+The maintainer ran a read-only console diagnostic in Typora on macOS with the
+installed 0.3.1 plugin. This is failure evidence for 0.3.1, not validation of
+any later build. The macOS, Typora, and Community Plugin versions were not
+captured; the WebKit user-agent string does not identify them.
+
+- Outline clicks: the target heading element was connected, and
+  `scrollIntoView({ behavior: 'smooth', block: 'start' })` was called. The editor
+  scroll container, Typora's `<content>`, kept `scrollTop` 0 at 0, 150, 600, and
+  1500 ms, with 14,563 px of scroll range.
+- Heading source display: entering a heading replaced its `h1`/`h2` element with
+  `<p mdlike="h1">`/`<p mdlike="h2">` carrying the same `cid`. The editor's
+  top-level heading count dropped by one, and the outline lost that row.
+- The failing headings were plain text. Detailed output, which contains private
+  document content, stays under ignored `_local/`.
+
 ## 0.3.1 maintainer signoff - 2026-09-23
 
 The maintainer confirmed native testing on macOS and Windows and explicitly

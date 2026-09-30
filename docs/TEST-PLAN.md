@@ -98,7 +98,19 @@ DOM tests alone do not certify every inline extension or Typora version.
 - click nested H4/H6
 - navigation still works after edit
 - navigation still works after file switch
+- navigation still works after placing the caret in the document, then clicking
+  several rows far apart (macOS regression in 0.3.1)
 - active item remains correct after navigation
+
+### Heading source display
+
+Turn on Preferences → Markdown → Live Rendering → "Display source for simple
+blocks (including headings, etc.) on focus", which is off by default. Then:
+
+- click into a heading; its row stays, with the same label and no `#` markers
+- move the caret out of the heading; the row stays
+- click the row of the heading that holds the caret; navigation works
+- repeat on macOS and Windows
 
 ### Live refresh
 

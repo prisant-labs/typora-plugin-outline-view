@@ -89,6 +89,22 @@ function setHeadingTops(tops: number[]) {
   )
 }
 
+// Without a scroll container around #write, navigation scrolls the document.
+function trackDocumentScroll(initial = 0) {
+  const root = document.scrollingElement ?? document.documentElement
+  const writes: number[] = []
+  let scrollTop = initial
+  Object.defineProperty(root, 'scrollTop', {
+    configurable: true,
+    get: () => scrollTop,
+    set: (value: number) => {
+      scrollTop = value
+      writes.push(value)
+    },
+  })
+  return writes
+}
+
 function labels(view: OutlineView) {
   return Array.from(
     view.containerEl.querySelectorAll('.outline-view__item'),
@@ -111,6 +127,7 @@ afterEach(() => {
   document.body.replaceChildren()
   vi.useRealTimers()
   delete (HTMLElement.prototype as Partial<HTMLElement>).scrollIntoView
+  delete ((document.scrollingElement ?? document.documentElement) as Partial<HTMLElement>).scrollTop
 })
 
 describe('OutlineView', () => {
@@ -320,11 +337,9 @@ describe('OutlineView', () => {
   })
 
   it('connects rendered items to live heading navigation', () => {
-    document.body.innerHTML = '<div id="write"><h1>One</h1></div>'
+    document.body.innerHTML = '<div id="write" tabindex="-1"><h1>One</h1></div>'
     setHeadingTops([10])
-    const heading = document.querySelector('h1')!
-    const scrollIntoView = vi.fn()
-    heading.scrollIntoView = scrollIntoView
+    const scrollWrites = trackDocumentScroll()
     const { app } = createApp()
     const view = new OutlineView({} as never, app as never)
 
@@ -333,7 +348,39 @@ describe('OutlineView', () => {
       .querySelector<HTMLButtonElement>('.outline-view__item')
       ?.click()
 
-    expect(scrollIntoView).toHaveBeenCalledOnce()
+    expect(scrollWrites).toEqual([10])
+    expect(document.activeElement?.id).toBe('write')
+  })
+
+  it('keeps a heading row while Typora shows that heading as source', () => {
+    vi.useFakeTimers()
+    document.body.innerHTML =
+      '<div id="write"><h1 cid="n2">Title</h1><h2 cid="n5">Start here</h2><p cid="n6">Body</p></div>'
+    setHeadingTops([10, 200])
+    const scrollWrites = trackDocumentScroll()
+    const { app, markdownEditor } = createApp()
+    const view = new OutlineView({} as never, app as never)
+    view.onOpen()
+    const keys = () => Array.from(
+      view.containerEl.querySelectorAll<HTMLElement>('.outline-view__item'),
+    ).map((item) => item.dataset.headingKey)
+    expect(keys()).toEqual(['cid:n2', 'cid:n5'])
+
+    // Clicking into the heading with "Display source for simple blocks" on.
+    const source = document.createElement('p')
+    source.setAttribute('cid', 'n5')
+    source.setAttribute('mdlike', 'h2')
+    source.innerHTML = '<span class="md-block-like"><span class="md-blockmeta">## </span><span class="md-header-span">Start here</span></span>'
+    source.getBoundingClientRect = () => ({ top: 220 }) as DOMRect
+    document.querySelector('[cid="n5"]')!.replaceWith(source)
+    markdownEditor.emit('edit')
+    vi.advanceTimersByTime(120)
+
+    expect(keys()).toEqual(['cid:n2', 'cid:n5'])
+    expect(labels(view)).toEqual(['Title', 'Start here'])
+    view.containerEl.querySelector<HTMLButtonElement>('[data-heading-key="cid:n5"]')!.click()
+    expect(scrollWrites).toEqual([220])
+    view.unload()
   })
 
   it('supports toolbar and command-driven expand/collapse all', () => {
@@ -401,8 +448,7 @@ describe('OutlineView', () => {
     vi.useFakeTimers()
     document.body.innerHTML = '<div id="write"><h1 cid="field">Field notes</h1><h2 cid="research">Research</h2><h3 cid="observations">Observations</h3><h4 cid="child">A familiar pattern</h4><h2 cid="sibling">Design direction</h2><h1 cid="appendix">Appendix</h1></div>'
     setHeadingTops([-300, -150, 10, 200, 400, 600])
-    const scrollIntoView = vi.fn()
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView })
+    const scrollWrites = trackDocumentScroll(1000)
     const { app } = createApp()
     const settings = new FakeSettings()
     settings.set('collapseIcon', 'arrow')
@@ -428,7 +474,8 @@ describe('OutlineView', () => {
     vi.advanceTimersByTime(120)
     expect(labels(view)).toEqual(['Field notes', 'Research', 'Observations', 'A familiar pattern'])
     view.containerEl.querySelectorAll<HTMLButtonElement>('.outline-view__current-path button')[1].click()
-    expect(scrollIntoView).toHaveBeenCalled()
+    // "Research" sits 150px above the viewport top.
+    expect(scrollWrites).toEqual([850])
     settings.set('focusCurrentBranch', false)
     vi.advanceTimersByTime(120)
     expect(labels(view)).toEqual(['Field notes', 'Research', 'Observations', 'A familiar pattern', 'Design direction', 'Appendix'])

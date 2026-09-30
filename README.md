@@ -5,14 +5,17 @@ is an independent, synchronized heading navigator for
 [Typora Community Plugin](https://github.com/typora-community-plugin/typora-community-plugin).
 It does not replace or move Typora's native outline.
 
-**Release:** [0.3.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.3.1)
+**Release:** [0.3.2](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.3.2)
 is available for installation. Outline View is listed in the Community Plugin marketplace;
 its update display may follow GitHub publication after the next metadata refresh.
-The maintainer confirmed native testing on Windows and macOS; see the
+0.3.2 was published before native testing of that build; native confirmation on
+Windows and macOS is pending. See the
 [validation record](docs/release/NATIVE-CHECKLIST.md) for the report and archive identity.
 
-See the [0.3.1 release notes](docs/release/0.3.1.md) for the compact settings masthead
-and the [0.3.0 release notes](docs/release/0.3.0.md) for appearance and browsing options.
+See the [0.3.2 release notes](docs/release/0.3.2.md) for the macOS navigation and
+heading-source fixes, the [0.3.1 release notes](docs/release/0.3.1.md) for the
+compact settings masthead, and the [0.3.0 release notes](docs/release/0.3.0.md)
+for appearance and browsing options.
 
 ## Features
 
@@ -58,7 +61,7 @@ install it, then enable it under **Installed Plugins**.
 
 ### Manual installation or candidate testing
 
-Download [plugin.zip from release 0.3.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.3.1/plugin.zip).
+Download [plugin.zip from release 0.3.2](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.3.2/plugin.zip).
 GitHub's automatic source-code ZIPs are not plugin packages. The release includes
 a SHA-256 checksum for verifying the downloaded archive.
 
@@ -155,7 +158,7 @@ control GitHub visibility or marketplace distribution.
 
 See [contributing](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md),
 [test plan](docs/TEST-PLAN.md), [release runbook](docs/MARKETPLACE-RELEASE.md),
-[0.3.1 notes](docs/release/0.3.1.md), and [changelog](CHANGELOG.md).
+[0.3.2 notes](docs/release/0.3.2.md), and [changelog](CHANGELOG.md).
 
 ## Credits and license
 
