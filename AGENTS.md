@@ -23,6 +23,13 @@ Before coding, read:
 
 Use `docs/RESEARCH-NOTES.md` when verifying Community Plugin APIs.
 
+## Branches and worktrees
+
+- Start every task on a new branch created from the latest `origin/main`. Do not resume an older branch; its work is either merged or abandoned.
+- Leave the primary checkout on `main`. Do task work in a separate git worktree.
+- Merge through a PR. GitHub deletes the head branch on merge; delete the local branch and remove the worktree as well.
+- Keep notes and evidence in the ignored `_local/` folder of the primary checkout. A worktree's `_local/` folder is deleted with the worktree.
+
 ## Primary objective
 
 Build a stable Community Plugin that displays a synchronized outline of the active Markdown document independently from Typora's native left sidebar.
