@@ -7,7 +7,7 @@ updates:
     open-pull-requests-limit: 5
     # Stabilize the native release candidate before optional major migrations.
     # This version-update filter does not restrict security updates.
-    # Revisit after 0.2.1; see docs/BACKLOG.md (Dependency maintenance).
+    # Pending major migrations: CONTRIBUTING.md (Dependency updates).
     allow:
       - dependency-name: "*"
         update-types: [version-update:semver-minor, version-update:semver-patch]
