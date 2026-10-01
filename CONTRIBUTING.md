@@ -6,8 +6,7 @@ Bug reports, compatibility reports, and small improvements are welcome.
 ## Before changing code
 
 - Read [AGENTS.md](AGENTS.md) and the documents it lists.
-- Discuss larger features in an issue first. Search, alternate icons, hierarchy
-  guides, and placements are tracked in [the backlog](docs/BACKLOG.md).
+- Discuss larger features in an issue first.
 - Keep document content unchanged. Use public Community Plugin APIs and never
   move Typora's native outline DOM.
 - Use synthetic Markdown in tests, screenshots, and reports. Never submit real
@@ -39,10 +38,20 @@ installed plugins, or local session logs.
 
 ### Dependency updates
 
-During 0.2.1 native validation, automated npm version updates are limited to minor
-and patch releases. Optional major migrations are tracked in the
-[dependency maintenance backlog](docs/BACKLOG.md#dependency-maintenance).
-The `allow.update-types` filter does not restrict security updates; see
+Automated npm version updates are limited to minor and patch releases. Review
+optional major migrations individually or in a deliberately tested build-tool
+batch. These are pending:
+
+- `@rollup/plugin-node-resolve` 15 to 16.
+- `@rollup/plugin-typescript` 11 to 12.
+- `@rollup/plugin-babel` 6 to 7.
+- `archiver` 7 to 8, including its module/API compatibility with the packager.
+- `@types/jquery` 3 to 4 only after checking the supported Community Plugin host's
+  runtime jQuery version and declarations; newer types are not automatically a
+  better compatibility target.
+
+Security remediation must not wait for these optional upgrades. The
+`allow.update-types` filter does not restrict security updates; see
 [GitHub's Dependabot reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#update-types-allow).
 The separate core compatibility-baseline ignore remains in place, so core updates
 require manual review. Keep vulnerability alerts and the CI audit enabled.

@@ -16,12 +16,10 @@ This repository is intended to be developed with coding agents. Read this file b
 
 Before coding, read:
 
-1. `docs/PROJECT-CONTEXT.md`
-2. `docs/PRD.md`
-3. `docs/ARCHITECTURE.md`
-4. `docs/IMPLEMENTATION-PLAN.md`
-5. `docs/DECISIONS.md`
-6. `docs/TEST-PLAN.md`
+1. `docs/PRD.md`
+2. `docs/ARCHITECTURE.md`
+3. `docs/DECISIONS.md`
+4. `docs/TEST-PLAN.md`
 
 Use `docs/RESEARCH-NOTES.md` when verifying Community Plugin APIs.
 
