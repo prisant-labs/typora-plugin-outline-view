@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 - 2026-10-02
 
 - Show an update pill in the outline toolbar and beside the installed version
   in settings when Community Plugin Core's Plugin Marketplace offers a newer
