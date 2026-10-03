@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+// jsdom has no IndexedDB: keep the update record in memory, shared like the real per-profile database.
+const updates = vi.hoisted(() => ({ record: { checkForUpdates: true } as Record<string, unknown> }))
+vi.mock('./update/update-store', () => ({ UpdateStore: class {
+  async read() { return structuredClone(updates.record) }
+  async update(change: (record: Record<string, unknown>) => Record<string, unknown>) { updates.record = structuredClone(change(structuredClone(updates.record))); return structuredClone(updates.record) }
+  async close() {}
+} }))
+
 import OutlinePlugin from './main'
 import {
   OUTLINE_VIEW_TYPE,
@@ -249,5 +257,144 @@ describe('OutlinePlugin', () => {
 
     expect(outlineLeaf.detach).toHaveBeenCalledOnce()
     expect(otherLeaf.detach).not.toHaveBeenCalled()
+  })
+})
+
+describe('OutlinePlugin updates', () => {
+  const ID = 'prisant-labs.outline-view'
+
+  afterEach(() => {
+    document.body.replaceChildren()
+    vi.useRealTimers()
+  })
+
+  /** A host with Core's plugin manager, one outline leaf, and GitHub's release lookup. */
+  function updateHost(marketplace: object, updatePlugin: (id: string) => Promise<void>) {
+    const leaf = { type: 'leaf', viewType: OUTLINE_VIEW_TYPE, view: undefined as OutlineView | undefined, detach: vi.fn(() => { leaf.view?.unload(); leaf.view?.containerEl.remove() }) }
+    const app = {
+      commands: { run: vi.fn() },
+      viewManager: { registerView: vi.fn((_type: string, _factory: (leaf: never) => OutlineView) => () => {}) },
+      workspace: {
+        activeFile: undefined, on: vi.fn(() => () => {}),
+        rightSplit: { findLeaf: vi.fn(() => null), filterLeaves: vi.fn((predicate: (leaf: RightDockLeaf) => boolean) => [leaf as unknown as RightDockLeaf].filter(predicate)), expand: vi.fn(), toggle: vi.fn() },
+      },
+      features: { markdownEditor: { on: vi.fn(() => () => {}) } },
+      plugins: { marketplace, updatePlugin: vi.fn(updatePlugin) },
+      openLink: vi.fn(),
+      github: { getReleaseInfo: vi.fn(async () => ({ tag_name: '0.3.4', published_at: '2026-10-01T16:00:00Z' })) },
+    }
+    const plugin = new OutlinePlugin(app as never, { id: ID, name: 'Outline View', version: '0.3.2', repo: 'prisant-labs/typora-plugin-outline-view' } as never)
+    const openView = () => {
+      const factory = app.viewManager.registerView.mock.calls[0][1]
+      leaf.view = factory(leaf as never)
+      document.body.append(leaf.view.containerEl)
+      leaf.view.onOpen()
+      return leaf.view
+    }
+    const openSettings = () => {
+      const tab = (plugin as unknown as { registeredSettingTabs: Array<{ containerEl: HTMLElement; onshow(): void }> }).registeredSettingTabs[0]
+      document.body.append(tab.containerEl); tab.onshow()
+      return tab
+    }
+    // Core's uninstall: unloadPlugin runs onunload, then the registered disposers.
+    const coreUnload = () => { plugin.onunload(); plugin.unload() }
+    return { app, plugin, openView, openSettings, coreUnload }
+  }
+  const dialogs = () => [...document.querySelectorAll<HTMLElement>('.typ-modal__wrapper')].filter(node => node.style.display !== 'none')
+  const dialogButton = (name: string) => [...dialogs()[0].querySelectorAll('button')].find(node => node.textContent === name)!
+
+  it('shows Core\'s newer version as pills and updates through Core after confirmation', async () => {
+    vi.useFakeTimers()
+    updates.record = { checkForUpdates: true }
+    const info: { id: string; newestVersion?: string } = { id: ID }
+    const marketplace = {
+      pluginList: [] as unknown[],
+      get isLoaded() { return marketplace.pluginList.length > 0 },
+      getPlugin: vi.fn((id: string) => marketplace.pluginList.find(entry => (entry as { id: string }).id === id)),
+      loadCommunityPlugins: vi.fn(async () => { marketplace.pluginList = [info]; info.newestVersion = '0.3.4' }),
+      getPluginNewestVersion: vi.fn(async (entry: { newestVersion?: string }) => entry.newestVersion),
+    }
+    // Core's update unloads the running plugin before it downloads the new one.
+    const host = updateHost(marketplace, async () => { host.coreUnload() })
+    const { app, plugin } = host
+    plugin.onload(); await vi.advanceTimersByTimeAsync(0)
+    // Loading the plugin asks Core for nothing; opening the outline does.
+    expect(marketplace.loadCommunityPlugins).not.toHaveBeenCalled()
+    const view = host.openView(); await vi.advanceTimersByTimeAsync(0)
+    expect(marketplace.loadCommunityPlugins).toHaveBeenCalledOnce()
+    expect(marketplace.getPluginNewestVersion).not.toHaveBeenCalled()
+    const pill = view.containerEl.querySelector<HTMLButtonElement>('[data-action="update"]')!
+    expect(pill.getAttribute('aria-label')).toBe('Update Outline View to 0.3.4')
+    expect(updates.record).toMatchObject({ checkForUpdates: true, checked: { version: '0.3.4' } })
+
+    const tab = host.openSettings(); await vi.advanceTimersByTimeAsync(0)
+    // The settings page reuses this window's check: Core is not asked again.
+    expect(marketplace.loadCommunityPlugins).toHaveBeenCalledOnce()
+    expect(app.github.getReleaseInfo).toHaveBeenCalledOnce()
+    expect(tab.containerEl.querySelector<HTMLInputElement>('input[data-update-setting="checkForUpdates"]')?.checked).toBe(true)
+    expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Update available')
+    const settingsPill = tab.containerEl.querySelector<HTMLButtonElement>('.outline-view-settings__masthead [data-action="update"]')!
+    expect(settingsPill.textContent).toBe('Update to 0.3.4')
+
+    pill.click()
+    expect(dialogs()).toHaveLength(1)
+    expect(dialogs()[0].textContent).toContain('Update Outline View from 0.3.2 to 0.3.4?')
+    dialogButton('Cancel').click()
+    expect(dialogs()).toHaveLength(0)
+    expect(app.plugins.updatePlugin).not.toHaveBeenCalled()
+
+    settingsPill.click()
+    const release = dialogs()[0].querySelector('a')!
+    release.click()
+    expect(app.openLink).toHaveBeenCalledExactlyOnceWith('https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.3.4')
+    dialogButton('Update').click(); await vi.advanceTimersByTimeAsync(0)
+    expect(app.plugins.updatePlugin).toHaveBeenCalledExactlyOnceWith(ID)
+    // Core's unload closed the dialog and the outline; nothing reappears.
+    expect(dialogs()).toHaveLength(0)
+    expect(view.containerEl.isConnected).toBe(false)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(document.querySelectorAll('.typ-modal__wrapper')).toHaveLength(0)
+  })
+
+  it('reports an update that Core did not start, without unloading', async () => {
+    vi.useFakeTimers()
+    updates.record = { checkForUpdates: false }
+    const marketplace = {
+      pluginList: [{ id: ID, newestVersion: '0.3.4' }] as unknown[],
+      get isLoaded() { return true },
+      getPlugin: vi.fn((id: string) => marketplace.pluginList.find(entry => (entry as { id: string }).id === id)),
+      loadCommunityPlugins: vi.fn(async () => {}), getPluginNewestVersion: vi.fn(async () => '0.3.4'),
+    }
+    const host = updateHost(marketplace, async () => {})
+    const { app, plugin } = host
+    plugin.onload(); await vi.advanceTimersByTimeAsync(0)
+    const view = host.openView(); await vi.advanceTimersByTimeAsync(0)
+    host.openSettings(); await vi.advanceTimersByTimeAsync(0)
+    // The setting is off, so neither Core nor GitHub is asked; Core's already-loaded data still shows the pill.
+    expect(marketplace.loadCommunityPlugins).not.toHaveBeenCalled()
+    expect(marketplace.getPluginNewestVersion).not.toHaveBeenCalled()
+    expect(app.github.getReleaseInfo).not.toHaveBeenCalled()
+    view.containerEl.querySelector<HTMLButtonElement>('[data-action="update"]')!.click()
+    const dialog = dialogs()[0]
+    dialogButton('Update').click()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(app.plugins.updatePlugin).toHaveBeenCalledOnce()
+    expect(dialog.textContent).toContain('Outline View was not updated.')
+    host.coreUnload()
+    expect(dialog.isConnected).toBe(false)
+  })
+
+  it('keeps the update setting out of Outline View\'s settings file', async () => {
+    updates.record = { checkForUpdates: true }
+    const host = updateHost({ getPlugin: () => undefined, loadCommunityPlugins: async () => {} }, async () => {})
+    host.plugin.onload()
+    const set = vi.spyOn(host.plugin.settings, 'set')
+    const tab = host.openSettings()
+    const box = tab.containerEl.querySelector<HTMLInputElement>('input[data-update-setting="checkForUpdates"]')!
+    box.checked = false; box.dispatchEvent(new Event('change'))
+    await vi.waitFor(() => expect(updates.record.checkForUpdates).toBe(false))
+    expect(set).not.toHaveBeenCalled()
+    expect(host.plugin.settings.get('checkForUpdates' as never)).toBeUndefined()
+    host.coreUnload()
   })
 })

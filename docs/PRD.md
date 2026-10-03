@@ -280,6 +280,17 @@ This plugin should not attempt to replace Typora Community Plugin's workspace sy
 
 It is a focused view that uses that system.
 
+## Approved extension: in-plugin update offer
+
+Outline View tells users when the Plugin Marketplace offers a newer version and
+lets them start Community Plugin Core's own update from the outline or its
+settings. This keeps users on fixed releases; it is distribution support, not a
+navigation feature, and it adds no workspace widget. Outline View never
+downloads or installs anything itself, and it sends nothing about the user. The
+check is on by default, runs at most once a day, and has an off switch under
+Updates. [D025 (update pill)](DECISIONS.md#d025-update-pill-offer-cores-marketplace-update-inside-the-plugin)
+records the design.
+
 ## Approved 0.2.0 extension: heading presentation
 
 The heading-range selector has two endpoints with drag, click-to-arm then

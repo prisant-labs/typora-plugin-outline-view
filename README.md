@@ -5,14 +5,15 @@ is an independent, synchronized heading navigator for
 [Typora Community Plugin](https://github.com/typora-community-plugin/typora-community-plugin).
 It does not replace or move Typora's native outline.
 
-**Release:** [0.3.2](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.3.2)
+**Release:** [0.4.0](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.4.0)
 is available for installation. Outline View is listed in the Community Plugin marketplace;
 its update display may follow GitHub publication after the next metadata refresh.
-0.3.2 was published before native testing of that build; native confirmation on
-Windows and macOS is pending. See the
+0.4.0 and 0.3.2 were published before native testing of those builds; native
+confirmation on Windows and macOS is pending. See the
 [validation record](docs/release/NATIVE-CHECKLIST.md) for the report and archive identity.
 
-See the [0.3.2 release notes](docs/release/0.3.2.md) for the macOS navigation and
+See the [0.4.0 release notes](docs/release/0.4.0.md) for the update pill, the
+[0.3.2 release notes](docs/release/0.3.2.md) for the macOS navigation and
 heading-source fixes, the [0.3.1 release notes](docs/release/0.3.1.md) for the
 compact settings masthead, and the [0.3.0 release notes](docs/release/0.3.0.md)
 for appearance and browsing options.
@@ -28,6 +29,8 @@ for appearance and browsing options.
   section spacing/dividers with theme or custom light/dark colors.
 - Optional active-path emphasis, clickable current path, and current-branch focus.
 - Presentation changes never modify document text.
+- An update pill in the outline toolbar and on the settings page when the Plugin
+  Marketplace offers a newer version. Community Plugin Core performs the update.
 
 ## Preview the settings
 
@@ -61,7 +64,7 @@ install it, then enable it under **Installed Plugins**.
 
 ### Manual installation or candidate testing
 
-Download [plugin.zip from release 0.3.2](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.3.2/plugin.zip).
+Download [plugin.zip from release 0.4.0](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.4.0/plugin.zip).
 GitHub's automatic source-code ZIPs are not plugin packages. The release includes
 a SHA-256 checksum for verifying the downloaded archive.
 
@@ -114,6 +117,32 @@ active-file background and border colors to identify the current heading without
 changing its selected text color, font weight, or other styles. Keyboard focus
 remains separately visible on the focused control.
 
+## Updates and privacy
+
+When Community Plugin Core's Plugin Marketplace offers a newer version, a small
+**↑ Update** pill appears in the outline toolbar and beside **Installed** on the
+settings page. In a narrow dock, the pill shows only the arrow and the version.
+Click either pill to review the update, then choose **Update**. Core downloads
+the new version and reloads Outline View in that window. Your Outline View
+settings are kept, and other Typora windows keep the old version until they
+restart.
+
+To stop the daily check, turn off **Check for updates automatically** under
+**Updates** in Outline View's settings. With the check off, the pill can still
+appear when Core already holds newer Marketplace data, for example after you
+open Core's **Installed Plugins** or **Plugin Marketplace** tab.
+
+Outline View collects no telemetry and sends nothing about you or your files. It
+causes network requests in two cases, both carried out by Community Plugin Core.
+The update check: at most once a day, when the outline or its settings page
+opens, Outline View asks Core to check the Plugin Marketplace for a newer
+version, and Core downloads the Marketplace's public lists from GitHub. While
+the check is on, the settings page also asks GitHub, through Core, for the
+latest published release, to show its version and date. Turn both off in
+Outline View's settings under **Updates**. And an update you confirm: Core
+downloads the new version, after reloading those lists if its copy is out of
+date.
+
 ## Troubleshooting and limitations
 
 - No outline? Confirm the plugin is enabled, the core version meets the minimum,
@@ -158,7 +187,7 @@ control GitHub visibility or marketplace distribution.
 
 See [contributing](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md),
 [test plan](docs/TEST-PLAN.md), [release runbook](docs/MARKETPLACE-RELEASE.md),
-[0.3.2 notes](docs/release/0.3.2.md), and [changelog](CHANGELOG.md).
+[0.4.0 notes](docs/release/0.4.0.md), and [changelog](CHANGELOG.md).
 
 ## Credits and license
 

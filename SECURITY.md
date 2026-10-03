@@ -26,6 +26,15 @@ reads the active document's heading DOM and stores settings through Community
 Plugin. It does not send document contents to a service or deliberately modify
 Markdown. Only install plugins and updates from sources you trust.
 
+Outline View makes no network requests of its own. Through Community Plugin
+Core, and only while "Check for updates automatically" is on, it asks Core to
+refresh the Plugin Marketplace's public lists at most once a day, and the
+settings page asks GitHub for the latest release. Its update-check record lives
+in Typora's built-in browser storage (IndexedDB), which its windows share,
+separate from its settings. An update runs only after the user confirms it, and Core performs it:
+Core removes the installed plugin folder, then downloads and installs the
+release's `plugin.zip`. See [D025 (update pill)](docs/DECISIONS.md#d025-update-pill-offer-cores-marketplace-update-inside-the-plugin).
+
 The offline prototype uses synthetic headings and in-memory settings. Build and
 test dependencies are development tooling; audit findings must still be
 reviewed and fixed or explicitly assessed before release.

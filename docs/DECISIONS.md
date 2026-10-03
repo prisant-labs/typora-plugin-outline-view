@@ -311,3 +311,67 @@ sticky group inside the host settings scrollport. Section jumps reserve the
 group's measured height; the narrow live preview also reserves space beneath
 it. A Chromium layout test runs against the production-generated settings
 prototype in CI, while native Typora remains the final integration check.
+
+**Update check revision (D025):** The GitHub release lookup now only displays
+information. It still fills the latest published release version and its
+publication date, but it no longer decides whether an update is available.
+"Update available" and the update pill come only from Community Plugin Core's
+Plugin Marketplace data, because that is what Core's update installs. The
+lookup runs only while "Check for updates automatically" is on, and only after
+the stored setting has been read, so a user who turned the check off never
+causes the request. With the check off, the masthead shows its offline values
+and the status "Not checked". When GitHub names a newer release that the
+Marketplace does not offer yet, the status reads "Newer release" instead of
+"Update available", because the Marketplace can lag a release by up to a day.
+Turning the check off also discards any lookup still in flight.
+
+---
+
+## D025 (update pill): Offer Core's Marketplace update inside the plugin
+
+**Decision:** When Community Plugin Core's Plugin Marketplace names a newer
+Outline View, the outline toolbar shows an "Update" pill between the spacer and
+the wrap button, and the settings masthead shows an "Update to <version>" pill
+beside the installed version. Either pill opens a confirmation built on Core's
+`Modal`, and **Update** calls Core's `updatePlugin` once. A settings section
+named "Updates" holds "Check for updates automatically", on by default. The
+port follows the Favorites plugin's reviewed implementation (Favorites pull
+request #9, commit `728e8fe`). Its five porting decisions are settled as the
+porting guide recommended:
+
+- **OV-D1 (masthead GitHub check):** keep D024's release metadata for display,
+  gated by the off switch. See the D024 revision above.
+- **OV-D2 (storage):** keep the setting and the last completed check in
+  IndexedDB, in the database `prisant-labs.outline-view`, object store `state`,
+  key `updates`. One read-modify-write transaction per change keeps windows
+  from overwriting each other, and the 24-hour limit is shared by every window
+  and vault. The record never enters `PluginSettings`, so an older Outline View
+  reads its settings unchanged.
+- **OV-D3 (off switch):** with the check off, Outline View never asks Core to
+  load anything on its own, and it never makes the GitHub release lookup. A
+  pill can still appear from data Core already holds in memory, for example
+  after the user opens Core's Installed Plugins tab. A click on **Update** may
+  reload Core's lists once, because the user asked for the update.
+- **OV-D4 (when the check runs):** from `OutlineView.onOpen()`, from the
+  settings `onshow()`, and from the settings visibility observer. The notifier
+  runs at most one check at a time and at most one completed check per day
+  across windows, so extra triggers cost nothing.
+- **OV-D5 (contrast):** a selected or call-to-action element never has lower
+  text contrast than its neighbors on Typora's default theme. Pills use the
+  theme's text color; the accent colors only the border, the arrow, and a 14%
+  tint. The masthead's "Update available" status follows the same rule.
+
+**Why:** Core already installs updates from its Marketplace, but only when the
+user opens Core's Installed Plugins tab, so a user can run an outdated version
+without knowing a fix exists. The check asks Core to download only the Marketplace's public lists, and only once
+a day; Outline View sends nothing about the user. Reading Core's in-memory
+`newestVersion` instead of calling `getPluginNewestVersion()` avoids Core's
+GitHub REST fallback. An update reloads Core's lists only when Core's copy is
+missing or older than the pill's version, because a failed reload deletes the
+data the update needs.
+
+**Undocumented API boundary:** `app.plugins.marketplace` and
+`app.plugins.updatePlugin` are typed by Core 2.10.21 but are not documented
+plugin APIs. The notifier checks each method at runtime and shows nothing when
+one is missing. The Core behavior the design relies on is recorded in
+[RESEARCH-NOTES.md](RESEARCH-NOTES.md#plugin-marketplace-and-updates).

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.0 - 2026-10-02
+
+- Show an update pill in the outline toolbar and beside the installed version
+  in settings when Community Plugin Core's Plugin Marketplace offers a newer
+  Outline View. The pill opens a confirmation, and **Update** hands the update
+  to Core. Settings are kept. In a narrow dock, the pill shows only an arrow and
+  the version.
+- Add an **Updates** settings section with "Check for updates automatically",
+  on by default. The check asks Core to refresh the Marketplace's public lists
+  at most once a day, shared across Typora windows. Outline View sends nothing
+  about you or your files.
+- The settings masthead's GitHub release lookup now runs only while the check
+  is on. "Update available" now comes from the Marketplace, which Core installs
+  from. A newer GitHub release that the Marketplace has not picked up yet shows
+  as "Newer release", and a turned-off check shows as "Not checked".
+- Keep the "Update available" status at full text contrast in Typora's default
+  theme; the accent color marks only its border and tint.
+- Add a privacy section to the README, and an Updates scenario to the offline
+  settings prototype.
+
 ## 0.3.2 - 2026-09-30
 
 - Keep a heading's row while Typora shows that heading as source. This happens

@@ -23,7 +23,8 @@
   font-weight: 600;
   white-space: nowrap;
 }
-.outline-view-settings__release-status[data-state='update'] { color: var(--active-file-border-color, var(--settings-text)); border-color: currentColor; }
+// D025 (OV-D5): a call to action keeps full text contrast; Typora's base accent is #777. The accent marks the border and tint.
+.outline-view-settings__release-status[data-state='update'] { --update-accent: var(--active-file-border-color, var(--settings-text)); color: var(--settings-text); border-color: var(--update-accent); background: color-mix(in srgb, var(--update-accent) 14%, var(--settings-bg)); }
 .outline-view-settings__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 9px; margin-top: 7px; color: var(--settings-muted); font-size: 11px; }
 .outline-view-settings__meta-separated::before { content: '·'; margin-right: 9px; color: var(--settings-muted); }
 .outline-view-settings__folder-item { display: inline-flex; align-items: center; }
@@ -47,6 +48,12 @@
 }
 .outline-view-settings__folder svg { flex: none; width: 12px; height: 12px; stroke-width: 1.6; }
 .outline-view-settings__folder:not(:disabled):hover { background: color-mix(in srgb, var(--settings-text) 6%, var(--settings-bg)); }
+// The accent marks the pill; its text stays full contrast (D025, OV-D5).
+.outline-view-settings__update { --update-accent: var(--active-file-border-color, var(--settings-text)); display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; min-height: 22px; padding: 1px 8px 1px 6px; border: 1px solid var(--update-accent); border-radius: 999px; color: var(--settings-text); background: transparent; background: color-mix(in srgb, var(--update-accent) 14%, transparent); font: inherit; font-size: 11px; font-weight: 600; line-height: 1.1; white-space: nowrap; cursor: pointer; }
+.outline-view-settings__update svg { flex: none; width: 12px; height: 12px; stroke-width: 2.2; color: var(--update-accent); }
+.outline-view-settings__update:hover { background: color-mix(in srgb, var(--update-accent) 26%, transparent); }
+.outline-view-settings__update-error { margin: 6px 0 0; padding-inline-start: 8px; border-inline-start: 2px solid var(--active-file-border-color, var(--settings-text)); color: var(--settings-text); font-size: 12px; line-height: 1.5; }
+.outline-view-settings__update-error[hidden] { display: none; }
 .outline-view-settings__nav {
   display: flex;
   gap: 4px;

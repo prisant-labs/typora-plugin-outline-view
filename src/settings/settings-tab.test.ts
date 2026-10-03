@@ -11,7 +11,33 @@ import {
 import { OutlineSettingsTab } from './settings-tab'
 import { readFileSync } from 'node:fs'
 
-function createTab(parent?: HTMLElement, hostApp?: Record<string, unknown>) {
+/** A stand-in for the window's update notifier, as the settings page sees it. */
+function fakeUpdates(initial: { version?: string; enabled?: boolean } = {}) {
+  let state = { version: initial.version, enabled: initial.enabled ?? true }
+  const listeners = new Set<() => void>()
+  const emit = () => listeners.forEach(listener => listener())
+  const source = {
+    state: () => state,
+    subscribe: vi.fn((listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener) } }),
+    load: vi.fn(async () => state),
+    open: vi.fn(),
+    setEnabled: vi.fn(async (enabled: boolean) => { state = { ...state, enabled }; emit() }),
+    check: vi.fn(),
+  }
+  return { source, listeners, set(next: Partial<typeof state>) { state = { ...state, ...next }; emit() } }
+}
+
+function releaseHost(getReleaseInfo: (...args: unknown[]) => unknown) {
+  return {
+    workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
+    openFileWithDefaultApp: vi.fn(),
+    github: { getReleaseInfo: vi.fn(getReleaseInfo) },
+  }
+}
+
+const releaseStatus = (tab: OutlineSettingsTab) => tab.containerEl.querySelector<HTMLElement>('[data-release-status]')!
+
+function createTab(parent?: HTMLElement, hostApp?: Record<string, unknown>, updates?: ReturnType<typeof fakeUpdates>['source']) {
   const app = {}
   const plugin = new (class extends Plugin<OutlineSettings> {})(
     app as never,
@@ -30,7 +56,7 @@ function createTab(parent?: HTMLElement, hostApp?: Record<string, unknown>) {
   settings.setDefault(DEFAULT_OUTLINE_SETTINGS)
   plugin.registerSettings(settings)
 
-  const tab = new OutlineSettingsTab(plugin, hostApp as never)
+  const tab = new OutlineSettingsTab(plugin, hostApp as never, updates)
   parent?.append(tab.containerEl)
   tab.onshow()
   return { plugin, settings, tab }
@@ -90,40 +116,42 @@ describe('OutlineSettingsTab', () => {
     tab.onhide()
   })
 
-  it('reads current version and last update from the latest published release', async () => {
-    const host = {
-      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
-      openFileWithDefaultApp: vi.fn(),
-      github: { getReleaseInfo: vi.fn().mockResolvedValue({ tag_name: 'v0.3.1', published_at: '2026-09-23T16:00:00Z' }) },
-    }
-    const { tab } = createTab(undefined, host)
-    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Update available'))
-    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.1')
+  it('reads current version and last update from the latest published release, for display only', async () => {
+    const host = releaseHost(async () => ({ tag_name: 'v0.3.1', published_at: '2026-09-23T16:00:00Z' }))
+    const { tab } = createTab(undefined, host, fakeUpdates().source)
+    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.1'))
     expect(tab.containerEl.querySelector('[data-last-updated]')?.textContent).toBe('Sep 23, 2026')
-    expect(host.github.getReleaseInfo).toHaveBeenCalledWith('prisant-labs/typora-plugin-outline-view')
+    expect(host.github.getReleaseInfo).toHaveBeenCalledExactlyOnceWith('prisant-labs/typora-plugin-outline-view')
+    // GitHub's answer alone never offers an update: the Marketplace can lag a release, and Core installs from the Marketplace.
+    expect(releaseStatus(tab).textContent).toBe('Newer release')
+    expect(releaseStatus(tab).dataset.state).toBe('published')
+    expect(tab.containerEl.querySelector('[data-action="update"]')).toBeNull()
+    tab.onhide()
+  })
+
+  it('says an update is available only when the Marketplace offers one', async () => {
+    const host = releaseHost(async () => ({ tag_name: '0.3.1', published_at: '2026-09-23T16:00:00Z' }))
+    const updates = fakeUpdates({ version: '0.3.1' })
+    const { tab } = createTab(undefined, host, updates.source)
+    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.1'))
+    expect(releaseStatus(tab).textContent).toBe('Update available')
+    expect(releaseStatus(tab).dataset.state).toBe('update')
     tab.onhide()
   })
 
   it('shows an unavailable state when the release cannot be checked', async () => {
-    const host = {
-      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
-      openFileWithDefaultApp: vi.fn(),
-      github: { getReleaseInfo: vi.fn().mockRejectedValue(new Error('offline')) },
-    }
-    const { tab } = createTab(undefined, host)
-    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Unable to check'))
+    const host = releaseHost(async () => { throw new Error('offline') })
+    const { tab } = createTab(undefined, host, fakeUpdates().source)
+    await vi.waitFor(() => expect(releaseStatus(tab).textContent).toBe('Unable to check'))
     expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('Unavailable')
     expect(tab.containerEl.querySelector('[data-last-updated]')?.textContent).toBe('Unavailable')
     tab.onhide()
   })
 
   it('marks the installed published version as up to date', async () => {
-    const host = {
-      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
-      github: { getReleaseInfo: vi.fn().mockResolvedValue({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' }) },
-    }
-    const { tab } = createTab(undefined, host)
-    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Up to date'))
+    const host = releaseHost(async () => ({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' }))
+    const { tab } = createTab(undefined, host, fakeUpdates().source)
+    await vi.waitFor(() => expect(releaseStatus(tab).textContent).toBe('Up to date'))
     expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.0')
     tab.onhide()
   })
@@ -131,16 +159,168 @@ describe('OutlineSettingsTab', () => {
   it('does not update a reopened header from a previous release request', async () => {
     let resolveFirst!: (value: unknown) => void
     const first = new Promise(resolve => { resolveFirst = resolve })
-    const getReleaseInfo = vi.fn().mockReturnValueOnce(first).mockResolvedValueOnce({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' })
-    const host = {
-      workspace: { on: () => () => {} }, features: { markdownEditor: { on: () => () => {} } },
-      github: { getReleaseInfo },
-    }
-    const { tab } = createTab(undefined, host)
+    const host = releaseHost(() => undefined)
+    host.github.getReleaseInfo.mockReturnValueOnce(first).mockResolvedValueOnce({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' })
+    const { tab } = createTab(undefined, host, fakeUpdates().source)
+    await vi.waitFor(() => expect(host.github.getReleaseInfo).toHaveBeenCalledOnce())
     tab.onshow()
-    await vi.waitFor(() => expect(tab.containerEl.querySelector('[data-release-status]')?.textContent).toBe('Up to date'))
+    await vi.waitFor(() => expect(releaseStatus(tab).textContent).toBe('Up to date'))
     resolveFirst({ tag_name: '0.4.0', published_at: '2026-09-23T16:00:00Z' })
     await Promise.resolve()
+    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.0')
+    tab.onhide()
+  })
+
+  it('never asks GitHub while automatic checks are off', async () => {
+    const host = releaseHost(async () => ({ tag_name: '0.3.1', published_at: '2026-09-23T16:00:00Z' }))
+    const updates = fakeUpdates({ enabled: false })
+    const { tab } = createTab(undefined, host, updates.source)
+    await vi.waitFor(() => expect(releaseStatus(tab).textContent).toBe('Not checked'))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(host.github.getReleaseInfo).not.toHaveBeenCalled()
+    expect(releaseStatus(tab).dataset.state).toBe('off')
+    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('Unavailable')
+    tab.onhide()
+  })
+
+  it('waits for the stored setting before asking GitHub', async () => {
+    const host = releaseHost(async () => ({ tag_name: '0.3.1', published_at: '2026-09-23T16:00:00Z' }))
+    const updates = fakeUpdates()
+    // Until the store answers, the notifier reports its default: on. The store says off.
+    updates.source.load.mockImplementation(async () => { updates.set({ enabled: false }); return updates.source.state() })
+    const { tab } = createTab(undefined, host, updates.source)
+    expect(releaseStatus(tab).textContent).toBe('Checking…')
+    await vi.waitFor(() => expect(releaseStatus(tab).textContent).toBe('Not checked'))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(host.github.getReleaseInfo).not.toHaveBeenCalled()
+    tab.onhide()
+  })
+
+  it('lets a toggle made while the stored setting loads win over the loaded value', async () => {
+    const host = releaseHost(async () => ({ tag_name: '0.3.1', published_at: '2026-09-23T16:00:00Z' }))
+    const updates = fakeUpdates()
+    let finishLoad!: () => void
+    // The load resolves with the value it read, which a toggle has since replaced.
+    updates.source.load.mockImplementation(() => {
+      const loaded = updates.source.state()
+      return new Promise(resolve => { finishLoad = () => resolve(loaded) })
+    })
+    const { tab } = createTab(undefined, host, updates.source)
+    updates.set({ enabled: false })
+    finishLoad()
+    await vi.waitFor(() => expect(releaseStatus(tab).textContent).toBe('Not checked'))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(host.github.getReleaseInfo).not.toHaveBeenCalled()
+    tab.onhide()
+  })
+
+  it('ends at "Not checked" whichever microtask the toggle lands on while the page opens', async () => {
+    for (let ticks = 0; ticks <= 4; ticks++) {
+      const host = releaseHost(async () => ({ tag_name: '0.3.1', published_at: '2026-09-23T16:00:00Z' }))
+      const updates = fakeUpdates()
+      const { tab } = createTab(undefined, host, updates.source)
+      for (let tick = 0; tick < ticks; tick++) await Promise.resolve()
+      updates.set({ enabled: false })
+      await vi.waitFor(() => expect(releaseStatus(tab).textContent, `toggled after ${ticks} ticks`).toBe('Not checked'))
+      await new Promise(resolve => setTimeout(resolve, 0))
+      expect(releaseStatus(tab).textContent, `toggled after ${ticks} ticks`).toBe('Not checked')
+      expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('Unavailable')
+      tab.onhide()
+    }
+  })
+
+  it('never asks GitHub without an update notifier', async () => {
+    const host = releaseHost(async () => ({ tag_name: '0.3.1', published_at: '2026-09-23T16:00:00Z' }))
+    const { tab } = createTab(undefined, host)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(host.github.getReleaseInfo).not.toHaveBeenCalled()
+    expect(releaseStatus(tab).textContent).toBe('Unable to check')
+    expect(tab.containerEl.querySelector('[data-update-setting]')).toBeNull()
+    tab.onhide()
+  })
+
+  it('shows the update pill beside the installed version and opens the confirmation', async () => {
+    const updates = fakeUpdates()
+    const { tab } = createTab(undefined, releaseHost(async () => ({ tag_name: '0.3.0' })), updates.source)
+    expect(tab.containerEl.querySelector('[data-action="update"]')).toBeNull()
+    updates.set({ version: '0.3.4' })
+    const pill = tab.containerEl.querySelector<HTMLButtonElement>('[data-action="update"]')!
+    expect(pill.textContent).toBe('Update to 0.3.4')
+    expect(pill.getAttribute('aria-label')).toBe('Update Outline View to 0.3.4')
+    expect(pill.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+    expect(pill.parentElement?.textContent).toBe('Installed 0.3.0Update to 0.3.4')
+    expect(releaseStatus(tab).textContent).toBe('Update available')
+    pill.click()
+    expect(updates.source.open).toHaveBeenCalledOnce()
+    updates.set({ version: undefined })
+    expect(tab.containerEl.querySelector('[data-action="update"]')).toBeNull()
+    tab.onhide()
+    expect(updates.listeners.size).toBe(0)
+  })
+
+  it('asks for an update check whenever the page shows', () => {
+    const updates = fakeUpdates()
+    const { tab } = createTab(undefined, undefined, updates.source)
+    expect(updates.source.check).toHaveBeenCalledOnce()
+    tab.onshow()
+    expect(updates.source.check).toHaveBeenCalledTimes(2)
+    tab.onhide()
+  })
+
+  it('saves the update setting through the notifier, never through plugin settings', async () => {
+    const updates = fakeUpdates()
+    const { tab, settings } = createTab(undefined, undefined, updates.source)
+    const set = vi.spyOn(settings, 'set')
+    const links = Array.from(tab.containerEl.querySelectorAll('nav a')).map(link => link.textContent)
+    expect(links.at(-1)).toBe('Updates')
+    const row = settingRow(tab, 'Check for updates automatically')!
+    expect(row.textContent).toContain('At most once a day')
+    expect(row.textContent).toContain('asks GitHub')
+    const box = row.querySelector<HTMLInputElement>('input[type="checkbox"]')!
+    expect(box.dataset.updateSetting).toBe('checkForUpdates')
+    expect(box.hasAttribute('data-setting')).toBe(false)
+    expect(box.checked).toBe(true)
+    box.checked = false; box.dispatchEvent(new Event('change'))
+    expect(box.disabled).toBe(true)
+    await vi.waitFor(() => expect(box.disabled).toBe(false))
+    expect(updates.source.setEnabled).toHaveBeenCalledExactlyOnceWith(false)
+    expect(box.checked).toBe(false)
+    expect(set).not.toHaveBeenCalled()
+    tab.onhide()
+  })
+
+  it('rolls the update setting back and explains when it cannot be saved', async () => {
+    const updates = fakeUpdates()
+    updates.source.setEnabled.mockRejectedValueOnce(new Error('Synthetic storage failure'))
+    const { tab } = createTab(undefined, undefined, updates.source)
+    const row = settingRow(tab, 'Check for updates automatically')!
+    const box = row.querySelector<HTMLInputElement>('input[type="checkbox"]')!
+    box.checked = false; box.dispatchEvent(new Event('change'))
+    await vi.waitFor(() => expect(box.disabled).toBe(false))
+    expect(box.checked).toBe(true)
+    const alert = row.querySelector<HTMLElement>('[role="alert"]')!
+    expect(alert.hidden).toBe(false)
+    expect(alert.textContent).toBe('Synthetic storage failure')
+    tab.onhide()
+  })
+
+  it('discards the release lookup when the check is turned off, and looks up again when it is turned back on', async () => {
+    let resolveFirst!: (value: unknown) => void
+    const host = releaseHost(() => undefined)
+    host.github.getReleaseInfo
+      .mockReturnValueOnce(new Promise(resolve => { resolveFirst = resolve }))
+      .mockResolvedValueOnce({ tag_name: '0.3.0', published_at: '2026-09-21T16:00:00Z' })
+    const updates = fakeUpdates()
+    const { tab } = createTab(undefined, host, updates.source)
+    await vi.waitFor(() => expect(host.github.getReleaseInfo).toHaveBeenCalledOnce())
+    updates.set({ enabled: false })
+    resolveFirst({ tag_name: '0.4.0', published_at: '2026-09-23T16:00:00Z' })
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(releaseStatus(tab).textContent).toBe('Not checked')
+    expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('Unavailable')
+    updates.set({ enabled: true })
+    await vi.waitFor(() => expect(releaseStatus(tab).textContent).toBe('Up to date'))
+    expect(host.github.getReleaseInfo).toHaveBeenCalledTimes(2)
     expect(tab.containerEl.querySelector('[data-current-version]')?.textContent).toBe('0.3.0')
     tab.onhide()
   })

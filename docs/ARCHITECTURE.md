@@ -469,3 +469,33 @@ No private Modal access or additional editor observer is needed.
 `integration/icons.ts` creates font-independent SVG icons. Existing dock toggle
 tooltip/icon changes are reversible and do not replace the framework's action.
 If that framework element is absent, integration is a no-op; F1 Toggle remains.
+
+## Update check
+
+[D025 (update pill)](DECISIONS.md#d025-update-pill-offer-cores-marketplace-update-inside-the-plugin)
+records the decisions. Outline View never downloads or installs anything itself.
+It reads Community Plugin Core's Plugin Marketplace data and calls Core's own
+update. The modules in `src/update/` have no Typora DOM dependencies:
+
+- `update-check.ts` holds `UpdateNotifier`. It asks Core to reload its Marketplace
+  lists at most once a day across windows, retries a failed check after an hour,
+  and runs one check at a time. It computes the newer version from Core's memory
+  and the last completed check. `load()` reads the stored setting without asking
+  Core to check; callers that make requests wait for it, because until then the
+  setting is only its default. `update()` calls Core's `updatePlugin`, which
+  unloads Outline View before downloading, so a promise that settles means Core
+  did not update.
+- `update-store.ts` keeps the setting and the last completed check in Outline
+  View's own IndexedDB database, never in `PluginSettings`, so every window
+  shares one record. Each change is one read-modify-write transaction.
+- `update-confirmation.ts` builds the confirmation body, and `update-dialog.ts`
+  shows it in Core's `Modal`, removes it on close, and returns focus to the pill.
+
+`main.ts` creates one notifier and one store per plugin load. It passes the same
+adapter to the settings tab and to each `OutlineView`, and it closes the dialog,
+disposes the notifier, and closes the database on unload. `OutlineView.onOpen()`
+adds the toolbar pill and asks for a check. The settings tab adds the masthead
+pill, the Updates section, and a check on each show and each reopen. The
+masthead's GitHub release lookup waits for `load()` and runs only while the check
+is on. Core's REST lookup fills only Current and Last updated; the Marketplace
+decides whether an update is available.

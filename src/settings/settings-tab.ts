@@ -24,6 +24,18 @@ type ColorControls = {
   enabledBy?: 'showVerticalGuides' | 'zebraRows'
 }
 
+/** The window's update notifier, as the settings page needs it. */
+export interface OutlineSettingsUpdates {
+  state(): { version?: string; enabled: boolean }
+  subscribe(listener: () => void): () => void
+  /** Reads the stored setting. Until it resolves, `state().enabled` is only the default. Never rejects. */
+  load(): Promise<{ version?: string; enabled: boolean }>
+  /** Opens the update confirmation. */
+  open(): void
+  setEnabled(enabled: boolean): Promise<unknown>
+  check(): void
+}
+
 export class OutlineSettingsTab extends SettingTab {
   private preview?: OutlinePreview
   private disposables: Array<() => void> = []
@@ -32,8 +44,14 @@ export class OutlineSettingsTab extends SettingTab {
   private colorControls = new Map<AppearanceColorKey, ColorControls>()
   private previewVisible = true
   private headerGeneration = 0
+  private syncMasthead?: () => void
+  private syncUpdateSetting?: () => void
 
-  constructor(private readonly outlinePlugin: Plugin<OutlineSettings>, private readonly app?: App) {
+  constructor(
+    private readonly outlinePlugin: Plugin<OutlineSettings>,
+    private readonly app?: App,
+    private readonly updates?: OutlineSettingsUpdates,
+  ) {
     super()
     this.containerEl.classList.add('outline-view-settings')
   }
@@ -120,6 +138,7 @@ export class OutlineSettingsTab extends SettingTab {
       this.syncAppearanceRows()
     })
     this.containerEl.append(resetAll)
+    if (this.updates) this.addUpdatesSetting(this.updates)
     const controls = document.createElement('div')
     controls.className = 'outline-view-settings__controls'
     controls.append(...Array.from(this.containerEl.childNodes))
@@ -192,6 +211,8 @@ export class OutlineSettingsTab extends SettingTab {
         if (visible && !this.previewVisible) {
           this.previewVisible = true
           this.sync()
+          // A reopened settings window gets no onshow, so check from here too.
+          this.updates?.check()
         } else if (!visible) this.preview?.suspend()
         this.previewVisible = visible
         sizePreview()
@@ -203,10 +224,19 @@ export class OutlineSettingsTab extends SettingTab {
     }
     this.syncAppearanceRows()
     this.sync()
+    if (this.updates) {
+      this.disposables.push(this.updates.subscribe(() => {
+        this.syncMasthead?.()
+        this.syncUpdateSetting?.()
+      }))
+      this.updates.check()
+    }
   }
 
   onhide() {
     this.headerGeneration++
+    this.syncMasthead = undefined
+    this.syncUpdateSetting = undefined
     this.disposables.splice(0).forEach(dispose => dispose())
     this.preview?.destroy()
     this.preview = undefined
@@ -224,10 +254,7 @@ export class OutlineSettingsTab extends SettingTab {
     const status = document.createElement('span')
     status.className = 'outline-view-settings__release-status'
     status.dataset.releaseStatus = ''
-    status.dataset.state = 'unknown'
-    status.textContent = this.app?.github?.getReleaseInfo && manifest.repo ? 'Checking…' : 'Unable to check'
     status.setAttribute('role', 'status')
-    status.title = 'Compared with the latest published GitHub release'
     top.append(heading, status)
 
     const meta = document.createElement('div')
@@ -271,7 +298,7 @@ export class OutlineSettingsTab extends SettingTab {
       meta.append(span)
       return strong
     }
-    item('Installed', manifest.version || 'Unavailable')
+    const installed = item('Installed', manifest.version || 'Unavailable')
     const current = item('Current', 'Unavailable', 'data-current-version')
     const updated = item('Last updated', 'Unavailable', 'data-last-updated')
     updated.title = 'Date the latest GitHub release was published'
@@ -293,12 +320,28 @@ export class OutlineSettingsTab extends SettingTab {
     meta.append(folderItem)
     masthead.append(top, meta)
 
+    // D024, revised by D025: the GitHub release only fills Current and Last updated. Core's Marketplace,
+    // through the notifier, decides whether an update is available, because Core installs from it.
+    const updates = this.updates
+    const repo = manifest.repo
     const generation = this.headerGeneration
-    if (this.app?.github?.getReleaseInfo && manifest.repo) {
-      void this.app.github.getReleaseInfo(manifest.repo).then((release: unknown) => {
-        if (generation !== this.headerGeneration) return
-        if (!release || typeof release !== 'object') throw new Error('Missing release information')
-        const info = release as { tag_name?: unknown; published_at?: unknown }
+    const stale = () => generation !== this.headerGeneration
+    let release: { state: 'pending' } | { state: 'failed' } | { state: 'found'; comparison?: number } | undefined
+    // The stored setting is unknown until the notifier reads it; until then, nothing is requested.
+    let known = false
+    let enabled = false
+    let request = 0
+    let pill: HTMLButtonElement | undefined
+
+    const lookUpRelease = () => {
+      const github = this.app?.github
+      if (!github?.getReleaseInfo || !repo) return
+      const token = ++request
+      release = { state: 'pending' }
+      void Promise.resolve().then(() => github.getReleaseInfo(repo)).then((value: unknown) => {
+        if (stale() || token !== request) return
+        if (!value || typeof value !== 'object') throw new Error('Missing release information')
+        const info = value as { tag_name?: unknown; published_at?: unknown }
         const version = typeof info.tag_name === 'string' ? info.tag_name.replace(/^v/, '') : ''
         if (!/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(version)) throw new Error('Invalid release version')
         current.textContent = version
@@ -308,24 +351,133 @@ export class OutlineSettingsTab extends SettingTab {
             updated.textContent = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }).format(date)
           }
         }
-        const installed = manifest.version || ''
-        const versionParts = (value: string) => value.split(/[.+-]/, 3).map(part => Number(part))
-        const [latestMajor, latestMinor, latestPatch] = versionParts(version)
-        const [localMajor, localMinor, localPatch] = versionParts(installed)
-        const latest = [latestMajor, latestMinor, latestPatch]
-        const local = [localMajor, localMinor, localPatch]
-        const comparable = local.every(Number.isFinite) && latest.every(Number.isFinite)
+        const versionParts = (text: string) => text.split(/[.+-]/, 3).map(part => Number(part))
+        const latest = versionParts(version)
+        const local = versionParts(manifest.version || '')
+        const comparable = latest.length === 3 && local.length === 3 && local.every(Number.isFinite) && latest.every(Number.isFinite)
         const direction = comparable ? latest.findIndex((part, index) => part !== local[index]) : -1
-        const comparison = direction >= 0 ? Math.sign(latest[direction] - local[direction]) : 0
-        status.textContent = !comparable ? 'Version unknown' : comparison > 0 ? 'Update available' : comparison < 0 ? 'Ahead of release' : 'Up to date'
-        status.dataset.state = comparison > 0 ? 'update' : 'current'
+        release = { state: 'found', comparison: comparable ? (direction >= 0 ? Math.sign(latest[direction] - local[direction]) : 0) : undefined }
+        render()
       }).catch(() => {
-        if (generation !== this.headerGeneration) return
-        status.textContent = 'Unable to check'
-        status.dataset.state = 'unknown'
+        if (stale() || token !== request) return
+        release = { state: 'failed' }
+        render()
       })
     }
+
+    const statusFor = (): [text: string, state: string, title: string] => {
+      const compared = 'Compared with the latest published GitHub release'
+      if (updates?.state().version) return ['Update available', 'update', 'The Plugin Marketplace offers a newer version']
+      if (!updates || !this.app?.github?.getReleaseInfo || !repo) return ['Unable to check', 'unknown', compared]
+      if (!known) return ['Checking…', 'unknown', compared]
+      if (!enabled) return ['Not checked', 'off', 'Automatic update checks are off. Turn them on under Updates.']
+      if (!release || release.state === 'pending') return ['Checking…', 'unknown', compared]
+      if (release.state === 'failed') return ['Unable to check', 'unknown', compared]
+      if (release.comparison === undefined) return ['Version unknown', 'current', compared]
+      if (release.comparison > 0) return ['Newer release', 'published', 'A newer release is on GitHub. The Plugin Marketplace offers it after its next refresh.']
+      return [release.comparison < 0 ? 'Ahead of release' : 'Up to date', 'current', compared]
+    }
+
+    const render = () => {
+      if (stale()) return
+      const version = updates?.state().version
+      if (updates && version) {
+        const label = `Update Outline View to ${version}`
+        if (pill?.getAttribute('aria-label') !== label) {
+          pill?.remove()
+          pill = document.createElement('button')
+          pill.type = 'button'
+          pill.className = 'outline-view-settings__update'
+          pill.dataset.action = 'update'
+          pill.title = label
+          pill.setAttribute('aria-label', label)
+          pill.append(outlineIcon('update'), `Update to ${version}`)
+          pill.addEventListener('click', () => { if (!stale()) updates.open() })
+          installed.parentElement?.append(pill)
+        }
+      } else {
+        pill?.remove()
+        pill = undefined
+      }
+      const [text, state, title] = statusFor()
+      status.textContent = text
+      status.dataset.state = state
+      status.title = title
+    }
+
+    if (updates) {
+      // A toggle made during the load replaces the value the load resolved with, and syncMasthead ignored it because
+      // nothing was known yet. So read the notifier's state in the same step that marks it known; a load failure fails closed.
+      void updates.load().then(() => true, () => false).then(loaded => {
+        if (stale()) return
+        known = true
+        enabled = loaded && updates.state().enabled
+        if (enabled) lookUpRelease()
+        render()
+        this.syncUpdateSetting?.()
+      })
+    }
+    this.syncMasthead = () => {
+      if (stale()) return
+      const now = updates?.state().enabled ?? false
+      if (known && now !== enabled) {
+        enabled = now
+        if (enabled) lookUpRelease()
+        else {
+          // Turning the check off discards a lookup in flight and returns to the offline values.
+          request++
+          release = undefined
+          current.textContent = 'Unavailable'
+          updated.textContent = 'Unavailable'
+        }
+      }
+      render()
+    }
+    render()
     return masthead
+  }
+
+  /** The automatic update check. It saves through the notifier's own store, never through PluginSettings. */
+  private addUpdatesSetting(updates: OutlineSettingsUpdates) {
+    this.addSettingTitle('Updates')
+    this.addSetting((setting: SettingItem) => {
+      const name = 'Check for updates automatically'
+      setting.addName(name)
+      setting.addDescription('At most once a day, when this page or the outline opens, Outline View asks Community Plugin Core to check the Plugin Marketplace for a newer version. Core downloads the Marketplace\'s public lists from GitHub. While this is on, this page also asks GitHub, through Core, for the latest published release, to show its version and date. Outline View sends nothing about you or your files.')
+      const alert = document.createElement('p')
+      alert.className = 'outline-view-settings__update-error'
+      alert.setAttribute('role', 'alert')
+      alert.hidden = true
+      setting.info.append(alert)
+      setting.addCheckbox(input => {
+        input.checked = updates.state().enabled
+        // Not data-setting: sync() would reset it from PluginSettings.
+        input.dataset.updateSetting = 'checkForUpdates'
+        input.setAttribute('aria-label', name)
+        const generation = this.headerGeneration
+        const stale = () => generation !== this.headerGeneration
+        input.addEventListener('change', () => {
+          if (stale() || input.disabled) return
+          const enabled = input.checked
+          const restoreFocus = document.activeElement === input
+          input.disabled = true
+          alert.hidden = true
+          const fail = (error: unknown) => {
+            if (stale()) return
+            input.checked = !enabled
+            alert.textContent = error instanceof Error ? error.message : 'The setting could not be saved.'
+            alert.hidden = false
+          }
+          const complete = () => {
+            if (stale()) return
+            input.disabled = false
+            if (restoreFocus && input.isConnected && document.activeElement === document.body) input.focus()
+          }
+          try { Promise.resolve(updates.setEnabled(enabled)).catch(fail).finally(complete) } catch (error) { fail(error); complete() }
+        })
+        this.syncUpdateSetting = () => { if (!input.disabled) input.checked = updates.state().enabled }
+      })
+    })
   }
 
   private scrollParent() {

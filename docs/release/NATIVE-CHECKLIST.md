@@ -4,6 +4,21 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+## 0.4.0 publication before native testing - 2026-10-02
+
+The maintainer explicitly authorized publication of 0.4.0 before native testing
+of this build. No native result for 0.4.0 is recorded here, and none is inferred.
+
+- `plugin.zip`: 32,833 bytes; SHA-256
+  `bba683fda01a411b62b1d71e066fdf38f8d5097682d7b45b8e6bfce0750b1be3`.
+- Native confirmation on macOS and Windows is pending. 0.4.0 contains 0.3.2's
+  navigation and heading-source fixes, so one run can confirm both releases.
+  The cases are in the Navigation, Heading source display, and Update pill
+  sections of the [test plan](../TEST-PLAN.md).
+- **Gate for the next release:** run the Update pill native steps first. The
+  next release is the first that users receive through the pill.
+- See [0.4.0 release notes](0.4.0.md) for scope and compatibility.
+
 ## 0.3.2 publication before native testing - 2026-09-30
 
 The maintainer explicitly authorized publication of 0.3.2 before native testing
@@ -189,6 +204,20 @@ installation, lifecycle stress, keyboard coverage, and additional themes.
 - [ ] Active fill/outline uses theme background/border colors while preserving each heading's selected
       color, bold/italic/underline, size and case; keyboard focus remains visible.
 - [ ] SVG settings/dock toggle icons appear, especially on macOS.
+
+### Updates
+
+The full procedure is in the [test plan](../TEST-PLAN.md#native-steps), under
+"Update pill".
+
+- [ ] With a build that claims an older version, both pills name the newest
+      release; the toolbar pill drops the word "Update" at the default dock width.
+- [ ] Cancel and Escape change nothing and return focus to the pill.
+- [ ] **Update** from the toolbar pill and from the settings pill completes
+      through Core; settings are kept.
+- [ ] With the check off, no pill and Not checked until Core's plugin tabs open.
+- [ ] A second window keeps working on the old version until it restarts.
+- [ ] Both pills read clearly in light and dark themes.
 
 Capture a native screenshot using only synthetic document content after passing.
 Include Files + document + Outline View; hide personal paths, account details,

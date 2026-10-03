@@ -316,3 +316,57 @@ The plugin's correction targets only direct side-dock tab groups containing
 contract, not an exported layout API; recheck it when updating core. No private
 runtime property or internal import is used. Automated checks verify selector
 scope, computed constraints, and removal; they do not simulate browser geometry.
+
+The same source sets the right dock's minimum and default width to 280px
+(`WorkspaceSidedock.MIN_SIZE` and the `rightSplitWidth` default). The update
+pill's label threshold relies on that minimum; see "Update pill label threshold"
+in `TEST-PLAN.md`.
+
+## Plugin Marketplace and updates
+
+Verified on 2026-10-02 by reading the pinned Core 2.10.21 bundle,
+`node_modules/@typora-community-plugin/core/dist/core.js`. Line numbers refer to
+that file. None of these behaviors has been confirmed in native Typora yet.
+[D025 (update pill)](DECISIONS.md#d025-update-pill-offer-cores-marketplace-update-inside-the-plugin)
+depends on them.
+
+1. **The Marketplace's lists load only on request.** `loadCommunityPlugins()`
+   (line 10664) downloads `community-plugins.json` and
+   `community-plugin-stats.json` from the `typora-community-plugin/typora-plugin-releases`
+   repository, then calls `markUpdatesAvailable()`. Its only callers are the
+   Plugin Marketplace tab (line 5259) and the Installed Plugins tab (line 5437),
+   so Core loads the lists when the user opens one of them, not at startup.
+2. **`newestVersion` comes from the statistics file.** `markUpdatesAvailable()`
+   (line 10685) sets each listed plugin's `newestVersion` from the statistics,
+   and deletes it when the statistics have no entry for that plugin.
+3. **A failed statistics download looks like an empty list.**
+   `loadCommunityPluginStats()` (line 10747) turns a failed download into `{}`.
+   The next `markUpdatesAvailable()` then deletes every `newestVersion`. So the
+   notifier treats empty statistics as a failed check, and an update reloads the
+   lists only when Core's copy is missing or older than the pill's version.
+4. **`getPluginNewestVersion()` can call GitHub's REST API.** It returns
+   `newestVersion` or the statistics version, and otherwise falls back to
+   `github.getReleaseInfo()` (line 10656). The notifier reads `newestVersion`
+   directly so that a check never makes that REST call.
+5. **`getReleaseInfo(repo)` is an uncached REST call.** It fetches
+   `repos/<repo>/releases/latest` from the GitHub API on every call (line 10600).
+   The settings masthead makes it once per settings show, and only while
+   automatic checks are on.
+6. **`updatePlugin(id)` unloads the running plugin before it downloads.** It
+   returns early, without an error, when the plugin is unknown, unlisted, or
+   already current (line 10914). Otherwise it calls `uninstallPlugin(id)`
+   (line 10934), which calls `unloadPlugin(id)`, removes the plugin from the
+   enabled list, and deletes the plugin folder. Then it installs the newest
+   version and re-enables the plugin if it was enabled. If the download fails,
+   the plugin stays uninstalled and must be reinstalled from the Marketplace.
+7. **Unloading runs the plugin's cleanup first.** `disablePlugin(id)`
+   (line 10904) calls the instance's `unload()`. `Component.unload()` (line 3097)
+   runs `onunload()` and then the registered disposables, so Outline View's update
+   dialog, notifier, and database close before the folder is deleted.
+8. **Settings survive an update.** `PluginSettings` files live in Core's data
+   folder, `<config>/data/<plugin id>.json` (`Plugin.dataPath`, line 5899), not in
+   the plugin folder that `uninstallPlugin` deletes.
+
+`app.plugins.marketplace` and `app.plugins.updatePlugin` are typed by Core but
+are not documented plugin APIs. The notifier checks each method at runtime and
+shows nothing when one is missing.
