@@ -4,6 +4,21 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+## 0.4.0 publication before native testing - 2026-10-02
+
+The maintainer explicitly authorized publication of 0.4.0 before native testing
+of this build. No native result for 0.4.0 is recorded here, and none is inferred.
+
+- `plugin.zip`: 32,833 bytes; SHA-256
+  `bba683fda01a411b62b1d71e066fdf38f8d5097682d7b45b8e6bfce0750b1be3`.
+- Native confirmation on macOS and Windows is pending. 0.4.0 contains 0.3.2's
+  navigation and heading-source fixes, so one run can confirm both releases.
+  The cases are in the Navigation, Heading source display, and Update pill
+  sections of the [test plan](../TEST-PLAN.md).
+- **Gate for the next release:** run the Update pill native steps first. The
+  next release is the first that users receive through the pill.
+- See [0.4.0 release notes](0.4.0.md) for scope and compatibility.
+
 ## 0.3.2 publication before native testing - 2026-09-30
 
 The maintainer explicitly authorized publication of 0.3.2 before native testing
