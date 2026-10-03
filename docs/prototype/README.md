@@ -11,10 +11,20 @@ Reset settings restores the production defaults. No personal files or installed
 Typora settings are read or written. The version and source fingerprint identify
 the checked-in build, not necessarily the latest published release.
 
-The compact masthead uses a simulated 0.3.0 GitHub release and publication date
-so it works offline. Its Local folder button explains that a browser prototype
-has no installed plugin folder; in Typora, the button opens the plugin's local
+The compact masthead uses a simulated GitHub release and publication date so it
+works offline. Its Local folder button explains that a browser prototype has no
+installed plugin folder; in Typora, the button opens the plugin's local
 directory. Neither simulated value is a live release or filesystem check.
+
+The Updates control switches between two simulated cases. "Up to date" reports
+the installed version as the latest release. "Update available" offers the next
+patch version, as Community Plugin Core's Plugin Marketplace would: the masthead
+shows the update pill beside Installed, and the pill opens the production
+confirmation in a browser dialog. Choosing Update there only describes what Core
+would do; nothing is downloaded. Turning off "Check for updates automatically"
+stops the simulated GitHub lookup, so Current and Last updated read
+"Unavailable". As in Typora, a version that Core already holds still shows the
+pill; with no update, the status reads "Not checked".
 
 ## How it stays current
 
@@ -50,7 +60,7 @@ Windows and macOS native smoke testing remains required before publication.
 
 Review minimum/maximum ranges, all selector styles, labels/dots, theme/grayscale,
 hidden controls, size, emphasis states, case, custom/theme colors, resets,
-section navigation, and narrow-width preview access.
+section navigation, narrow-width preview access, and both Updates cases.
 
 Enable Vertical guides or Alternating row colors to reveal their indented
 settings. Choose Custom under any color source to show its editor below the

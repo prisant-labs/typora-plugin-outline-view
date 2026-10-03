@@ -9,7 +9,7 @@ test('section navigation keeps the masthead visible inside the settings scrollpo
 
   const sections = [
     ['Behavior', 'behavior'], ['Structure', 'structure'], ['Appearance', 'appearance'],
-    ['Selector', 'selector'], ['Heading styles', 'heading-styles'],
+    ['Selector', 'selector'], ['Heading styles', 'heading-styles'], ['Updates', 'updates'],
   ] as const
   for (const [label, slug] of sections) {
     const link = page.locator('.outline-view-settings__nav').getByRole('link', { name: label })

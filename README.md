@@ -28,6 +28,8 @@ for appearance and browsing options.
   section spacing/dividers with theme or custom light/dark colors.
 - Optional active-path emphasis, clickable current path, and current-branch focus.
 - Presentation changes never modify document text.
+- An update pill in the outline toolbar and on the settings page when the Plugin
+  Marketplace offers a newer version. Community Plugin Core performs the update.
 
 ## Preview the settings
 
@@ -113,6 +115,32 @@ restore defaults with emphasis Off. A row fill and fine outline use the theme's
 active-file background and border colors to identify the current heading without
 changing its selected text color, font weight, or other styles. Keyboard focus
 remains separately visible on the focused control.
+
+## Updates and privacy
+
+When Community Plugin Core's Plugin Marketplace offers a newer version, a small
+**↑ Update** pill appears in the outline toolbar and beside **Installed** on the
+settings page. In a narrow dock, the pill shows only the arrow and the version.
+Click either pill to review the update, then choose **Update**. Core downloads
+the new version and reloads Outline View in that window. Your Outline View
+settings are kept, and other Typora windows keep the old version until they
+restart.
+
+To stop the daily check, turn off **Check for updates automatically** under
+**Updates** in Outline View's settings. With the check off, the pill can still
+appear when Core already holds newer Marketplace data, for example after you
+open Core's **Installed Plugins** or **Plugin Marketplace** tab.
+
+Outline View collects no telemetry and sends nothing about you or your files. It
+causes network requests in two cases, both carried out by Community Plugin Core.
+The update check: at most once a day, when the outline or its settings page
+opens, Outline View asks Core to check the Plugin Marketplace for a newer
+version, and Core downloads the Marketplace's public lists from GitHub. While
+the check is on, the settings page also asks GitHub, through Core, for the
+latest published release, to show its version and date. Turn both off in
+Outline View's settings under **Updates**. And an update you confirm: Core
+downloads the new version, after reloading those lists if its copy is out of
+date.
 
 ## Troubleshooting and limitations
 

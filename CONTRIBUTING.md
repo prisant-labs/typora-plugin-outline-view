@@ -66,9 +66,15 @@ PR code from a privileged workflow just to make dependency checks green.
 ## Pull requests
 
 Include the user-visible change, test coverage, and native platforms/themes
-actually checked. Add regression tests for behavior fixes. Update the changelog
-for user-visible changes and retain license notices when adapting third-party
-code. Keep lifecycle cleanup and keyboard access intact.
+actually checked. Add regression tests for behavior fixes. Add user-visible
+changes to the changelog's **Unreleased** section; the release PR renames it to
+the version and date. Retain license notices when adapting third-party code.
+Keep lifecycle cleanup and keyboard access intact.
+
+Community Plugin Core shows `README.md` from `main` as the plugin's Marketplace
+listing, so a merged README describes the plugin to every user, including users
+of the latest release. Merge README text about unreleased behavior together with
+the release that ships it.
 
 Merge through a reviewed PR with the `CI required` check passing. Do not force
 push `main`, move existing release tags, or treat a merged PR as authorization

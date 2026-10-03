@@ -137,6 +137,24 @@ export class SettingTab {
   onshow() {}
 }
 
+/** Core's Modal: close() runs the close listeners and only hides the wrapper. */
+export class Modal {
+  containerEl = document.createElement('div')
+  body = document.createElement('div')
+  private listeners: (() => void)[] = []
+  constructor(_props: unknown) {
+    this.containerEl.className = 'typ-modal__wrapper'
+    this.containerEl.style.display = 'none'
+    this.containerEl.append(this.body)
+    document.body.append(this.containerEl)
+  }
+  setHeader(_text: string) { return this }
+  setBody(build: (body: HTMLElement) => void) { build(this.body); return this }
+  onClose(callback: () => void) { this.listeners.push(callback); return this }
+  open() { this.containerEl.style.display = '' }
+  close() { this.listeners.forEach(callback => callback()); this.containerEl.style.display = 'none' }
+}
+
 export class Plugin<T extends Record<string, any> = {}> extends TestComponent {
   registeredCommands: unknown[] = []
   registeredSettingTabs: unknown[] = []

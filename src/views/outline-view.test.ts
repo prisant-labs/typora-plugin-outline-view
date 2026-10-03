@@ -784,4 +784,72 @@ describe('OutlineView', () => {
         ?.getAttribute('aria-expanded'),
     ).toBe('false')
   })
+
+  describe('update pill', () => {
+    function updates(version?: string, open?: () => void) {
+      let state: { version?: string } = { version }
+      const listeners = new Set<() => void>()
+      return {
+        source: {
+          state: () => state,
+          subscribe: vi.fn((listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener) } }),
+          open,
+          check: vi.fn(),
+        },
+        set(next?: string) { state = { version: next }; listeners.forEach(listener => listener()) },
+        listeners,
+      }
+    }
+    function openView(source: ReturnType<typeof updates>['source']) {
+      document.body.innerHTML = '<div id="write"><h1>One</h1></div>'
+      const { app } = createApp()
+      const view = new OutlineView({} as never, app as never, new FakeSettings() as never, undefined, source)
+      view.onOpen()
+      return view
+    }
+    const pill = (view: OutlineView) => view.containerEl.querySelector<HTMLButtonElement>('[data-action="update"]')
+
+    it('shows no pill without a newer version, and asks for a check when the view opens', () => {
+      const { source } = updates(undefined, vi.fn())
+      const view = openView(source)
+      expect(pill(view)).toBeNull()
+      expect(source.check).toHaveBeenCalledOnce()
+    })
+
+    it('shows no pill without an update action', () => {
+      const { source } = updates('0.3.4')
+      expect(pill(openView(source))).toBeNull()
+    })
+
+    it('places the pill between the spacer and the wrap button, and opens the confirmation', () => {
+      const open = vi.fn()
+      const { source } = updates('0.3.4', open)
+      const view = openView(source)
+      const button = pill(view)!
+      expect(button.getAttribute('aria-label')).toBe('Update Outline View to 0.3.4')
+      expect(button.title).toBe('Update Outline View to 0.3.4')
+      expect(button.type).toBe('button')
+      expect(button.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+      expect(button.querySelector('.outline-view__update-pill-label')?.textContent).toBe('Update')
+      expect(button.textContent).toBe('Update0.3.4')
+      expect(button.previousElementSibling?.classList.contains('outline-view__toolbar-spacer')).toBe(true)
+      expect((button.nextElementSibling as HTMLElement | null)?.dataset.action).toBe('toggle-wrap')
+      button.click()
+      expect(open).toHaveBeenCalledOnce()
+    })
+
+    it('follows the notifier, and stops listening when the view unloads', () => {
+      const changes = updates(undefined, vi.fn())
+      const view = openView(changes.source)
+      changes.set('0.3.4')
+      expect(pill(view)?.textContent).toBe('Update0.3.4')
+      changes.set('0.3.5')
+      expect(view.containerEl.querySelectorAll('[data-action="update"]')).toHaveLength(1)
+      expect(pill(view)?.getAttribute('aria-label')).toBe('Update Outline View to 0.3.5')
+      changes.set(undefined)
+      expect(pill(view)).toBeNull()
+      view.unload()
+      expect(changes.listeners.size).toBe(0)
+    })
+  })
 })

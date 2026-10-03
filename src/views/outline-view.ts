@@ -42,6 +42,15 @@ import { applyOutlineAppearance, observeThemeChanges } from '../outline/appearan
 import { outlineIcon } from '../integration/icons'
 import { createCurrentPath, renderCurrentPath } from '../outline/current-path'
 
+/** The window's update notifier, as the toolbar pill needs it. */
+export interface OutlineViewUpdates {
+  state(): { version?: string }
+  subscribe(listener: () => void): () => void
+  /** Opens the update confirmation. Without it, the view shows no pill. */
+  open?(): void
+  check(): void
+}
+
 const REFRESH_DELAY_MS = 120
 const ACTIVE_HEADING_DELAY_MS = 32
 const ACTIVE_HEADING_OFFSET_PX = 32
@@ -60,6 +69,7 @@ export class OutlineView extends WorkspaceView {
   private readonly contentEl: HTMLElement
   private readonly currentPathEl = createCurrentPath()
   private readonly wrapButton = document.createElement('button')
+  private updatePill?: HTMLButtonElement
   private readonly rangeSelector: HeadingRangeSelector
   private readonly rangeByFile = new Map<string, HeadingRange>()
   private renderedFileKey?: string
@@ -88,6 +98,7 @@ export class OutlineView extends WorkspaceView {
     private readonly app: App,
     private readonly settings?: PluginSettings<OutlineSettings>,
     private readonly onOpenSettings: () => void = () => undefined,
+    private readonly updates?: OutlineViewUpdates,
   ) {
     super(leaf)
 
@@ -179,6 +190,11 @@ export class OutlineView extends WorkspaceView {
           this.refreshTask.schedule()
         }),
       )
+    }
+    if (this.updates) {
+      this.syncUpdatePill()
+      this.register(this.updates.subscribe(() => this.syncUpdatePill()))
+      this.updates.check()
     }
     this.register(observeThemeChanges(() => applyOutlineAppearance(this.containerEl, this.currentSettings())))
     this.register(() => this.rangeSelector.destroy())
@@ -281,6 +297,32 @@ export class OutlineView extends WorkspaceView {
     this.wrapButton.setAttribute('aria-pressed', state)
     this.wrapButton.title = wrap ? 'Word wrap on. Click to turn off.' : 'Word wrap off. Click to turn on.'
     this.wrapButton.replaceChildren(outlineIcon(wrap ? 'wrap' : 'nowrap'))
+  }
+
+  /** Shows the update pill between the toolbar spacer and the wrap button while a newer version is offered. */
+  private syncUpdatePill() {
+    const version = this.updates?.state().version
+    if (!version || !this.updates?.open) {
+      this.updatePill?.remove()
+      this.updatePill = undefined
+      return
+    }
+    const label = `Update Outline View to ${version}`
+    if (this.updatePill?.getAttribute('aria-label') === label) return
+    this.updatePill?.remove()
+    const pill = document.createElement('button')
+    pill.type = 'button'
+    pill.className = 'outline-view__update-pill'
+    pill.dataset.action = 'update'
+    pill.title = label
+    pill.setAttribute('aria-label', label)
+    const word = document.createElement('span')
+    word.className = 'outline-view__update-pill-label'
+    word.textContent = 'Update'
+    pill.append(outlineIcon('update'), word, version)
+    pill.addEventListener('click', () => this.updates?.open?.())
+    this.wrapButton.before(pill)
+    this.updatePill = pill
   }
 
   private activeFileKey() {

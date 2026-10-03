@@ -65,6 +65,7 @@
   align-items: center;
   padding: 4px 8px;
   border-bottom: 1px solid var(--base-border);
+  container-type: inline-size;
 }
 
 .outline-view__toolbar-button {
@@ -86,6 +87,56 @@
 
 .outline-view__toolbar-spacer {
   flex: 1 1 auto;
+}
+
+// D025 (OV-D5): the text keeps the theme's text contrast. The accent marks only the border, the arrow and a tint,
+// because Typora's base palette sets it to #777, paler than muted text.
+.outline-view__update-pill {
+  --update-accent: var(--active-file-border-color, currentColor);
+
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 3px;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px 0 6px;
+  color: var(--text-color, inherit);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--active-file-bg-color, transparent);
+  background: color-mix(in srgb, var(--update-accent) 14%, transparent);
+  border: 1px solid var(--update-accent);
+  border-radius: 999px;
+}
+
+.outline-view__update-pill:hover {
+  background: var(--item-hover-bg-color, transparent);
+  background: color-mix(in srgb, var(--update-accent) 26%, transparent);
+}
+
+.outline-view__update-pill:focus-visible {
+  outline: 2px solid var(--update-accent);
+  outline-offset: 1px;
+}
+
+.outline-view__update-pill svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--update-accent);
+  stroke-width: 2.2;
+}
+
+// The toolbar's content box needs 271px for the widest measured pill, "Update 0.10.10" in the Github theme's Open Sans.
+// 280px leaves a margin for other theme fonts. Measurement: TEST-PLAN.md, "Update pill label threshold".
+@container (max-width: 280px) {
+  .outline-view__update-pill-label {
+    display: none;
+  }
 }
 
 .outline-view__config-button,
@@ -340,4 +391,31 @@
   padding: 14px 10px;
   color: var(--text-muted);
   line-height: 1.45;
+}
+
+// The update confirmation renders inside Core's Modal, outside the outline view.
+.outline-view-update-confirmation {
+  max-width: 34em;
+  line-height: 1.5;
+}
+
+.outline-view-update-confirmation ul {
+  margin: 8px 0;
+  padding-left: 1.4em;
+}
+
+.outline-view-update-confirmation li + li {
+  margin-top: 3px;
+}
+
+.outline-view-update-confirmation__status {
+  padding-inline-start: 8px;
+  border-inline-start: 2px solid var(--active-file-border-color, currentColor);
+}
+
+.outline-view-update-confirmation__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
 }

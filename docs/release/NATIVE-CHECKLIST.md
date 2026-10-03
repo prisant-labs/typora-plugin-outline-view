@@ -190,6 +190,20 @@ installation, lifecycle stress, keyboard coverage, and additional themes.
       color, bold/italic/underline, size and case; keyboard focus remains visible.
 - [ ] SVG settings/dock toggle icons appear, especially on macOS.
 
+### Updates
+
+The full procedure is in the [test plan](../TEST-PLAN.md#native-steps), under
+"Update pill".
+
+- [ ] With a build that claims an older version, both pills name the newest
+      release; the toolbar pill drops the word "Update" at the default dock width.
+- [ ] Cancel and Escape change nothing and return focus to the pill.
+- [ ] **Update** from the toolbar pill and from the settings pill completes
+      through Core; settings are kept.
+- [ ] With the check off, no pill and Not checked until Core's plugin tabs open.
+- [ ] A second window keeps working on the old version until it restarts.
+- [ ] Both pills read clearly in light and dark themes.
+
 Capture a native screenshot using only synthetic document content after passing.
 Include Files + document + Outline View; hide personal paths, account details,
 recent documents, and notifications. Strip image metadata before committing.

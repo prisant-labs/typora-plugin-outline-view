@@ -24,7 +24,11 @@ For each release:
 3. Check source, history, documentation, and artifacts being published for private
    data. Keep local plans, installed plugins, settings, and build staging ignored.
 4. Confirm versions, platform claims, changelog, and release notes match the release.
-5. Obtain explicit publication approval. A merged PR alone is not authorization.
+   Rename the changelog's **Unreleased** section to the version and date.
+5. Merge README changes that describe the release no earlier than the release
+   itself. Core renders `README.md` from `main` as the Marketplace listing, so
+   an early merge advertises behavior that the installable version lacks.
+6. Obtain explicit publication approval. A merged PR alone is not authorization.
 
 ## Build the reviewed commit
 
@@ -83,7 +87,16 @@ It downloads `plugin.zip` from the selected release when installing/updating.
 
 Consequently, GitHub publication can precede the marketplace's update display.
 After upstream metadata refreshes, reopen Community Plugin settings and update
-Outline View under Installed Plugins. Use the release ZIP for immediate manual
+Outline View under Installed Plugins. Versions with the update pill
+([D025 (update pill)](DECISIONS.md#d025-update-pill-offer-cores-marketplace-update-inside-the-plugin))
+also show a pill once their daily check sees the refreshed statistics. That can
+take about two days after publication, because the statistics refresh once a
+day and each installation checks at most once a day. After the refresh, opening
+Core's Installed Plugins tab reloads the lists, and the pill then appears the
+next time the outline or Outline View's settings open.
+The pill reads the same statistics, so it
+cannot appear before Installed Plugins would offer the update. Users of a
+version without the pill still update only through Installed Plugins. Use the release ZIP for immediate manual
 installation. Native marketplace install/update remains a separate check from
 confirming registration and public release assets.
 

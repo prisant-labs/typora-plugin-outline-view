@@ -383,17 +383,107 @@ archive in native Typora. Record platform checks separately as described in
   settings. Confirm the compact masthead remains above sticky section navigation
   inside the modal, not at the app-window top behind the modal, at wide and
   narrow modal widths in light/dark themes. Click Behavior, Structure,
-  Appearance, Selector, and Heading styles; the masthead should stay visible.
+  Appearance, Selector, Heading styles, and Updates; the masthead should stay
+  visible.
 - Confirm the small Local folder button follows GitHub with a middle-dot
   separator that stays with the button on wrapping, and opens the installed
   plugin directory; author and GitHub open the intended pages. No description,
   release-notes, or issue link should appear in the masthead.
-- With network access, compare Installed to the manifest and Current/Last updated
-  to the latest published GitHub release. With the lookup unavailable, verify
-  settings still work and the badge says Unable to check.
+- With network access and automatic update checks on, compare Installed to the
+  manifest and Current/Last updated to the latest published GitHub release. With
+  the lookup unavailable, verify settings still work and the badge says Unable to
+  check. With automatic update checks off, Current and Last updated read
+  Unavailable and the badge says Not checked.
 - Close/reopen settings during a pending lookup and verify an old result does not
   overwrite the newer header. The offline prototype simulates release data and
   does not validate this native behavior.
+
+## Update pill
+
+[D025 (update pill)](DECISIONS.md#d025-update-pill-offer-cores-marketplace-update-inside-the-plugin)
+records the design. The Core behavior it relies on is in
+[RESEARCH-NOTES.md](RESEARCH-NOTES.md#plugin-marketplace-and-updates).
+
+### Automated coverage
+
+- `src/update/*.test.ts` cover the notifier's daily limit, retry, single check,
+  off switch, and Core's update; the IndexedDB store; the confirmation; and the
+  dialog. `src/main.test.ts` runs the pill and confirmation through a fake Core,
+  including an update that Core unloads and one that Core did not start.
+- `src/views/outline-view.test.ts` and `src/settings/settings-tab.test.ts` cover
+  both pills, every masthead status, the Updates setting, and a toggle made while
+  the stored setting is still loading.
+- `pnpm test:browser` clicks every settings section link, including Updates. The
+  prototype's Updates control shows the settings pill and the confirmation, but
+  it does not exercise Core.
+
+### Update pill label threshold
+
+The outline toolbar is a size container. When its content box is 280px wide or
+less, the pill hides the word "Update" and keeps the arrow and the version.
+
+Measured on 2026-10-02 in Chromium (Playwright 1.63) against the built
+`dist/style.css`. The page rendered the toolbar's real controls: Collapse all,
+Expand all, the spacer, the pill, and the wrap and gear buttons. The outline's
+width grew in 1px steps until the toolbar stopped overflowing. The table gives
+that narrowest outline width, in pixels. The toolbar's content box is 16px
+narrower, because of its padding.
+
+| Font | No pill | Icon pill, 0.3.4 | Full pill, 0.3.4 | Icon pill, 0.10.10 | Full pill, 0.10.10 |
+| --- | --- | --- | --- | --- | --- |
+| Open Sans (Typora's Github theme) | 170 | 231 | 274 | 243 | 287 |
+| Segoe UI | 164 | 224 | 264 | 233 | 272 |
+| Arial | 168 | 229 | 269 | 241 | 281 |
+
+The widest full pill needs a 271px content box (287 − 16). The 280px threshold
+adds a margin for theme fonts that were not measured. Core 2.10.21 never makes
+the right dock narrower than 280px, so the icon-only pill, which needs at most a
+243px outline, does not overflow the dock. At Core's default dock width, the
+word "Update" is therefore hidden; it appears once the dock is about 300px wide.
+That last point is inferred from the numbers, not observed in Typora. Measure
+again when the toolbar's controls, their labels, or the pill's padding change.
+
+### Native steps
+
+The pill appears only when the Marketplace offers a newer version than the one
+installed. Until a newer release exists, test with a build that claims an older
+version. Before the first release with the pill is published, the update in
+steps 5 and 6 installs the latest published release, which has no pill.
+Reinstall the candidate build afterwards.
+
+1. Run `pnpm build`. Copy the build output into Community Plugin's `plugins`
+   folder as `prisant-labs.outline-view`, as a real folder and not a link. Core's
+   update deletes the plugin folder before downloading, and deleting a link
+   could expose the build output.
+2. In the copied `manifest.json`, set `version` to an older version, such as
+   `0.3.1`. Restart Typora.
+3. Open Outline View. Within a few seconds, the toolbar pill names the newest
+   released version. At Core's default dock width, it shows only the arrow and
+   the version; widen the dock and the word "Update" appears. No toolbar control
+   is clipped at any width. The settings page shows the same version beside
+   **Installed**, and the status badge says Update available.
+4. Click the toolbar pill. Check the confirmation text, and check that the
+   release link opens the GitHub release page. Click **Cancel**, and confirm
+   nothing changes. Open the dialog again with the keyboard and press
+   **Escape**. The dialog should close and return focus to the pill.
+5. Click the pill again, then **Update**. Core reports success, the outline
+   reloads without a pill, and your Outline View settings are unchanged.
+6. Repeat steps 1 and 2, then update from the **settings page** pill. Record
+   what Core's settings window shows after Core unloads the plugin.
+7. Turn off **Check for updates automatically**, repeat steps 1 and 2, and open
+   the outline and its settings page. No pill appears, the masthead says Not
+   checked, and Current and Last updated read Unavailable. Then open Core's
+   **Installed Plugins** or **Plugin Marketplace** tab, and reopen Outline
+   View's settings. The pill and Update available now appear from Core's own
+   data, without a request from Outline View (D025, OV-D3). Current and Last
+   updated still read Unavailable.
+8. With two Typora windows open, update in one. The other window should keep
+   working on the old version until it restarts.
+9. Collapse and re-expand the right dock, and note whether `onOpen()` runs again
+   (D025, OV-D4). The answer decides whether re-expanding the dock triggers a
+   check.
+10. Check both pills in light and dark themes: the text keeps the theme's text
+    contrast, and the accent marks only the border, the arrow, and the tint.
 
 ## Release gate
 

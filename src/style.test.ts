@@ -153,4 +153,34 @@ describe('outline layout safeguards', () => {
     expect(included).toContain('--range-accent')
     expect(focus).toContain('--range-accent')
   })
+
+  // D025 (OV-D5): Typora's base palette sets the accent to #777, paler than muted text, so accent-colored
+  // text would make a call to action look disabled. The accent marks only the border, the arrow and a tint.
+  it('keeps update pills at full text contrast and lets the accent mark only border, arrow and tint', async () => {
+    const source = await stylesheet()
+    const toolbar = rule(source, '.outline-view__toolbar')
+    const pill = rule(source, '.outline-view__update-pill')
+    const arrow = rule(source, '.outline-view__update-pill svg')
+    expect(toolbar).toContain('container-type: inline-size')
+    expect(pill).toContain('color: var(--text-color')
+    expect(pill).toContain('border: 1px solid var(--update-accent)')
+    expect(pill).toContain('color-mix(in srgb, var(--update-accent) 14%, transparent)')
+    expect(arrow).toContain('color: var(--update-accent)')
+    expect(source.replace(/\r\n/g, '\n')).toMatch(/@container \(max-width: \d+px\) \{\n\s*\.outline-view__update-pill-label \{\n\s*display: none;/)
+
+    const settings = await readFile(new URL('./settings.scss', import.meta.url), 'utf8')
+    const settingsPill = rule(settings, '.outline-view-settings__update')
+    const status = rule(settings, ".outline-view-settings__release-status[data-state='update']")
+    expect(settingsPill).toContain('color: var(--settings-text)')
+    expect(settingsPill).toContain('border: 1px solid var(--update-accent)')
+    expect(rule(settings, '.outline-view-settings__update svg')).toContain('color: var(--update-accent)')
+    expect(status).toContain('color: var(--settings-text)')
+    expect(status).not.toMatch(/(^|[\s;])color: var\(--active-file-border-color/)
+  })
+
+  it('styles the update confirmation inside Core\'s dialog', async () => {
+    const source = await stylesheet()
+    expect(rule(source, '.outline-view-update-confirmation')).toContain('max-width: 34em')
+    expect(rule(source, '.outline-view-update-confirmation__actions')).toContain('justify-content: flex-end')
+  })
 })
