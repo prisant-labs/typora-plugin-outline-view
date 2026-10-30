@@ -90,6 +90,12 @@ describe('outline layout safeguards', () => {
     expect(lists).toContain('width: 100%')
   })
 
+  it('leaves only the dock border on the left edge of the outline tab group', async () => {
+    const source = await stylesheet()
+    const tabs = rule(source, '.typ-workspace-sidedock > .sidedock-content > .typ-workspace-tabs:has(.outline-view)')
+    expect(tabs).toContain('border-left: 0')
+  })
+
   it('bounds the root inside the host flex leaf even for long unwrapped headings', async () => {
     const source = await stylesheet()
     const root = rule(source, '.outline-view')
