@@ -2,15 +2,17 @@
 
 Repository: `prisant-labs/typora-plugin-outline-view`.
 Plugin identity: `prisant-labs.outline-view` / **Outline View**.
-Current release: **0.4.0** ([release notes](release/0.4.0.md)).
+Current release: **0.4.1** ([release notes](release/0.4.1.md)).
 Existing release tags and assets are immutable.
 
 ## Publication authorization and validation
 
-The maintainer explicitly authorized publication of 0.4.0 on 2026-10-02, before
-native testing of that build, as for 0.3.2 on 2026-09-30. Native confirmation of
-both releases on macOS and Windows is pending. See the
-[release notes](release/0.4.0.md) and
+The maintainer explicitly authorized publication of 0.4.1 on 2026-10-29, before
+native testing of that build, as for 0.4.0 on 2026-10-02 and 0.3.2 on 2026-09-30.
+For 0.4.1 the maintainer also waived the gate that called for the native Update
+pill steps first. Native confirmation of all three releases on macOS and Windows
+is pending. See the
+[release notes](release/0.4.1.md) and
 [native validation record](release/NATIVE-CHECKLIST.md) for the archive checksum
 and the distinction between maintainer reports and automated checks. The last
 release with the maintainer's native signoff on both platforms is 0.3.1.
@@ -43,7 +45,7 @@ pnpm test:run
 pnpm test:browser
 pnpm typecheck
 pnpm run pack
-pnpm release:check --tag 0.4.0
+pnpm release:check --tag 0.4.1
 ```
 
 The last command validates the proposed version; it does not create a Git tag.
@@ -59,7 +61,7 @@ ZIP against its recorded checksum. CI can independently rebuild the same source.
 
 ## Tag and publish
 
-1. Create an annotated version tag, such as `0.4.0`, on the exact reviewed merge
+1. Create an annotated version tag, such as `0.4.1`, on the exact reviewed merge
    commit. Confirm the tag resolves to that commit, then push only that tag.
    Do not move existing tags or push all local tags.
 2. Create a draft GitHub Release for that tag, titled with the version, using

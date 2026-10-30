@@ -4,7 +4,10 @@
 // Core 2.10.21 gives split children flex sizing, but not side-dock tabs.
 // Scope the correction to a dock tab group that actually hosts our view.
 // :has follows mounting/removal without changing host DOM or other panes.
+// The dock already draws its own left border; Core also borders the tab group
+// (offset by -1px only in the editor root), so drop the second line here.
 .typ-workspace-sidedock > .sidedock-content > .typ-workspace-tabs:has(.outline-view) {
+  border-left: 0;
   box-sizing: border-box;
   flex: 1 1 0px;
   min-width: 0px;

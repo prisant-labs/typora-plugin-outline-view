@@ -4,6 +4,28 @@ Record the exact commit, ZIP SHA-256, plugin/Typora/core versions, OS, theme, an
 result for each run. Keep detailed evidence in ignored `_local/`; publish only
 sanitized results. Never count browser or CI runs as native Typora testing.
 
+## 0.4.1 publication before native testing - 2026-10-29
+
+The maintainer explicitly authorized publication of 0.4.1 before native testing
+of this build. No native result for 0.4.1 is recorded here, and none is inferred.
+
+- `plugin.zip`: SIZE bytes; SHA-256
+  `SHA256`.
+- **Gate waived:** the maintainer chose to publish without first running the
+  Update pill native steps that the 0.4.0 entry below names as a gate. 0.4.1 is
+  the first release that 0.4.0 users receive through the pill. The pill steps
+  remain pending, and Installed Plugins remains the fallback update path.
+- Maintainer report, Windows, before this build: the dock toggle beside the
+  word count works, and the dock's left edge showed a thick dark line. Core
+  2.10.70, Typora theme `github.css`, Windows in dark mode. This report
+  describes 0.4.0 and is the basis for the fix, not a result for 0.4.1.
+- Maintainer report, macOS, before this build: the dock toggle was missing, and
+  no status bar was visible. Core places the toggle in the status bar. Whether
+  the Mac's status bar was hidden is not yet confirmed.
+- To confirm 0.4.1: the dock's left edge shows one 1px line, in light and dark
+  OS modes.
+- See [0.4.1 release notes](0.4.1.md) for scope and compatibility.
+
 ## 0.4.0 publication before native testing - 2026-10-02
 
 The maintainer explicitly authorized publication of 0.4.0 before native testing

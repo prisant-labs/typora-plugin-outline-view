@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 - 2026-10-29
+
+- Draw a single 1px line on the left edge of the right dock. Community Plugin
+  Core drew two adjacent borders there, one on the dock and one on its tab
+  group, which read as a thick line. Core 2.10.70 colors both dark when the
+  operating system is in dark mode, which made the double line most visible.
+
 ## 0.4.0 - 2026-10-02
 
 - Show an update pill in the outline toolbar and beside the installed version

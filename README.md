@@ -5,14 +5,15 @@ is an independent, synchronized heading navigator for
 [Typora Community Plugin](https://github.com/typora-community-plugin/typora-community-plugin).
 It does not replace or move Typora's native outline.
 
-**Release:** [0.4.0](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.4.0)
+**Release:** [0.4.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/tag/0.4.1)
 is available for installation. Outline View is listed in the Community Plugin marketplace;
 its update display may follow GitHub publication after the next metadata refresh.
-0.4.0 and 0.3.2 were published before native testing of those builds; native
+0.4.1, 0.4.0 and 0.3.2 were published before native testing of those builds; native
 confirmation on Windows and macOS is pending. See the
 [validation record](docs/release/NATIVE-CHECKLIST.md) for the report and archive identity.
 
-See the [0.4.0 release notes](docs/release/0.4.0.md) for the update pill, the
+See the [0.4.1 release notes](docs/release/0.4.1.md) for the dock border fix, the
+[0.4.0 release notes](docs/release/0.4.0.md) for the update pill, the
 [0.3.2 release notes](docs/release/0.3.2.md) for the macOS navigation and
 heading-source fixes, the [0.3.1 release notes](docs/release/0.3.1.md) for the
 compact settings masthead, and the [0.3.0 release notes](docs/release/0.3.0.md)
@@ -64,7 +65,7 @@ install it, then enable it under **Installed Plugins**.
 
 ### Manual installation or candidate testing
 
-Download [plugin.zip from release 0.4.0](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.4.0/plugin.zip).
+Download [plugin.zip from release 0.4.1](https://github.com/prisant-labs/typora-plugin-outline-view/releases/download/0.4.1/plugin.zip).
 GitHub's automatic source-code ZIPs are not plugin packages. The release includes
 a SHA-256 checksum for verifying the downloaded archive.
 
