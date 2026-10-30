@@ -9,8 +9,8 @@ sanitized results. Never count browser or CI runs as native Typora testing.
 The maintainer explicitly authorized publication of 0.4.1 before native testing
 of this build. No native result for 0.4.1 is recorded here, and none is inferred.
 
-- `plugin.zip`: SIZE bytes; SHA-256
-  `SHA256`.
+- `plugin.zip`: 32,840 bytes; SHA-256
+  `d410e43d2db51843b73aac9a2981f79ab9cfbb72edbc37a4c561692d443186a4`.
 - **Gate waived:** the maintainer chose to publish without first running the
   Update pill native steps that the 0.4.0 entry below names as a gate. 0.4.1 is
   the first release that 0.4.0 users receive through the pill. The pill steps
