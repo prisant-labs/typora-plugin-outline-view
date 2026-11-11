@@ -490,7 +490,14 @@ Reinstall the candidate build afterwards.
 - Run `pnpm run pack` and `pnpm release:check` against the actual production ZIP.
 - Check exact entries, nonempty matching payloads, version/core consistency,
   both identical archive names, and current MIT/third-party notices.
-- Run `pnpm audit --audit-level=moderate` after dependency changes.
+- Run `pnpm audit --audit-level=moderate` after dependency changes. CI runs it
+  on every push, so a new advisory can fail an unchanged branch.
+- `pnpm.overrides` in `package.json` force `glob` 14.0.2 or later and `minimatch`
+  11.0.1 or later under `archiver`, which only `pack.js` uses at build time. They
+  clear two moderate advisories that archiver 7.0.1 and 8.0.0 still pull in.
+  `pack.js` never calls the glob paths. Remove the overrides once `pnpm why glob
+  minimatch` shows patched versions without them. A low `deepmerge` advisory
+  remains and has no patched version.
 - CI runs tests/types/prototype/pack checks on Linux and Windows. `CI required`
   fails if either platform fails or is cancelled. Native validation is recorded
   separately in [the release checklist](release/NATIVE-CHECKLIST.md).
