@@ -485,6 +485,35 @@ Reinstall the candidate build afterwards.
 10. Check both pills in light and dark themes: the text keeps the theme's text
     contrast, and the accent marks only the border, the arrow, and the tint.
 
+## Settings import and export
+
+### Automated coverage
+
+- `src/settings/transfer.test.ts` covers the file format, every refusal, the
+  round trip of Light and Dark colors and opacity, and the adjustment report.
+- `src/settings/settings-tab.test.ts` covers the buttons per browser engine, the
+  clipboard fallback, import, undo, and a file read that ends after hide.
+- `pnpm test:browser` saves a real file, imports it back, and checks the narrow
+  layout in Chromium. None of this proves native Typora behavior.
+
+### Native steps
+
+Run these on Windows and on macOS, and record results in
+[the release checklist](release/NATIVE-CHECKLIST.md).
+
+1. Change several settings, including a custom color, opacity, and a heading style.
+2. Click **Copy JSON**. Paste into a text editor and confirm it is the settings file.
+3. Click **Reset all heading styles**. Paste the JSON into the box and click
+   **Import pasted JSON**. The controls, the live preview, and an open outline
+   return to the exported values, and Markdown is unchanged.
+4. Click **Undo import**, and confirm the reset values return.
+5. Paste `{` and click **Import pasted JSON**. An error appears, and nothing changes.
+6. Confirm that pasting with the keyboard works in the box inside the settings window.
+7. Move the JSON from one platform to the other, and import it there.
+8. On Windows, click **Save file…**, and confirm that a save dialog or a saved file
+   appears and the open document stays in place. Import that file with **Choose
+   file…**. On macOS, confirm that those two buttons are absent.
+
 ## Release gate
 
 - Run `pnpm run pack` and `pnpm release:check` against the actual production ZIP.

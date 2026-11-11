@@ -115,6 +115,13 @@ export class SettingItem {
     build(select)
     this.controls.append(select)
   }
+
+  addButton(build: (button: HTMLButtonElement) => void) {
+    const button = document.createElement('button')
+    button.className = 'typ-button'
+    build(button)
+    this.controls.append(button)
+  }
 }
 
 export class SettingTab {

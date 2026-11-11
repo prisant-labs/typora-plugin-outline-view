@@ -68,6 +68,201 @@ function settingRow(tab: OutlineSettingsTab, name: string) {
   ) as HTMLElement | undefined
 }
 
+describe('OutlineSettingsTab import and export', () => {
+  const chromium = 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Typora/1.11 Chrome/120.0.0.0 Safari/537.36'
+  const webkit = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Safari/605.1.15'
+  const action = (tab: OutlineSettingsTab, name: string) => tab.containerEl.querySelector<HTMLButtonElement>(`[data-action="${name}"]`)
+  const statusText = (tab: OutlineSettingsTab) => tab.containerEl.querySelector<HTMLElement>('[data-transfer-status]')!
+  const errorText = (tab: OutlineSettingsTab) => tab.containerEl.querySelector<HTMLElement>('[data-transfer-error]')!
+  const pasteAndImport = (tab: OutlineSettingsTab, text: string) => {
+    tab.containerEl.querySelector<HTMLTextAreaElement>('[data-transfer-input]')!.value = text
+    action(tab, 'import-pasted-settings')!.click()
+  }
+  const importable = (settings: Record<string, unknown>) => JSON.stringify({ plugin: 'prisant-labs.outline-view', schema: 1, settings })
+  const stubClipboard = (writeText: (text: string) => Promise<void>) => {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    delete (navigator as unknown as { clipboard?: unknown }).clipboard
+  })
+
+  it('sits before Updates in the section navigation', () => {
+    const { tab } = createTab(undefined, undefined, fakeUpdates().source)
+    const links = Array.from(tab.containerEl.querySelectorAll('nav a')).map(link => link.textContent)
+    expect(links.slice(-2)).toEqual(['Import and export', 'Updates'])
+    tab.onhide()
+  })
+
+  it('offers the file buttons only on Chromium, because WebKit may leave the editor page on a download', () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(webkit)
+    const mac = createTab().tab
+    expect(action(mac, 'save-settings-file')).toBeNull()
+    expect(action(mac, 'choose-settings-file')).toBeNull()
+    expect(action(mac, 'copy-settings')).not.toBeNull()
+    expect(action(mac, 'import-pasted-settings')).not.toBeNull()
+    mac.onhide()
+
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(chromium)
+    const windows = createTab().tab
+    expect(action(windows, 'save-settings-file')).not.toBeNull()
+    expect(action(windows, 'choose-settings-file')).not.toBeNull()
+    windows.onhide()
+  })
+
+  it('copies a file the same plugin can import', async () => {
+    const writeText = vi.fn(async (_text: string) => {})
+    stubClipboard(writeText)
+    const { tab, settings } = createTab()
+    settings.set('density', 'compact')
+    action(tab, 'copy-settings')!.click()
+    await vi.waitFor(() => expect(statusText(tab).textContent).toBe('Copied the settings as JSON.'))
+    const parsed = JSON.parse(writeText.mock.calls[0][0])
+    expect(parsed.plugin).toBe('prisant-labs.outline-view')
+    expect(parsed.settings.density).toBe('compact')
+    expect(tab.containerEl.querySelector<HTMLTextAreaElement>('[data-transfer-output]')!.hidden).toBe(true)
+    tab.onhide()
+  })
+
+  it('reveals selected text that follows later changes when the clipboard is unavailable', async () => {
+    stubClipboard(() => Promise.reject(new Error('Not allowed')))
+    const { tab, settings } = createTab(document.body)
+    action(tab, 'copy-settings')!.click()
+    await vi.waitFor(() => expect(statusText(tab).textContent).toBe('Copy the selected text below.'))
+    const output = tab.containerEl.querySelector<HTMLTextAreaElement>('[data-transfer-output]')!
+    expect(output.hidden).toBe(false)
+    expect(JSON.parse(output.value).settings.density).toBe('comfortable')
+    settings.set('density', 'compact')
+    expect(JSON.parse(output.value).settings.density).toBe('compact')
+    tab.onhide()
+    tab.containerEl.remove()
+  })
+
+  it('downloads the settings under a stable name and releases the URL on hide', () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(chromium)
+    const createObjectURL = vi.fn((_blob: Blob) => 'blob:outline-settings')
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }))
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      expect(this.download).toBe('outline-view-settings.json')
+      expect(this.href).toBe('blob:outline-settings')
+    })
+    const { tab } = createTab()
+    action(tab, 'save-settings-file')!.click()
+    expect(click).toHaveBeenCalledOnce()
+    expect(createObjectURL.mock.calls[0][0].type).toBe('application/json')
+    expect(revokeObjectURL).not.toHaveBeenCalled()
+    tab.onhide()
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:outline-settings')
+  })
+
+  it('replaces every setting from pasted JSON, refreshes the controls, and can undo', () => {
+    const { tab, settings } = createTab()
+    settings.set('zebraRows', true)
+    const before = JSON.stringify(settings.get('headingStyles'))
+    const h1 = tab.containerEl.querySelector<HTMLElement>('[data-appearance-level="1"]')!
+    pasteAndImport(tab, importable({
+      density: 'compact',
+      headingStyles: { 1: { size: 150, bold: true, italic: false, underline: false, casing: 'normal', color: null } },
+    }))
+    expect(settings.get('density')).toBe('compact')
+    expect(settings.get('zebraRows')).toBe(false)
+    expect(tab.containerEl.querySelector<HTMLSelectElement>('[data-setting="density"]')!.value).toBe('compact')
+    expect(h1.querySelector<HTMLInputElement>('[data-field="size"]')!.value).toBe('150')
+    expect(h1.querySelector<HTMLButtonElement>('[data-field="bold"]')!.getAttribute('aria-pressed')).toBe('true')
+    expect(tab.containerEl.querySelector<HTMLTextAreaElement>('[data-transfer-input]')!.value).toBe('')
+    expect(statusText(tab).textContent).toContain('Imported the settings.')
+    expect(statusText(tab).textContent).toContain('set to their defaults: 24 settings.')
+
+    const undo = action(tab, 'undo-settings-import')!
+    expect(undo.hidden).toBe(false)
+    undo.click()
+    expect(settings.get('density')).toBe('comfortable')
+    expect(settings.get('zebraRows')).toBe(true)
+    expect(JSON.stringify(settings.get('headingStyles'))).toBe(before)
+    expect(h1.querySelector<HTMLInputElement>('[data-field="size"]')!.value).toBe('100')
+    expect(undo.hidden).toBe(true)
+    expect(statusText(tab).textContent).toBe('Restored the settings from before the import.')
+    tab.onhide()
+  })
+
+  it.each([
+    ['nothing pasted', '   ', 'Paste exported settings'],
+    ['malformed JSON', '{', 'not valid JSON'],
+    ['a newer file', JSON.stringify({ plugin: 'prisant-labs.outline-view', schema: 99, settings: {} }), 'newer Outline View'],
+  ])('leaves every setting alone and explains why for %s', (_name, text, message) => {
+    const { tab, settings } = createTab()
+    const set = vi.spyOn(settings, 'set')
+    pasteAndImport(tab, text)
+    expect(set).not.toHaveBeenCalled()
+    const error = errorText(tab)
+    expect(error.hidden).toBe(false)
+    expect(error.textContent).toContain(message)
+    expect(error.textContent).toContain('Your settings have not changed.')
+    expect(action(tab, 'undo-settings-import')!.closest<HTMLElement>('[role="status"]')!.hidden).toBe(true)
+    tab.onhide()
+  })
+
+  it('keeps Undo available after a failed attempt and a copy that follow an import', async () => {
+    stubClipboard(async () => {})
+    const { tab, settings } = createTab()
+    pasteAndImport(tab, importable({ density: 'compact' }))
+    pasteAndImport(tab, '{')
+    expect(errorText(tab).hidden).toBe(false)
+    const undo = action(tab, 'undo-settings-import')!
+    expect(undo.closest<HTMLElement>('[role="status"]')!.hidden).toBe(false)
+    expect(undo.hidden).toBe(false)
+
+    action(tab, 'copy-settings')!.click()
+    await vi.waitFor(() => expect(statusText(tab).textContent).toBe('Copied the settings as JSON.'))
+    expect(undo.hidden).toBe(false)
+
+    undo.click()
+    expect(settings.get('density')).toBe('comfortable')
+    tab.onhide()
+  })
+
+  it('does not save the update-check setting through an import', () => {
+    const updates = fakeUpdates()
+    const { tab, settings } = createTab(undefined, undefined, updates.source)
+    const set = vi.spyOn(settings, 'set')
+    pasteAndImport(tab, importable({ checkForUpdates: false, density: 'compact' }))
+    expect(updates.source.setEnabled).not.toHaveBeenCalled()
+    expect(set.mock.calls.map(([key]) => key)).not.toContain('checkForUpdates')
+    expect(statusText(tab).textContent).toContain('Not recognized, so ignored: checkForUpdates.')
+    tab.onhide()
+  })
+
+  it('imports a chosen file, rejects an oversized one, and ignores a read that ends after hide', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(chromium)
+    const { tab, settings } = createTab()
+    const picker = tab.containerEl.querySelector<HTMLInputElement>('[data-transfer-picker]')!
+    const choose = (file: { size: number; text(): Promise<string> }) => {
+      Object.defineProperty(picker, 'files', { configurable: true, value: [file] })
+      Object.defineProperty(picker, 'value', { configurable: true, writable: true, value: 'chosen.json' })
+      picker.dispatchEvent(new Event('change'))
+    }
+    choose({ size: 10, text: async () => importable({ density: 'compact' }) })
+    await vi.waitFor(() => expect(settings.get('density')).toBe('compact'))
+    expect(picker.value).toBe('')
+
+    const text = vi.fn()
+    choose({ size: 2_000_000, text })
+    expect(text).not.toHaveBeenCalled()
+    expect(errorText(tab).textContent).toContain('too large')
+
+    let finish!: (value: string) => void
+    choose({ size: 10, text: () => new Promise<string>(resolve => { finish = resolve }) })
+    tab.onhide()
+    finish(importable({ density: 'comfortable' }))
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(settings.get('density')).toBe('compact')
+  })
+})
+
 describe('OutlineSettingsTab', () => {
   it('shows the approved compact header with metadata and links in order', () => {
     const { tab } = createTab()
@@ -528,7 +723,7 @@ describe('OutlineSettingsTab', () => {
     const nav = tab.containerEl.querySelector('nav[aria-label="Outline View settings sections"]')
     expect(nav).not.toBeNull()
     const links = Array.from(nav!.querySelectorAll('a'))
-    expect(links.map(link => link.textContent)).toEqual(['General', 'Behavior', 'Structure', 'Appearance', 'Selector', 'Heading styles'])
+    expect(links.map(link => link.textContent)).toEqual(['General', 'Behavior', 'Structure', 'Appearance', 'Selector', 'Heading styles', 'Import and export'])
     const target = tab.containerEl.querySelector<HTMLElement>('#outline-settings-heading-styles')!
     target.scrollIntoView = vi.fn()
     links[5].click()
@@ -572,7 +767,7 @@ describe('OutlineSettingsTab', () => {
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => { frame = callback; return 1 })
     scroll.dispatchEvent(new Event('scroll'))
     frame(0)
-    expect(tab.containerEl.querySelector('nav [aria-current]')!.textContent).toBe('Heading styles')
+    expect(tab.containerEl.querySelector('nav [aria-current]')!.textContent).toBe('Import and export')
     tab.onhide()
   })
   it('refreshes after modal reopen even when core does not call onshow again', () => {

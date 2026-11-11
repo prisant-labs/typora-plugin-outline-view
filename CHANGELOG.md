@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add an **Import and export** settings section. **Copy JSON** and a paste box
+  move every Outline View setting as versioned JSON on every platform. **Save
+  file…** and **Choose file…** do the same on Windows. Import replaces
+  every setting, the live preview shows the result, and **Undo import** restores
+  what you had. A file that cannot be used changes nothing.
+
 ## 0.4.1 - 2026-10-29
 
 - Draw a single 1px line on the left edge of the right dock. Community Plugin

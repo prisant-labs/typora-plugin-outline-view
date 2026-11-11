@@ -6,6 +6,9 @@ import {
   defaultHeadingAppearance, type AppearanceColor, type HeadingAppearance, type OutlineSettings,
 } from './model'
 import { OutlinePreview } from './preview'
+import {
+  MAX_SETTINGS_FILE_LENGTH, SETTINGS_FILE_NAME, parseOutlineSettingsFile, serializeOutlineSettings,
+} from './transfer'
 import { observeThemeChanges } from '../outline/appearance'
 import { outlineIcon } from '../integration/icons'
 
@@ -138,6 +141,7 @@ export class OutlineSettingsTab extends SettingTab {
       this.syncAppearanceRows()
     })
     this.containerEl.append(resetAll)
+    this.addTransferSettings()
     if (this.updates) this.addUpdatesSetting(this.updates)
     const controls = document.createElement('div')
     controls.className = 'outline-view-settings__controls'
@@ -478,6 +482,178 @@ export class OutlineSettingsTab extends SettingTab {
         this.syncUpdateSetting = () => { if (!input.disabled) input.checked = updates.state().enabled }
       })
     })
+  }
+
+  /** D026: Copy and paste work on every host. The file buttons exist only on Chromium, where they are safe. */
+  private addTransferSettings() {
+    this.addSettingTitle('Import and export')
+    const generation = this.headerGeneration
+    const stale = () => generation !== this.headerGeneration
+    const exportText = () => serializeOutlineSettings(readOutlineSettings(this.outlinePlugin.settings), this.outlinePlugin.manifest)
+    const fileButtons = /Chrome\//.test(navigator.userAgent)
+
+    const status = document.createElement('div')
+    status.className = 'outline-view-settings__transfer-status'
+    status.setAttribute('role', 'status')
+    status.hidden = true
+    const statusText = document.createElement('span')
+    statusText.dataset.transferStatus = ''
+    const undo = document.createElement('button')
+    undo.type = 'button'
+    undo.className = 'typ-button'
+    undo.dataset.action = 'undo-settings-import'
+    undo.textContent = 'Undo import'
+    undo.hidden = true
+    status.append(statusText, undo)
+    const alert = document.createElement('p')
+    alert.className = 'outline-view-settings__update-error'
+    alert.dataset.transferError = ''
+    alert.setAttribute('role', 'alert')
+    alert.hidden = true
+    let previous: OutlineSettings | undefined
+    const report = (text: string) => {
+      statusText.textContent = text
+      status.hidden = false
+      undo.hidden = !previous
+      alert.hidden = true
+    }
+    const fail = (text: string) => {
+      alert.textContent = `${text} Your settings have not changed.`
+      alert.hidden = false
+      // A failed attempt leaves the last import in place, so its Undo stays available.
+      status.hidden = !previous
+    }
+
+    let output!: HTMLTextAreaElement
+    this.addSetting((setting: SettingItem) => {
+      setting.addName('Export settings')
+      setting.addDescription('Export every Outline View setting as JSON, to keep or to move to another computer. It never includes document text, file paths, your place in a document, or the automatic update check.')
+      setting.addButton(button => {
+        button.textContent = 'Copy JSON'
+        button.dataset.action = 'copy-settings'
+        button.addEventListener('click', () => {
+          const text = exportText()
+          // navigator.clipboard is missing from some hosts, so a selected text box is the fallback.
+          void Promise.resolve().then(() => navigator.clipboard.writeText(text)).then(
+            () => { if (!stale()) { output.hidden = true; report('Copied the settings as JSON.') } },
+            () => {
+              if (stale()) return
+              output.value = text
+              output.hidden = false
+              output.focus()
+              output.select()
+              let copied = false
+              try { copied = document.execCommand('copy') } catch { /* Selected for a manual copy below. */ }
+              if (copied) output.hidden = true
+              report(copied ? 'Copied the settings as JSON.' : 'Copy the selected text below.')
+            },
+          )
+        })
+      })
+      if (fileButtons) {
+        setting.addButton(button => {
+          button.textContent = 'Save file…'
+          button.dataset.action = 'save-settings-file'
+          button.addEventListener('click', () => {
+            const url = URL.createObjectURL(new Blob([exportText()], { type: 'application/json' }))
+            const link = document.createElement('a')
+            link.href = url
+            link.download = SETTINGS_FILE_NAME
+            link.click()
+            // The download reads the URL after this click returns.
+            const timer = window.setTimeout(() => URL.revokeObjectURL(url), 10000)
+            this.disposables.push(() => {
+              window.clearTimeout(timer)
+              URL.revokeObjectURL(url)
+            })
+          })
+        })
+      }
+      output = document.createElement('textarea')
+      output.className = 'outline-view-settings__transfer-text'
+      output.dataset.transferOutput = ''
+      output.readOnly = true
+      output.hidden = true
+      output.rows = 6
+      output.spellcheck = false
+      output.setAttribute('aria-label', 'Outline View settings as JSON')
+      setting.containerEl.append(output)
+    })
+    // A revealed export must not go stale while the user keeps changing settings.
+    this.disposables.push(this.outlinePlugin.settings.onChange('*', () => {
+      if (!output.hidden) output.value = exportText()
+    }))
+
+    let pasted!: HTMLTextAreaElement
+    const importText = (text: string) => {
+      const result = parseOutlineSettingsFile(text, this.outlinePlugin.manifest.id)
+      if (!result.ok) { fail(result.message); return }
+      previous = readOutlineSettings(this.outlinePlugin.settings)
+      this.persist(result.settings)
+      this.syncAppearanceRows()
+      pasted.value = ''
+      // Names help with a few keys. A hand-written file can omit most of them, and that list helps nobody.
+      const names = (keys: string[]) => keys.length > 5 ? `${keys.length} settings` : keys.join(', ')
+      const notes = [
+        result.adjusted.length ? `Adjusted to fit: ${names(result.adjusted)}.` : '',
+        result.missing.length ? `Not in the file, so set to their defaults: ${names(result.missing)}.` : '',
+        result.ignored.length ? `Not recognized, so ignored: ${names(result.ignored)}.` : '',
+      ].filter(Boolean)
+      report(['Imported the settings.', ...notes].join(' '))
+    }
+    undo.addEventListener('click', () => {
+      if (!previous) return
+      this.persist(previous)
+      this.syncAppearanceRows()
+      previous = undefined
+      report('Restored the settings from before the import.')
+    })
+
+    this.addSetting((setting: SettingItem) => {
+      setting.addName('Import settings')
+      setting.addDescription('Replace every Outline View setting with exported ones. Anything they leave out returns to its default. The live preview shows the result, and Undo import restores what you had.')
+      setting.addButton(button => {
+        button.textContent = 'Import pasted JSON'
+        button.dataset.action = 'import-pasted-settings'
+        button.addEventListener('click', () => {
+          if (pasted.value.trim()) importText(pasted.value)
+          else fail('Paste exported settings into the box first.')
+        })
+      })
+      if (fileButtons) {
+        const picker = document.createElement('input')
+        picker.type = 'file'
+        picker.accept = '.json,application/json'
+        picker.hidden = true
+        picker.dataset.transferPicker = ''
+        picker.addEventListener('change', () => {
+          const file = picker.files?.[0]
+          // Clearing the value lets the same file be chosen again.
+          picker.value = ''
+          if (!file) return
+          if (file.size > MAX_SETTINGS_FILE_LENGTH) { fail('This is too large to be an Outline View settings file.'); return }
+          void file.text().then(
+            text => { if (!stale()) importText(text) },
+            () => { if (!stale()) fail('The file could not be read.') },
+          )
+        })
+        setting.addButton(button => {
+          button.textContent = 'Choose file…'
+          button.dataset.action = 'choose-settings-file'
+          button.addEventListener('click', () => picker.click())
+        })
+        setting.containerEl.append(picker)
+      }
+      pasted = document.createElement('textarea')
+      pasted.className = 'outline-view-settings__transfer-text'
+      pasted.dataset.transferInput = ''
+      pasted.rows = 4
+      pasted.spellcheck = false
+      pasted.placeholder = 'Paste exported settings here'
+      pasted.setAttribute('aria-label', 'Paste exported Outline View settings')
+      setting.containerEl.append(pasted)
+    })
+    this.containerEl.append(status, alert)
   }
 
   private scrollParent() {

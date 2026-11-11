@@ -343,3 +343,14 @@ active-ancestor emphasis, a clickable current-path bar, and focus-current-branch
 Focus mode retains the selected heading's ancestor chain and complete subtree,
 and disabling it restores the full filtered outline. These settings affect only
 the outline view and its production-backed settings preview.
+
+## Approved extension: settings import and export
+
+A user can move every Outline View setting between computers or vaults as JSON.
+**Copy JSON** and a paste box work on every platform. **Save file…** and
+**Choose file…** also appear on Windows and Linux. Import replaces every setting,
+the live preview shows the result, and **Undo import** restores the previous
+settings. A file that cannot be used changes nothing and says why. The JSON never
+holds document text, file paths, a position in a document, or the automatic update
+check. Named presets remain separate work. The decisions are in
+[D026 (settings import and export)](DECISIONS.md#d026-settings-import-and-export-versioned-json-copy-and-paste-everywhere).
