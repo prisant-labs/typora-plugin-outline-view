@@ -375,3 +375,50 @@ data the update needs.
 plugin APIs. The notifier checks each method at runtime and shows nothing when
 one is missing. The Core behavior the design relies on is recorded in
 [RESEARCH-NOTES.md](RESEARCH-NOTES.md#plugin-marketplace-and-updates).
+
+---
+
+## D026 (settings import and export): Versioned JSON, copy and paste everywhere
+
+**Decision:** A settings section named "Import and export" moves every value of
+`OutlineSettings` as one JSON file. This ships ahead of named presets, which
+[issue #21 (named outline presets)](https://github.com/prisant-labs/typora-plugin-outline-view/issues/21)
+tracks, and it does not create them.
+
+- **File format:** `{ plugin, schema, pluginVersion, exportedAt, settings }`.
+  This shape is Outline View's own, separate from the file Core saves. The
+  `plugin` field lets import refuse another plugin's file. `schema` is 1. A later
+  presets feature can reuse this envelope.
+- **What the file holds:** only `OutlineSettings`. The automatic update check
+  stays out, because it lives in its own IndexedDB store (D025, OV-D2) and is a
+  per-computer privacy choice. Document ranges and collapse state stay out,
+  because they are session state.
+- **Refusals:** import refuses text that is not JSON, is not this plugin's file,
+  has a schema it cannot read, or has no settings object. A refusal changes
+  nothing and says why.
+- **Values:** `normalizeOutlineSettings` decides every value, so import cannot
+  store a state the plugin could not already hold. A file with a bad value still
+  imports. The message names values that were adjusted, settings the file omits,
+  and keys this version does not know.
+- **Replace, not merge:** import replaces every setting, so one file always gives
+  the same result. A setting the file omits returns to its default.
+- **Undo instead of a confirmation:** the live preview shows the result at once,
+  and **Undo import** restores the previous settings until the page is rebuilt.
+  Seeing the result is more useful than a warning before it. The existing reset
+  buttons also apply without asking.
+- **How the JSON moves:** **Copy JSON** and a paste box work on every host.
+  **Save file…** and **Choose file…** appear only when the user agent contains
+  `Chrome/`, so they appear on Windows and Linux and not on macOS.
+
+**Why not files everywhere:** Core has no file dialog. Its `fs` export writes on
+macOS by running `echo '...' > '<path>'` in a shell, without escaping the path,
+so it is unsuitable for a path the user types. Typora on macOS is WebKit, where
+`<a download>` and `<input type="file">` depend on delegates that Typora may not
+implement. If they are missing, the input does nothing, and a download might
+navigate the editor away from an open document. That outcome is inferred and has
+not been tested. A native macOS test can lift the restriction by changing one
+check in `addTransferSettings`.
+
+**Rejected alternatives:** A typed file path through Core's `fs` for the shell
+reason above, and Typora's private dialog bridges, per the AGENTS.md rule against
+fragile internals.

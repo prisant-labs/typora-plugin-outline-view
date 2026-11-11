@@ -30,6 +30,9 @@ for appearance and browsing options.
   section spacing/dividers with theme or custom light/dark colors.
 - Optional active-path emphasis, clickable current path, and current-branch focus.
 - Presentation changes never modify document text.
+- Export and import every setting as JSON, by copy and paste or, on Windows, as
+  a file.
+
 - An update pill in the outline toolbar and on the settings page when the Plugin
   Marketplace offers a newer version. Community Plugin Core performs the update.
 
@@ -118,6 +121,35 @@ active-file background and border colors to identify the current heading without
 changing its selected text color, font weight, or other styles. Keyboard focus
 remains separately visible on the focused control.
 
+## Move your settings
+
+Use this to back up your Outline View settings, or to move them to another
+computer or vault. The section is **Import and export** in Outline View's settings,
+which the outline's gear opens.
+
+Import replaces every setting, and anything the JSON leaves out returns to its
+default. A file that cannot be used changes nothing. The JSON never holds document
+text, file paths, your place in a document, or the automatic update check.
+
+To move your settings to another computer:
+
+1. Click **Copy JSON**. The page says "Copied the settings as JSON." If the
+   clipboard is unavailable, the JSON appears selected in a box below; copy it
+   yourself.
+2. Paste the text into a note, a message, or a plain text file that reaches the
+   other computer.
+3. On the other computer, open the same section, paste the text into the box, and
+   click **Import pasted JSON**.
+
+When it worked, the page says "Imported the settings.", the live preview changes,
+and an open outline updates. **Undo import** appears beside that message and
+restores what you had, while the settings page stays open.
+
+On Windows, **Save file…** saves the same JSON as `outline-view-settings.json`,
+and **Choose file…** imports such a file. Typora on Linux should show them too,
+but Linux is not a supported platform yet. macOS has only copy and paste for now,
+because the file buttons have not been tested in Typora on macOS.
+
 ## Updates and privacy
 
 When Community Plugin Core's Plugin Marketplace offers a newer version, a small
@@ -159,6 +191,16 @@ date.
 - To revert an update, disable the plugin, close Typora, and restore the backed-up
   plugin folder. Back up settings before downgrading; older versions may not
   understand newer appearance settings.
+- Import refused? The message names the reason, and nothing changed. "This is
+  not valid JSON" usually means part of the text was not copied, so copy it again
+  in full. "A newer Outline View made this settings file" means you should update
+  Outline View on this computer first. "The file could not be read" means the
+  chosen file was unreadable; save it again, or use copy and paste.
+- Import worked but a value looks wrong? The message names any setting that was
+  adjusted to fit, missing from the file, or not recognized. Click **Undo import**
+  to return to what you had.
+- No **Save file…** or **Choose file…** on macOS? That is expected for now. Use
+  **Copy JSON** and **Import pasted JSON** instead.
 
 Report reproducible issues with plugin/core/Typora versions, OS, theme, and a
 synthetic Markdown example. Remove private text and paths from diagnostics.

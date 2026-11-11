@@ -54,6 +54,26 @@
 .outline-view-settings__update:hover { background: color-mix(in srgb, var(--update-accent) 26%, transparent); }
 .outline-view-settings__update-error { margin: 6px 0 0; padding-inline-start: 8px; border-inline-start: 2px solid var(--active-file-border-color, var(--settings-text)); color: var(--settings-text); font-size: 12px; line-height: 1.5; }
 .outline-view-settings__update-error[hidden] { display: none; }
+.outline-view-settings__transfer-text {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  color: var(--settings-text);
+  background: var(--settings-bg);
+  border: 1px solid var(--settings-border);
+  border-radius: 4px;
+  font-family: var(--monospace, monospace);
+  font-size: 12px;
+  line-height: 1.4;
+  resize: vertical;
+}
+.outline-view-settings__transfer-text[hidden] { display: none; }
+.outline-view-settings__transfer-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; color: var(--settings-text); font-size: 12px; line-height: 1.5; }
+.outline-view-settings__transfer-status[hidden],
+.outline-view-settings__transfer-status [hidden] { display: none; }
+.outline-view-settings__transfer-status > span { flex: 1 1 16rem; min-width: 0; overflow-wrap: anywhere; }
 .outline-view-settings__nav {
   display: flex;
   gap: 4px;
@@ -167,6 +187,7 @@
 .outline-view-settings select,
 .outline-view-settings__heading-style button,
 .outline-view-settings__heading-style input[type='number'],
+.outline-view-settings .typ-button,
 .outline-view-settings [data-action='reset-all-styles'],
 .outline-view-settings [data-action='reset-outline-appearance'] {
   box-sizing: border-box;
@@ -179,6 +200,8 @@
   font: inherit;
 }
 .outline-view-settings select { font-size: 12px; cursor: pointer; }
+.outline-view-settings .typ-button { font-size: 12px; cursor: pointer; }
+.outline-view-settings .typ-setting-controls .typ-button + .typ-button { margin-inline-start: 6px; }
 .outline-view-settings__heading-style input[type='number'] { width: 60px; }
 .outline-view-settings__heading-style input[type='range'] { width: 78px; min-width: 50px; accent-color: var(--active-file-border-color, var(--settings-text)); }
 .outline-view-settings__heading-style input[type='color'] { width: 30px; height: 30px; padding: 2px; cursor: pointer; border: 1px solid var(--settings-border); background: var(--settings-bg); border-radius: 4px; }
@@ -195,7 +218,7 @@
 .outline-view-settings :disabled { cursor: default; opacity: .45; }
 .outline-view-settings [data-action='reset-all-styles'],
 .outline-view-settings [data-action='reset-outline-appearance'] { margin-top: 12px; font-size: 12px; }
-.outline-view-settings :is(button, select, input, a):focus-visible { outline: 2px solid var(--active-file-border-color, var(--settings-text)); outline-offset: 2px; }
+.outline-view-settings :is(button, select, input, textarea, a):focus-visible { outline: 2px solid var(--active-file-border-color, var(--settings-text)); outline-offset: 2px; }
 @container (max-width: 850px) {
   .outline-view-settings__layout { flex-direction: column; }
   .outline-view-settings__controls { flex: auto; width: 100%; }

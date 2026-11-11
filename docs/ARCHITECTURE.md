@@ -499,3 +499,18 @@ pill, the Updates section, and a check on each show and each reopen. The
 masthead's GitHub release lookup waits for `load()` and runs only while the check
 is on. Core's REST lookup fills only Current and Last updated; the Marketplace
 decides whether an update is available.
+
+## Settings import and export
+
+`src/settings/transfer.ts` holds the file format and has no DOM code.
+`serializeOutlineSettings` writes the file. `parseOutlineSettingsFile` returns
+either the normalized settings with lists of what changed, or a message. The
+settings tab's `addTransferSettings` owns the buttons and the text boxes, and it
+applies a result through the same `persist` that every other control uses.
+Changes therefore reach open views through the normal settings events. Import also
+calls `syncAppearanceRows`, because `sync` does not refresh the heading rows.
+
+A file read or a clipboard write that ends after the tab is rebuilt is dropped by
+the same generation check the masthead uses. Hiding the tab releases any download
+URL still held. [D026 (settings import and export)](DECISIONS.md#d026-settings-import-and-export-versioned-json-copy-and-paste-everywhere)
+records why the file buttons appear only on Chromium.
